@@ -10,7 +10,7 @@ import sys; sys.path.insert(0, '../../esinet')
 
 from esinet.util import unpack_fwd
 
-def contextualize(stc_instant, fwd, alpha=0.001, lstm_look_back=80, 
+def contextualize(stc_instant, fwd, lstm_look_back=80, 
                 num_units=128, num_epochs=100, steps_per_ep=None, 
                 batch_size=32, optimizer="adam", loss="mean_squared_error",
                 verbose=0):
@@ -53,9 +53,76 @@ def contextualize(stc_instant, fwd, alpha=0.001, lstm_look_back=80,
         stc_lstm[:, i+lstm_look_back] = stc_pred
         stc_cmne[:, i+lstm_look_back] = stc_instant[:, i+lstm_look_back] * stc_pred
 
-    # stc_lstm = standardize_2(stc_lstm)
-    # stc_cmne = standardize_2(stc_cmne)
-    # stc_cmne_final = stc_instant_unscaled * stc_lstm
+    return stc_cmne
+
+def contextualize_bd(stc_instant, fwd, lstm_look_back=80, 
+                num_units=128, num_epochs=100, steps_per_ep=None, 
+                batch_size=32, optimizer="adam", loss="mean_squared_error",
+                verbose=0):
+
+    leadfield = unpack_fwd(fwd)[1]
+    _, n_dipoles = leadfield.shape
+    # stc_instant_unscaled = deepcopy(stc_instant)
+    stc_instant_forward = standardize_2(stc_instant)
+    stc_instant_backwards = stc_instant_forward[:, ::-1]
+
+    stc_epochs_train_forward = deepcopy(stc_instant_forward)[np.newaxis]
+    stc_epochs_train_backwards = deepcopy(stc_epochs_train_forward[:, :, ::-1])
+    stc_epochs_train = np.concatenate([stc_epochs_train_forward, stc_epochs_train_backwards], axis=0)
+
+    x_train, y_train = prepare_training_data(stc_epochs_train, lstm_look_back)
+    # time axis must be second-to-last
+    x_train = np.swapaxes(x_train, 1,2)
+
+    callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
+
+    model = Sequential()
+    model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
+    model.add(Dense(n_dipoles, activation='linear'))
+
+    # compile the model
+    model.compile(loss=loss, optimizer=optimizer, metrics=[tf.keras.losses.CosineSimilarity()])
+    model.summary()
+    model.fit(x_train, y_train, batch_size=batch_size, 
+                                steps_per_epoch=steps_per_ep, validation_split=0.15, 
+                                shuffle=True, epochs=num_epochs, callbacks=callbacks)
+
+    stc_lstm_forward =  np.zeros(stc_instant_forward.shape)
+    stc_cmne_forward =  np.zeros(stc_instant_forward.shape)
+
+    stc_lstm_forward[:, :lstm_look_back] = stc_instant_forward[:, :lstm_look_back]
+    stc_cmne_forward[:, :lstm_look_back] = stc_instant_forward[:, :lstm_look_back]
+
+    steps = stc_instant_forward.shape[1] - lstm_look_back
+    print("Forward Steps:")
+    for i in range(steps):
+        print(f"Time Step {i}/{steps}")
+        stc_prior = np.expand_dims(stc_cmne_forward[:, i:i+lstm_look_back], axis=0)
+        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2))
+        stc_pred = abs(stc_pred) / abs(stc_pred).max()
+        stc_lstm_forward[:, i+lstm_look_back] = stc_pred
+        stc_cmne_forward[:, i+lstm_look_back] = stc_instant_forward[:, i+lstm_look_back] * stc_pred
+
+    stc_lstm_backwards =  np.zeros(stc_instant_backwards.shape)
+    stc_cmne_backwards =  np.zeros(stc_instant_backwards.shape)
+
+    stc_lstm_backwards[:, :lstm_look_back] = stc_instant_backwards[:, :lstm_look_back]
+    stc_cmne_backwards[:, :lstm_look_back] = stc_instant_backwards[:, :lstm_look_back]
+
+    steps = stc_instant_backwards.shape[1] - lstm_look_back
+    print("Forward Steps:")
+    for i in range(steps):
+        print(f"Time Step {i}/{steps}")
+        stc_prior = np.expand_dims(stc_cmne_backwards[:, i:i+lstm_look_back], axis=0)
+        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2))
+        stc_pred = abs(stc_pred) / abs(stc_pred).max()
+        stc_lstm_backwards[:, i+lstm_look_back] = stc_pred
+        stc_cmne_backwards[:, i+lstm_look_back] = stc_instant_backwards[:, i+lstm_look_back] * stc_pred
+
+    stc_cmne_backwards_reverse = stc_cmne_backwards[:, ::-1]
+    stc_cmne = deepcopy(stc_cmne_forward)
+    stc_cmne[:, :lstm_look_back] = stc_cmne_backwards_reverse[:, :lstm_look_back]
+
     return stc_cmne
 
 def inverse_dspm(M, leadfield):
