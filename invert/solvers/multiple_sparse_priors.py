@@ -403,7 +403,7 @@ def spm_sp_reml_demo(YY, Q_c, max_iter):
         a += len(v[i])
     
     dedh = np.zeros((a, len(v)))
-    print("dedh.shape: ", dedh.shape, "v[0].shape: ", v[0].shape, "v[1].shape: ", v[1].shape, )
+    # print("dedh.shape: ", dedh.shape, "v[0].shape: ", v[0].shape, "v[1].shape: ", v[1].shape, )
     dedh[:n, 0] = v[0]
     for i in range(1, dedh.shape[1]):
         b = np.zeros(a)
