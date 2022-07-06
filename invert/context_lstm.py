@@ -10,12 +10,12 @@ import sys; sys.path.insert(0, '../../esinet')
 
 from esinet.util import unpack_fwd
 
-def contextualize(stc_instant, fwd, lstm_look_back=80, 
+def contextualize(stc_instant, leadfield, lstm_look_back=80, 
                 num_units=128, num_epochs=100, steps_per_ep=None, 
                 batch_size=32, optimizer="adam", loss="mean_squared_error",
                 verbose=0):
 
-    leadfield = unpack_fwd(fwd)[1]
+    # leadfield = unpack_fwd(fwd)[1]
     _, n_dipoles = leadfield.shape
     # stc_instant_unscaled = deepcopy(stc_instant)
     stc_instant = standardize_2(stc_instant)
@@ -55,12 +55,12 @@ def contextualize(stc_instant, fwd, lstm_look_back=80,
 
     return stc_cmne
 
-def contextualize_bd(stc_instant, fwd, lstm_look_back=80, 
+def contextualize_bd(stc_instant, leadfield, lstm_look_back=80, 
                 num_units=128, num_epochs=100, steps_per_ep=None, 
                 batch_size=32, optimizer="adam", loss="mean_squared_error",
                 verbose=0):
 
-    leadfield = unpack_fwd(fwd)[1]
+    # leadfield = unpack_fwd(fwd)[1]
     _, n_dipoles = leadfield.shape
     # stc_instant_unscaled = deepcopy(stc_instant)
     stc_instant_forward = standardize_2(stc_instant)

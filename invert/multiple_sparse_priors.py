@@ -10,6 +10,48 @@ import matplotlib.pyplot as plt
 import sys; sys.path.insert(0, '../../esinet')
 from esinet.util import unpack_fwd
 
+
+
+def make_msp_inverse_operator(leadfield, pos, adjacency, evoked,Np=64, 
+                              max_iter=128, inversion_type='MSP', 
+                              smoothness=0.6, noise_cov=None, **kwargs):
+    """ Calculate the inverse operator using Multiple Sparse Priors.
+
+    Parameters
+    ----------
+    leadfield : numpy.ndarray
+        Leadfield (or gain matrix) G which constitutes the forward model of M =
+        J @ G, where sources J are projected through the leadfield producing the
+        observed EEG matrix M.
+    alpha : float
+        The regularization parameter.
+    noise_cov : numpy.ndarray
+        The noise covariance matrix (channels x channels).
+
+    Return
+    ------
+    inverse_operator : numpy.ndarray
+        The inverse operator that is used to calculate source.
+
+    """
+    n_chans, _ = leadfield.shape
+    if noise_cov is None:
+        noise_cov = np.identity(n_chans)
+
+    A = get_spatial_projector(leadfield)
+    S, V = get_temporal_projector(evoked, leadfield, A)
+    Y = evoked.data
+
+    Y_ = A @ Y @ S
+    leadfield_ = A @ leadfield
+    maximum_a_posteriori = make_msp_map(Y_, leadfield_, pos, adjacency, A, Np=Np, max_iter=max_iter, 
+        inversion_type=inversion_type, smoothness=smoothness)
+    inverse_operator = [maximum_a_posteriori, A, S]
+    # J_ = maximum_a_posteriori @ Y_
+    # D_MSP =  J_ @ S.T 
+    return inverse_operator
+
+
 def inverse_msp(evoked, fwd, Np=64, max_iter=128, inversion_type='MSP', smoothness=0.6):
     leadfield, pos = unpack_fwd(fwd)[1:3]
     A = get_spatial_projector(leadfield)
@@ -18,42 +60,13 @@ def inverse_msp(evoked, fwd, Np=64, max_iter=128, inversion_type='MSP', smoothne
 
     Y_ = A @ Y @ S
     leadfield_ = A @ leadfield
-    maximum_a_posteriori = make_msp_map_3(Y_, leadfield_, fwd, A, Np=Np, max_iter=max_iter, 
+    maximum_a_posteriori = make_msp_map(Y_, leadfield_, fwd, A, Np=Np, max_iter=max_iter, 
         inversion_type=inversion_type, smoothness=smoothness)
     J_ = maximum_a_posteriori @ Y_
     D_MSP =  J_ @ S.T 
     return D_MSP
 
-def pos_from_forward(forward, verbose=0):
-    ''' Get vertex/dipole positions from mne.Forward model
 
-    Parameters
-    ----------
-    forward : instance of mne.Forward
-        The forward model. 
-    
-    Return
-    ------
-    pos : numpy.ndarray
-        A 2D matrix containing the MNI coordinates of the vertices/ dipoles
-
-    Note
-    ----
-    forward must contain some subject id in forward["src"][0]["subject_his_id"]
-    in order to work.
-    '''
-    # Get Subjects ID
-    subject_his_id = forward["src"][0]["subject_his_id"]
-    src = forward["src"]
-
-    # Extract vertex positions from left and right source space
-    pos_left = mne.vertex_to_mni(src[0]["vertno"], 0, subject_his_id, verbose=verbose)
-    pos_right = mne.vertex_to_mni(src[1]["vertno"], 1, subject_his_id, verbose=verbose)
-
-    # concatenate coordinates from both hemispheres
-    pos = np.concatenate([pos_left, pos_right], axis=0)
-
-    return pos
 
 def get_spatial_projector(leadfield):
     # eliminate low SNR spatial modes
@@ -84,11 +97,7 @@ def get_temporal_projector(evoked, leadfield, A, Nmax=16, hpf=0, lpf=45, sdv=4):
     '''
     Nd = leadfield.shape
 
-    # % Time-window of interest
-    # w = np.array([evoked.times.min(), evoked.times.max()])*1000
-    # It = (w/1000 - evoked.tmin)*evoked.info['sfreq'] 
-    # It = np.arange(np.max([0, It[0]]), np.min([It[-1], len(evoked.times)])).astype(int)
-    # It = np.array([int(val) for val in It])
+    #  Time-window of interest
     It = np.arange(len(evoked.times)).astype(int)
     # print(It)
     # % Peristimulus time
@@ -170,15 +179,9 @@ def get_temporal_projector(evoked, leadfield, A, Nmax=16, hpf=0, lpf=45, sdv=4):
     # Qe  = AQeA/(np.trace(AQeA))  # IID noise in virtual sensor space
     return S, V
 
-def greens_function(fwd, smoothness=0.6):
+def greens_function(adjacency, smoothness=0.6):
     
-    A = mne.spatial_src_adjacency(fwd['src'],verbose=0).toarray()
-    # pos = util.unpack_fwd(fwd)[2]
-    # A = cdist(pos, pos)
-    # plt.figure()
-    # plt.imshow(A)
-    # plt.title("A")
-    # plt.colorbar()
+    A = adjacency
     Nd = A.shape[0]
     GL = A - spdiags( A.sum(axis=1), 0, Nd, Nd)
     GL = GL * smoothness/2
@@ -192,16 +195,9 @@ def greens_function(fwd, smoothness=0.6):
     
     QG = QG * (QG > np.exp(-8))
     QG = QG @ QG
-
-
-    # G_L = deepcopy(A)
-
-    # for i in range(Nd):
-    #     G_L[i, i] = - A[i,:].sum()
-    # Q_G = np.e**(smoothness*G_L)
     return QG
 
-def make_msp_map(Y, leadfield, fwd, V, Np=256, smoothness=0.6, max_iter=100,
+def make_msp_map(Y, leadfield, pos, adjacency, A, Np=128, smoothness=0.6, max_iter=128,
     inversion_type='MSP'):
     '''
     Create the maximum a posteriori (MAP) estimator for the multiple sparse
@@ -218,220 +214,6 @@ def make_msp_map(Y, leadfield, fwd, V, Np=256, smoothness=0.6, max_iter=100,
     (2014). Algorithmic procedures for Bayesian MEG/EEG source reconstruction in
     SPM. NeuroImage, 84, 476-487.
     '''
-    pos = unpack_fwd(fwd)[2]
-    n, d = leadfield.shape
-    u, v = Y.shape
-    # v = 1
-    # Greens function
-    if smoothness is not None:
-        Q_G = greens_function(fwd, smoothness=smoothness)
-    else:   
-        Q_G = np.identity(d)
-    A = V.T
-    AQeA   = A @ A.T
-    
-    Q_e = []
-    if inversion_type == 'MSP':
-        Ip = np.ceil( np.arange(Np) * d/Np ).astype(int)
-        m = deepcopy(len(Ip))  # numer of source cov components
-        
-        for i in range(m):
-            # Q = np.zeros((d,d))
-            # Q[i,i] = 1  # single-dipole source covariance components
-            # Q[Ip[i],Ip[i]] = 1  # single-dipole source covariance components
-            Q = np.diag(Q_G[Ip[i]])
-            Q_e.append( Q )
-
-    elif inversion_type == 'MNE':
-        Q_e.append(np.identity(d))
-        m = len(Q_e)
-    elif inversion_type == 'LORETA':
-        Q_e.append( np.identity(d) )
-        Q_e.append( deepcopy(Q_G) )
-        m = len(Q_e)
-
-    
-    # Source Level Analysis
-    lam_e = np.zeros(m)
-    
-    
-    # M-STEP
-    C = Y @ Y.T  # sensor covariance
-    # Scale C:
-    # n = C.shape[0]
-    # sY = n*np.trace(C)
-    # C /= sY
-    # Scale Q_e
-    # sh = np.zeros(m);
-    # for i in range(m):
-    #     sh[i] = n * np.trace(Q_e[i].T @ Q_e[i]);
-    #     Q_e[i]  = Q_e[i] / np.sqrt(sh[i]);
-    
-    
-    # C = (1/v) * Y @ Y.T  # sensor covariance
-    lam_u_e = np.zeros(m)  # hyperparameters
-    # sensor covariances
-    Q_c = [leadfield @ Q @ leadfield.T for Q in Q_e]
-    # summed sensor covariances
-    sigma_u_lam = sigma(lam_u_e, Q_c)
-    sigma_u_pinv = np.linalg.pinv(sigma_u_lam)
-    P = [-np.e**lam_e[i] * sigma_u_pinv  @ Q_c[i] @ sigma_u_pinv for i in range(m)]
-
-    eta = 0
-    pi = np.identity(d) / 256
-    delta_F = 1
-    delta_F_list = []
-    loop_cnt = 1
-    while (delta_F > 0.01) and (loop_cnt<max_iter):
-        sigma_u_lam = sigma(lam_u_e, Q_c)
-        sigma_u_pinv = np.linalg.pinv(sigma_u_lam)
-        P = [-np.e**lam_e[i] * sigma_u_pinv  @ Q_c[i] @ sigma_u_pinv for i in range(m)]
-
-        F_lam = [-(v/2) * np.trace(P[i] @ (C - sigma_u_lam)) - pi[i,i]  * (lam_u_e[i]- eta) 
-            for i in range(m)]
-        F_lamlam = np.zeros((m,m))
-        for i in range(m):
-            for j in range(m):
-                F_lamlam[i,j] = -(v/2) * np.trace(P[i] @ sigma_u_lam @ P[j] @ sigma_u_lam) - pi[i,j]
-        delta_lam_u_e = -np.linalg.inv(F_lamlam) @ F_lam
-        lam_u_e += delta_lam_u_e
-        lam_u_e[abs(lam_u_e)<1e-6] = 0
-        # lam_u_e /= np.linalg.norm(lam_u_e)
-        # sigma_lam = -np.linalg.inv(F_lamlam)
-        delta_F = F_lam @ delta_lam_u_e
-        delta_F_list.append(delta_F)
-        print(f'Iteration {loop_cnt}. Free Energy Improvement: {delta_F:.2f}')
-        loop_cnt += 1
-    # E-Step
-    sigma_e = sigma(lam_u_e, Q_e)
-    sigma_u_lam = sigma(lam_u_e, Q_c)
-    # sigma_e = np.sum([np.e**l * Q for l, Q in zip(lam_u_e, Q_e)], axis=0)
-    M = sigma_e @ leadfield.T @ np.linalg.inv(sigma_u_lam)
-    # mu_theta = M@Y
-    # sigma_theta = sigma_e - M @ leadfield @ sigma_e
-
-
-    return M
-
-def make_msp_map_2(Y, leadfield, fwd, Np=256, smoothness=0.6, max_iter=100,
-    inversion_type='MSP'):
-    '''
-    Create the maximum a posteriori (MAP) estimator for the multiple sparse
-    priors inverse solution.
-
-
-    References
-    ----------
-    [1] Friston, K., Harrison, L., Daunizeau, J., Kiebel, S., Phillips, C.,
-    Trujillo-Barreto, N., ... & Mattout, J. (2008). Multiple sparse priors for
-    the M/EEG inverse problem. NeuroImage, 39(3), 1104-1120. 
-    
-    [2] López, J. D., Litvak, V., Espinosa, J. J., Friston, K., & Barnes, G. R.
-    (2014). Algorithmic procedures for Bayesian MEG/EEG source reconstruction in
-    SPM. NeuroImage, 84, 476-487.
-    '''
-    YY = Y @ Y.T
-    K = 128
-    n = YY.shape[0]
-    d = leadfield.shape[1]
-    u, v = Y.shape
-
-    # Greens function
-    if smoothness is not None:
-        Q_G = greens_function(fwd, smoothness=smoothness)
-    else:   
-        Q_G = np.identity(d)
-
-    if inversion_type == 'MSP':
-        Ip = np.ceil( np.arange(Np) * d/Np ).astype(int)
-        m = deepcopy(len(Ip))  # numer of source cov components
-        Q_e = []
-        for i in range(m):
-            # Q = np.zeros((d,d))
-            # Q[i,i] = 1  # single-dipole source covariance components
-            # Q[Ip[i],Ip[i]] = 1  # single-dipole source covariance components
-            Q = np.diag(Q_G[Ip[i]])
-            Q_e.append( Q )
-
-    elif inversion_type == 'MNE':
-        Q_e = [np.identity(d),]
-        m = len(Q_e)
-    elif inversion_type == 'LORETA':
-        Q_e = [np.identity(d), deepcopy(Q_G),]
-        m = len(Q_e)
-    
-    h = np.zeros(m)
-    # uninformative hyperpriors
-    hE = np.zeros(m) -32
-    hC = np.identity(m) * 256
-    hP = np.linalg.pinv(hC)
-    # find bases of Q if necessary
-    v_e = [np.ones((1,1)) for _ in range(m)]
-
-    # scale YY
-    sY    = n * np.trace(YY)
-    YY    = YY / sY
-    # % scale Q
-    sh = np.zeros(m);
-    for i in range(m):
-        sh[i] = n * np.trace( Q_e[i].T @ Q_e[i] )
-        Q_e[i] = Q_e[i] / np.sqrt(sh[i])
-    # compute basis and dsdh
-    q = np.stack([ np.diagonal(Q) for Q in Q_e], axis=0)
-
-    a = len(v_e)
-    for i in range(len(v_e)):
-        a += len(v_e[i])
-    
-    dedh = np.zeros((a,len(v_e)))
-    dedh[:n,0] = v_e[0]
-    for i in np.arange(2, dedh.shape[1]):
-        b = np.zeros(a)
-        b[i+n-1] = v_e[i]
-        dedh[:,i] = b
-    
-    
-    # pre-compute bases
-    n, s = q.shape
-    # print(q.shape)
-    qq    = np.zeros(s)
-    for i in range(s):
-        qq[i] = q[:,i] @ q[:,i].T;
-
-
-    a_s = np.arange(m)
-    for k in range(K):
-    
-        # E-step: conditional covariance cov(B|y)
-        
-        # compute current estimate of covariance
-        C = np.zeros((n,n))
-        e     = dedh @ np.e**h
-        # print(len(qq), len(e))
-        for i in range(s):
-            # print(qq[i])
-            # print(e[i])
-            C = C + qq[i]*e[i];
-        
-
-def make_msp_map_3(Y, leadfield, fwd, A, Np=128, smoothness=0.6, max_iter=128,
-    inversion_type='MSP'):
-    '''
-    Create the maximum a posteriori (MAP) estimator for the multiple sparse
-    priors inverse solution.
-
-
-    References
-    ----------
-    [1] Friston, K., Harrison, L., Daunizeau, J., Kiebel, S., Phillips, C.,
-    Trujillo-Barreto, N., ... & Mattout, J. (2008). Multiple sparse priors for
-    the M/EEG inverse problem. NeuroImage, 39(3), 1104-1120. 
-    
-    [2] López, J. D., Litvak, V., Espinosa, J. J., Friston, K., & Barnes, G. R.
-    (2014). Algorithmic procedures for Bayesian MEG/EEG source reconstruction in
-    SPM. NeuroImage, 84, 476-487.
-    '''
-    pos = unpack_fwd(fwd)[2]
     n, d = leadfield.shape
     # u, v = Y.shape
     C = Y @ Y.T  # sensor covariance
@@ -442,7 +224,7 @@ def make_msp_map_3(Y, leadfield, fwd, A, Np=128, smoothness=0.6, max_iter=128,
     # v = 1
     # Greens function
     if smoothness is not None:
-        Q_G = greens_function(fwd, smoothness=smoothness)
+        Q_G = greens_function(adjacency, smoothness=smoothness)
     else:   
         Q_G = np.identity(d)
     
