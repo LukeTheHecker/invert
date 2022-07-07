@@ -1,6 +1,7 @@
 import numpy as np
 import mne
 from .util import pos_from_forward
+import esinet
 
 # from loreta import make_loreta_inverse_operator
 from .solvers.minimum_norm_estimates import (make_mne_inverse_operator, 
@@ -15,10 +16,14 @@ from .solvers.wrop import (make_laura_inverse_operator,
 
 from .solvers.multiple_sparse_priors import (make_msp_inverse_operator)
 
+from .solvers.esinet import (make_fullyconnected_inverse_operator,
+                            make_lstm_inverse_operator)
+
 all_solvers = [ "MNE", "wMNE", "dSPM", 
                 "LORETA", "sLORETA", "eLORETA", 
                 "LAURA", "Backus-Gilbert", 
-                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA"]
+                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
+                "Fully-Connected", "LSTM"]
 
 
 class InverseOperator:
@@ -98,6 +103,21 @@ def make_inverse_operator(forward: mne.Forward, solver='MNE', alpha=0.001,
             raise AttributeError(msg)
         inversion_type = "BMF-LOR"
         inverse_operator = make_msp_inverse_operator(leadfield, pos, adjacency, inversion_type=inversion_type, **kwargs)    
+    
+    elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
+        if not "evoked" in kwargs:
+            msg = f"""Fully-Connected requires an evoked object: make_inverse_operator(forward, solver="Fully-Connected", evoked=evoked) """
+            raise AttributeError(msg)
+
+        inverse_operator = make_fullyconnected_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
+
+    elif solver.lower() == "lstm":
+        if not "evoked" in kwargs:
+            msg = f"""LSTM requires an evoked object: make_inverse_operator(forward, solver="LSTM", evoked=evoked) """
+            raise AttributeError(msg)
+
+        inverse_operator = make_lstm_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
+
 
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {all_solvers}"
@@ -135,7 +155,8 @@ def apply_inverse_operator(evoked, inverse_operator, forward, verbose=0):
         J_ = maximum_a_posteriori @ M_
         # Project tansformed sources J_ back to original time frame using temporal projector S
         source_mat =  J_ @ S.T 
-        
+    elif inverse_operator.type == esinet.Net:
+        source_mat = inverse_operator.data.predict(evoked)[0].data
     else:
         msg = f"type of inverse operator ({inverse_operator.type}) unknown"
         raise AttributeError(msg)

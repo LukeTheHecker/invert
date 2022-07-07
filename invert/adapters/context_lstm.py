@@ -56,7 +56,7 @@ def contextualize(stc_instant, leadfield, lstm_look_back=80,
     return stc_cmne
 
 def contextualize_bd(stc_instant, leadfield, lstm_look_back=80, 
-                num_units=128, num_epochs=100, steps_per_ep=None, 
+                num_units=128, num_epochs=100, steps_per_ep=25, 
                 batch_size=32, optimizer="adam", loss="mean_squared_error",
                 verbose=0):
 
@@ -74,7 +74,7 @@ def contextualize_bd(stc_instant, leadfield, lstm_look_back=80,
     # time axis must be second-to-last
     x_train = np.swapaxes(x_train, 1,2)
 
-    callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
+    callbacks = [tf.keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True),]
 
     model = Sequential(name="Contextual_LSTM")
     model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
