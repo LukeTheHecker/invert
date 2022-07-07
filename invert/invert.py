@@ -3,22 +3,23 @@ import mne
 from .util import pos_from_forward
 
 # from loreta import make_loreta_inverse_operator
-from .minimum_norm_estimates import (make_mne_inverse_operator, 
+from .solvers.minimum_norm_estimates import (make_mne_inverse_operator, 
                                     make_wmne_inverse_operator,
                                     make_dspm_inverse_operator)
-from .loreta import (make_loreta_inverse_operator,
+from .solvers.loreta import (make_loreta_inverse_operator,
                     make_sloreta_inverse_operator,
                     make_eloreta_inverse_operator)
 
-from .wrop import (make_laura_inverse_operator,
+from .solvers.wrop import (make_laura_inverse_operator,
                     make_backus_gilbert_inverse_operator)
 
-from .multiple_sparse_priors import (make_msp_inverse_operator)
+from .solvers.multiple_sparse_priors import (make_msp_inverse_operator)
 
 all_solvers = [ "MNE", "wMNE", "dSPM", 
                 "LORETA", "sLORETA", "eLORETA", 
                 "LAURA", "Backus-Gilbert", 
-                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LOERTA"]
+                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA"]
+
 
 class InverseOperator:
     ''' This class holds the inverse operator, which may be a simple
@@ -96,22 +97,14 @@ def make_inverse_operator(forward: mne.Forward, solver='MNE', alpha=0.001,
             msg = f"""Bayesian Beamformer LORETA requires an evoked object: make_inverse_operator(forward, solver="Bayesian Beamformer LORETA", evoked=evoked) """
             raise AttributeError(msg)
         inversion_type = "BMF-LOR"
-        inverse_operator = make_msp_inverse_operator(leadfield, pos, adjacency, inversion_type=inversion_type, **kwargs)
-
-
-    
-
-        
-    
-    
-    
+        inverse_operator = make_msp_inverse_operator(leadfield, pos, adjacency, inversion_type=inversion_type, **kwargs)    
 
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {all_solvers}"
         raise AttributeError(msg)
 
-
     inverse_operator_object = InverseOperator(inverse_operator, solver)
+
     return inverse_operator_object
 
 def apply_inverse_operator(evoked, inverse_operator, forward, verbose=0):

@@ -30,7 +30,7 @@ def contextualize(stc_instant, leadfield, lstm_look_back=80,
     model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
     model.add(Dense(n_dipoles, activation='linear'))
 
-    # compile the model
+        # compile the model
     model.compile(loss=loss, optimizer=optimizer, metrics=[tf.keras.losses.CosineSimilarity()])
     model.summary()
     model.fit(x_train, y_train, batch_size=batch_size, 
@@ -76,16 +76,19 @@ def contextualize_bd(stc_instant, leadfield, lstm_look_back=80,
 
     callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
 
-    model = Sequential()
+    model = Sequential(name="Contextual_LSTM")
     model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
     model.add(Dense(n_dipoles, activation='linear'))
 
     # compile the model
     model.compile(loss=loss, optimizer=optimizer, metrics=[tf.keras.losses.CosineSimilarity()])
-    model.summary()
+    if verbose>0:
+        model.summary()
+
     model.fit(x_train, y_train, batch_size=batch_size, 
                                 steps_per_epoch=steps_per_ep, validation_split=0.15, 
-                                shuffle=True, epochs=num_epochs, callbacks=callbacks)
+                                shuffle=True, epochs=num_epochs, callbacks=callbacks,
+                                verbose=verbose)
 
     stc_lstm_forward =  np.zeros(stc_instant_forward.shape)
     stc_cmne_forward =  np.zeros(stc_instant_forward.shape)
@@ -94,9 +97,11 @@ def contextualize_bd(stc_instant, leadfield, lstm_look_back=80,
     stc_cmne_forward[:, :lstm_look_back] = stc_instant_forward[:, :lstm_look_back]
 
     steps = stc_instant_forward.shape[1] - lstm_look_back
-    print("Forward Steps:")
+    if verbose>0:
+        print("Forward Steps:")
     for i in range(steps):
-        print(f"Time Step {i}/{steps}")
+        if verbose>0:
+            print(f"Time Step {i}/{steps}")
         stc_prior = np.expand_dims(stc_cmne_forward[:, i:i+lstm_look_back], axis=0)
         stc_pred = model.predict(np.swapaxes(stc_prior, 1,2))
         stc_pred = abs(stc_pred) / abs(stc_pred).max()
@@ -110,9 +115,11 @@ def contextualize_bd(stc_instant, leadfield, lstm_look_back=80,
     stc_cmne_backwards[:, :lstm_look_back] = stc_instant_backwards[:, :lstm_look_back]
 
     steps = stc_instant_backwards.shape[1] - lstm_look_back
-    print("Forward Steps:")
+    if verbose>0:
+        print("Forward Steps:")
     for i in range(steps):
-        print(f"Time Step {i}/{steps}")
+        if verbose>0:
+            print(f"Time Step {i}/{steps}")
         stc_prior = np.expand_dims(stc_cmne_backwards[:, i:i+lstm_look_back], axis=0)
         stc_pred = model.predict(np.swapaxes(stc_prior, 1,2))
         stc_pred = abs(stc_pred) / abs(stc_pred).max()
@@ -125,31 +132,6 @@ def contextualize_bd(stc_instant, leadfield, lstm_look_back=80,
 
     return stc_cmne
 
-def inverse_dspm(M, leadfield):
-    alpha = 0.001
-    n_chans, n_dipoles = leadfield.shape
-    noise_cov = np.identity(n_chans) + np.random.rand(n_chans) * 0.01
-    source_cov = np.identity(n_dipoles)
-
-    M_norm = (1/np.sqrt(noise_cov)) @ M
-    G_norm = (1/np.sqrt(noise_cov)) @ leadfield
-
-    K = source_cov @ G_norm.T @ np.linalg.inv(G_norm @ source_cov @ G_norm.T + alpha**2 * np.identity(n_chans))
-    W_dSPM = np.diag(np.sqrt(1/np.diagonal(K @ noise_cov @ K.T)))
-    K_dSPM = W_dSPM @ K
-    D_dSPM = K_dSPM @ M_norm
-
-    # rectify & normalize
-    # Q = np.stack([rectify_norm(x) for x in D_dSPM.T], axis=1)
-    return D_dSPM
-
-def inverse_loreta(M, leadfield, fwd):
-    alpha = 0.001
-    adjacency = mne.spatial_src_adjacency(fwd['src']).toarray()
-    B = np.diag(np.linalg.norm(leadfield, axis=0))
-    laplace_operator = laplacian(adjacency)
-    D_LOR = np.linalg.inv(leadfield.T @ leadfield + alpha * B @ laplace_operator.T @ laplace_operator @ B) @ leadfield.T @ M
-    return D_LOR
 
 def rectify_norm(x):
     return (x-abs(x).mean()) / abs(x).std()
