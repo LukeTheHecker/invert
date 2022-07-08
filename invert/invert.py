@@ -31,11 +31,76 @@ class InverseOperator:
     numpy.ndarray matrix or some object like an esinet.net()
     '''
     def __init__(self, inverse_operator, solver_name):
-        self.type = type(inverse_operator)
         self.solver_name = solver_name
         self.data = inverse_operator
+        self.handle_inverse_operator()
 
+        self.has_multiple_operators()
+    def has_multiple_operators(self):
+        ''' Check if there are multiple inverse_operators.'''
+        if type(self.data) == list:
+            if len(self.data) > 1:
+                return True
+        return False
 
+    def handle_inverse_operator(self, inverse_operator):
+
+        if type(self.data) != list:
+            self.data = [self.data,]
+        self.type = type(self.data[0])
+        
+
+class BaseSolver:
+    def __init__(self, verbosity=0):
+        self.inverse_operator = None
+        self.verbosity = verbosity
+        pass
+    def make_inverse_operator(self, forward: mne.Forward, *args):
+        self.forward = forward
+        pass
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        ''' Apply the inverse operator '''
+        assert type(self.inverse_operator) == InverseOperator, f"inverse operator object is not correctly set (is of type {type(self.inverse_operator)})"
+        M = evoked.data
+
+        if len(self.inverse_operator.data) == 1:
+            inverse_operator = self.inverse_operator.data[0]
+            source_mat = inverse_operator.data @ M 
+        else:
+            source_mats = []
+            l2_norms = []
+            inverse_operators = self.inverse_operator.data
+            for inverse_operator in inverse_operators:
+                source_mats.append( inverse_operator.data @ M  )
+                l2_norms.append( np.linalg.norm(source_mats[-1]) )
+            corner_idx = self.find_corner(l2_norms)
+            source_mat = source_mats[corner_idx]
+        
+        stc = self.source_to_object(source_mat, evoked)
+        return stc
+
+    
+    def source_to_object(self, source_mat, evoked):
+        ''' Converts the source_mat matrix to an mne.SourceEstimate object '''
+        # Convert source to mne.SourceEstimate object
+        source_model = self.forward['src']
+        vertices = [source_model[0]['vertno'], source_model[1]['vertno']]
+        tmin = evoked.tmin
+        sfreq = evoked.info["sfreq"]
+        tstep = 1/sfreq
+        subject = evoked.info["subject_info"]
+
+        if subject is None:
+            subject = "fsaverage"
+        
+        stc = mne.SourceEstimate(source_mat, vertices, tmin=tmin, tstep=tstep, subject=subject, verbose=self.verbose)
+        return stc
+        
+    @staticmethod
+    def find_corner(l2_norms):
+        
+        pass
 
 def make_inverse_operator(forward: mne.Forward, solver='MNE', alpha=0.001, 
     noise_cov=None, source_cov=None, stop_crit=0.0005, 
