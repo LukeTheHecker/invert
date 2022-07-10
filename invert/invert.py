@@ -62,28 +62,65 @@ class BaseSolver:
         ''' Apply the inverse operator '''
         # assert type(self.inverse_operator) == type(InverseOperator), f"inverse operator object is not correctly set (is of type {type(self.inverse_operator)}, must be {InverseOperator})"
         M = evoked.data
-
+        leadfield = self.forward['sol']['data']
         if len(self.inverse_operator.data) == 1:
             inverse_operator = self.inverse_operator.data[0]
             source_mat = inverse_operator.data @ M 
         else:
             source_mats = []
             l2_norms = []
+            l2_norms_eeg = []
+            l2_residual = []
             inverse_operators = self.inverse_operator.data
             for inverse_operator in inverse_operators:
                 source_mats.append( inverse_operator.data @ M  )
                 l2_norms.append( np.linalg.norm(source_mats[-1]) )
-            # corner_idx = self.find_corner(l2_norms)
-            corner_idx = 5
+                l2_norms_eeg.append( np.linalg.norm(leadfield@source_mats[-1]) )
+                l2_residual.append( np.linalg.norm(leadfield@source_mats[-1]-M) )
+
+            corner_idx = self.find_corner(l2_norms)
             source_mat = source_mats[corner_idx]
 
             plt.figure()
-            plt.plot(np.arange(12), l2_norms)
+            plt.subplot(311)
+            r_vals = np.logspace(-10, 10, 100)
+            # r_vals = np.arange(12)
+            print("R = ", r_vals[corner_idx])
+            
+            plt.plot(r_vals, l2_norms, 'r*')
+            plt.vlines(r_vals[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            plt.xlabel("R values")
+            plt.ylabel("Norms of the source")
+
+            plt.subplot(312)
+            plt.plot(r_vals[:-1], np.diff(l2_norms), 'r*')
+            plt.vlines(r_vals[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            plt.xlabel("R values")
+            plt.ylabel("delta Norms of the source")
+
+
+            plt.subplot(313)
+            plt.loglog(l2_norms, l2_norms_eeg, 'r*')
+            plt.vlines(l2_norms[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            plt.ylabel("Norms of the eeg")
+            plt.xlabel("Norms of the source")
+
+            plt.figure()
+            plt.loglog(l2_residual, l2_norms_eeg, 'r*')
+            plt.vlines(l2_residual[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            plt.ylabel("l2_norms_eeg")
+            plt.xlabel("l2_residual")
+
+            
         
         stc = self.source_to_object(source_mat, evoked)
         return stc
 
-    
+    @staticmethod
+    def find_corner(l2_norms):
+        diffs = np.diff(l2_norms)
+        return np.clip(np.argmax(abs(diffs))+10, a_min=0, a_max=None)
+
     def source_to_object(self, source_mat, evoked):
         ''' Converts the source_mat matrix to an mne.SourceEstimate object '''
         # Convert source to mne.SourceEstimate object
@@ -100,10 +137,7 @@ class BaseSolver:
         stc = mne.SourceEstimate(source_mat, vertices, tmin=tmin, tstep=tstep, subject=subject, verbose=self.verbose)
         return stc
         
-    @staticmethod
-    def find_corner(l2_norms):
-        
-        pass
+  
 
 # def make_inverse_operator(forward: mne.Forward, solver='MNE', alpha=0.001, 
 #     noise_cov=None, source_cov=None, stop_crit=0.0005, 

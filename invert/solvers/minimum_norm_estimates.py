@@ -20,7 +20,13 @@ class SolverMinimumNorm(BaseSolver):
         else:
             eigenvals = np.linalg.eig(leadfield @leadfield.T)[0]
             alpha = np.max(eigenvals) / 2e4
-            alphas = [alpha*r for r in range(12)]
+            # alphas = [alpha*r for r in range(12)]
+            alphas = [alpha*r for r in np.logspace(-10, 10, 100)]
+            
+            # alphas = list(np.linspace(0, 1e3, 100))
+            # alphas = list(np.logspace(-10, 10, 100))
+            
+            
         inverse_operators = []
         for alpha in alphas:
             inverse_operator = leadfield.T @ np.linalg.inv(leadfield @ leadfield.T + alpha * noise_cov)
