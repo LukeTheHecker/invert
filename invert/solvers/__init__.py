@@ -4,3 +4,4 @@ from .minimum_norm_estimates import *
 from .loreta import *
 from .lucas import *
 from .esinet import *
+from .smap import *

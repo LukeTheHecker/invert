@@ -7,10 +7,60 @@ import mne
 from scipy.fftpack import dct
 from scipy.linalg import toeplitz
 import matplotlib.pyplot as plt
-import sys; sys.path.insert(0, '../../esinet')
-from esinet.util import unpack_fwd
+from ..util import pos_from_forward
+from ..invert import BaseSolver, InverseOperator
 
+class SolverMultipleSparsePriors(BaseSolver):
+    ''' Class for the Multiple Sparse Priors (MSP) inverse solution.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+    def __init__(self, name="Multiple Sparse Priors"):
+        self.name = name
+        return super().__init__()
 
+    def make_inverse_operator(self, forward, evoked,Np=64, 
+                              max_iter=128, inversion_type='MSP', 
+                              smoothness=0.6, alpha='auto', 
+                              verbose=0):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        self.forward = forward
+        leadfield = self.forward['sol']['data']
+        pos = pos_from_forward(forward, verbose=verbose)
+        adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
+
+        A = get_spatial_projector(leadfield)
+        S, V = get_temporal_projector(evoked, leadfield, A)
+        Y = evoked.data
+
+        Y_ = A @ Y @ S
+        leadfield_ = A @ leadfield
+        maximum_a_posteriori = make_msp_map(Y_, leadfield_, pos, adjacency, A, Np=Np, max_iter=max_iter, 
+            inversion_type=inversion_type, smoothness=smoothness)
+        inverse_operators = [maximum_a_posteriori, A, S]
+        
+        
+        
+        self.inverse_operators = [InverseOperator(inverse_operators, self.name),]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
 
 def make_msp_inverse_operator(leadfield, pos, adjacency, evoked,Np=64, 
                               max_iter=128, inversion_type='MSP', 
