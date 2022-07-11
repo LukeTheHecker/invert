@@ -21,10 +21,11 @@ class SolverMinimumNorm(BaseSolver):
             eigenvals = np.linalg.eig(leadfield @leadfield.T)[0]
             alpha = np.max(eigenvals) / 2e4
             # alphas = [alpha*r for r in range(12)]
-            alphas = [alpha*r for r in np.logspace(-10, 10, 100)]
+            alphas = [alpha*r for r in np.logspace(-2, 2, 100)]
             
             # alphas = list(np.linspace(0, 1e3, 100))
-            # alphas = list(np.logspace(-10, 10, 100))
+            # alphas = [0,]
+            # alphas.extend(list(np.logspace(-100, 100, 1000)))
             
             
         inverse_operators = []
@@ -40,7 +41,7 @@ class SolverMinimumNorm(BaseSolver):
 
 def make_mne_inverse_operator(leadfield, alpha=0.001, noise_cov=None):
     """ Calculate the inverse operator using Minimum Norm Estimates.
-
+s
     Parameters
     ----------
     leadfield : numpy.ndarray

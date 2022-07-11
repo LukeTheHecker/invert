@@ -58,11 +58,13 @@ class BaseSolver:
         self.forward = forward
         pass
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked):# -> mne.SourceEstimate:
         ''' Apply the inverse operator '''
-        # assert type(self.inverse_operator) == type(InverseOperator), f"inverse operator object is not correctly set (is of type {type(self.inverse_operator)}, must be {InverseOperator})"
         M = evoked.data
         leadfield = self.forward['sol']['data']
+        # r_vals = np.arange(12)
+        r_vals = np.logspace(-2, 2, 100)
+
         if len(self.inverse_operator.data) == 1:
             inverse_operator = self.inverse_operator.data[0]
             source_mat = inverse_operator.data @ M 
@@ -73,20 +75,19 @@ class BaseSolver:
             l2_residual = []
             inverse_operators = self.inverse_operator.data
             for inverse_operator in inverse_operators:
-                source_mats.append( inverse_operator.data @ M  )
-                l2_norms.append( np.linalg.norm(source_mats[-1]) )
-                l2_norms_eeg.append( np.linalg.norm(leadfield@source_mats[-1]) )
-                l2_residual.append( np.linalg.norm(leadfield@source_mats[-1]-M) )
+                source_mat = inverse_operator.data @ M
 
-            corner_idx = self.find_corner(l2_norms)
+                source_mats.append(  source_mat )
+                l2_norms.append( np.linalg.norm( source_mat ) )
+                l2_norms_eeg.append( np.linalg.norm( leadfield@ source_mat ) )
+                l2_residual.append( np.linalg.norm( leadfield@source_mat - M ) )
+
+            corner_idx = self.find_corner(r_vals, l2_norms)
+            print(f"idx = {corner_idx}, r={r_vals[corner_idx]}")
             source_mat = source_mats[corner_idx]
 
             plt.figure()
-            plt.subplot(311)
-            r_vals = np.logspace(-10, 10, 100)
-            # r_vals = np.arange(12)
-            print("R = ", r_vals[corner_idx])
-            
+            plt.subplot(311)            
             plt.plot(r_vals, l2_norms, 'r*')
             plt.vlines(r_vals[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
             plt.xlabel("R values")
@@ -106,21 +107,46 @@ class BaseSolver:
             plt.xlabel("Norms of the source")
 
             plt.figure()
-            plt.loglog(l2_residual, l2_norms_eeg, 'r*')
+            plt.loglog(l2_residual, l2_norms, 'r*')
             plt.vlines(l2_residual[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
-            plt.ylabel("l2_norms_eeg")
             plt.xlabel("l2_residual")
-
+            plt.ylabel("l2_norms")
+            
             
         
         stc = self.source_to_object(source_mat, evoked)
         return stc
 
-    @staticmethod
-    def find_corner(l2_norms):
-        diffs = np.diff(l2_norms)
-        return np.clip(np.argmax(abs(diffs))+10, a_min=0, a_max=None)
 
+    def find_corner(self, r_vals, l2_norms):
+        # Normalize l2 norms
+        l2_norms /= np.max(l2_norms)
+
+        A = np.array([r_vals[0], l2_norms[0]])
+        C = np.array([r_vals[-1], l2_norms[-1]])
+        areas = []
+        for j in range(1, len(l2_norms)-1):
+            B = np.array([r_vals[j], l2_norms[j]])
+            AB = self.euclidean_distance(A, B)
+            AC = self.euclidean_distance(A, C)
+            CB = self.euclidean_distance(C, B)
+            area = self.calc_area_tri(AB, AC, CB)
+            areas.append(area)
+
+        return np.argmax(areas)+1
+
+    @staticmethod
+    def euclidean_distance(A, B):
+        ''' Euclidean Distance between two points.'''
+        return np.sqrt(np.sum((A-B)**2))
+
+    @staticmethod
+    def calc_area_tri(AB, AC, CB):
+        ''' Calculates area of a triangle given the length of each side.'''
+        s = (AB + AC + CB) / 2
+        area = (s*(s-AB)*(s-AC)*(s-CB)) ** 0.5
+        return area
+        
     def source_to_object(self, source_mat, evoked):
         ''' Converts the source_mat matrix to an mne.SourceEstimate object '''
         # Convert source to mne.SourceEstimate object
