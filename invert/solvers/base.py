@@ -1,7 +1,5 @@
 import numpy as np
 import mne
-# from .util import pos_from_forward
-# import esinet
 import matplotlib.pyplot as plt
 
 class InverseOperator:
@@ -26,8 +24,10 @@ class InverseOperator:
             self.data = [self.data,]
         self.type = type(self.data[0])
     
-    def apply(self, M):
+    def apply(self, evoked):
         if self.solver_name == "Multiple Sparse Priors" or "bayesian" in self.solver_name.lower():
+            M = evoked.data
+            
             maximum_a_posteriori, A, S = self.data
             # transform data M with spatial (A) and temporal (S) projector
             M_ = A @ M @ S
@@ -35,11 +35,16 @@ class InverseOperator:
             J_ = maximum_a_posteriori @ M_
             # Project tansformed sources J_ back to original time frame using temporal projector S
             return J_ @ S.T 
+        elif self.solver_name == "Fully-Connected" or self.solver_name == "Long-Short Term Memory Network" or self.solver_name == "ConvDip":
+            net = self.data[0]
+            stc = net.predict(evoked)[0]
+            J = stc.data
         else:
+            M = evoked.data
             J = self.data @ M
             if len(J.shape) > 2:
                 J = np.squeeze(J)
-            return J
+        return J
         
         
 
@@ -65,7 +70,7 @@ class BaseSolver:
         # inverse_operators = self.inverse_operator.data
         for inverse_operator in self.inverse_operators:
             # source_mat = inverse_operator.data @ M
-            source_mat = inverse_operator.apply( M )
+            source_mat = inverse_operator.apply( evoked )
             source_mats.append(  source_mat )
             l2_norms.append( np.linalg.norm( source_mat ) )
             l2_norms_eeg.append( np.linalg.norm( leadfield@ source_mat ) )
@@ -73,25 +78,25 @@ class BaseSolver:
         if len(self.inverse_operators)>1:
             # Filter non-monotonic decreasing values
             bad_idc = self.filter_norms(self.r_values, l2_norms)
-            self.r_values = np.delete(self.r_values, bad_idc)
+            r_values = np.delete(self.r_values, bad_idc)
             l2_norms = np.delete(l2_norms, bad_idc)
             l2_norms_eeg = np.delete(l2_norms_eeg, bad_idc)
             l2_residual = np.delete(l2_residual, bad_idc)
 
             corner_idx = self.find_corner(l2_norms)
-            # print(f"idx = {corner_idx}, r={self.r_values[corner_idx]}")
             source_mat = source_mats[corner_idx]
+            # print(f"idx = {corner_idx}, r={r_values[corner_idx]}")
 
             # plt.figure()
             # plt.subplot(311)            
-            # plt.plot(self.r_values, l2_norms, 'r*')
-            # plt.vlines(self.r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            # plt.plot(r_values, l2_norms, 'r*')
+            # plt.vlines(r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
             # plt.xlabel("R values")
             # plt.ylabel("Norms of the source")
 
             # plt.subplot(312)
-            # plt.plot(self.r_values[:-1], np.diff(l2_norms), 'r*')
-            # plt.vlines(self.r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
+            # plt.plot(r_values[:-1], np.diff(l2_norms), 'r*')
+            # plt.vlines(r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
             # plt.xlabel("R values")
             # plt.ylabel("delta Norms of the source")
 
@@ -147,8 +152,10 @@ class BaseSolver:
             CB = self.euclidean_distance(C, B)
             area = self.calc_area_tri(AB, AC, CB)
             areas.append(area)
-
-        idx = np.argmax(areas)+1
+        if len(areas) > 0:
+            idx = np.argmax(areas)+1
+        else:
+            idx = 0
         return idx
 
     @staticmethod
@@ -161,7 +168,7 @@ class BaseSolver:
             r_vals = np.delete(r_vals, pop_idx)
             l2_norms = np.delete(l2_norms, pop_idx)
             diffs = np.diff(l2_norms)
-            print(f"filtered out idx {pop_idx}")
+            # print(f"filtered out idx {pop_idx}")
             bad_idc.append(all_idc[pop_idx])
             all_idc = np.delete(all_idc, pop_idx)
         return bad_idc

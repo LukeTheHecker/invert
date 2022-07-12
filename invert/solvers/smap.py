@@ -17,6 +17,13 @@ class SolverSMAP(BaseSolver):
     ----------
     forward : mne.Forward
         The mne-python Forward model instance.
+
+    References
+    ----------
+    Baillet, S., & Garnero, L. (1997). A Bayesian approach to introducing
+    anatomo-functional priors in the EEG/MEG inverse problem. IEEE transactions
+    on Biomedical Engineering, 44(5), 374-385.
+    
     '''
     def __init__(self, name="S-MAP"):
         self.name = name
@@ -38,40 +45,22 @@ class SolverSMAP(BaseSolver):
         '''
         self.forward = forward
         leadfield = self.forward['sol']['data']
-        pos = pos_from_forward(self.forward)
-        n_chans, _ = leadfield.shape
-        B = np.diag(np.linalg.norm(leadfield, axis=0))
-        # gradient = np.gradient(B)[0] #np.gradient(B)[0]
-        gradient = (np.gradient(B)[0] + np.gradient(B)[1]) / 2
-
-        # adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
-        # gradient = np.gradient(adjacency)
-        # gradient = np.stack([abs(gradient[0]), abs(gradient[1])], axis=0).mean(axis=0)
-
-        # gradient = np.gradient(leadfield.T @ leadfield)
-        # gradient = 1/np.stack([*gradient], axis=0).mean(axis=0)
-        # gradient *= adjacency
-
-        # adjacency = mne.spatial_src_adjacency(forward['src'], verbose=0).toarray()
-        # gradient = np.gradient(adjacency)
-        # gradient = np.stack([abs(gradient[0]), abs(gradient[1])], axis=0).mean(axis=0)
-        # gradient = gaussian_gradient_magnitude(leadfield.T @ leadfield, sigma=1)
-
-        # dist = cdist(pos, pos)      
-        # gradient = (abs(np.gradient(dist)[0]) + abs(np.gradient(dist)[1])) / 2
-        # gradient *= adjacency
-        
+        n_chans, n_dipoles = leadfield.shape
+        gradient = self.calculate_gradient(verbose=verbose)
+       
         if isinstance(alpha, (int, float)):
             alphas = [alpha,]
         else:
-            # eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            # alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
+            eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
+            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
             # alphas = self.r_values
-            alphas = np.insert(np.logspace(-3, 1, 12), 0, 0)
+            # alphas = np.insert(np.logspace(-3, 1, 12), 0, 0)
         
         inverse_operators = []
+        GG_inv = np.linalg.inv(gradient.T @ gradient)
         for alpha in alphas:
             inverse_operator = np.linalg.inv(leadfield.T @ leadfield + alpha * gradient.T @ gradient) @ leadfield.T
+            # inverse_operator = GG_inv @ leadfield.T @ np.linalg.inv(leadfield @ GG_inv @ leadfield.T + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -79,3 +68,14 @@ class SolverSMAP(BaseSolver):
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
+    
+    def calculate_gradient(self, verbose=0):
+        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=verbose).toarray()
+
+        gradient = adjacency
+        n_dipoles = gradient.shape[0]
+        for i in range(n_dipoles):
+            row = gradient[i,:]
+            gradient[i,i] = np.sum(row)-1
+            gradient[i, row==1] = -1
+        return gradient

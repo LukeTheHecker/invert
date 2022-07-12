@@ -223,7 +223,7 @@ def get_temporal_projector(evoked, leadfield, A, Nmax=16, hpf=0, lpf=45, sdv=4):
     V      = U[:,:Nr]  # temporal modes
     VE     = np.sum(E[:Nr])  # variance explained
 
-    print(f'Using {Nr} temporal mode(s)',)
+    # print(f'Using {Nr} temporal mode(s)',)
     # print(f'accounting for {100*VE:.1f} % average variance\n')
 
     # projection and whitening
@@ -513,7 +513,7 @@ def spm_sp_reml_demo(YY, Q_c, max_iter):
 
         dF = dFdh.T @ dh
 
-        print(f'Iteration {ii+1}. Free Energy Improvement: {dF:.2f}')        
+        # print(f'Iteration {ii+1}. Free Energy Improvement: {dF:.2f}')        
         if (delta_F < 0.01) or (ii == max_iter):
             break
         else:
@@ -719,7 +719,7 @@ def spm_reml_sc_demo(YY,Q,N,hE,hC,Qe):
             t += 1/8;
         dF    = pF
         
-        print(f"ReML Iteration {k}: {dF}") 
+        # print(f"ReML Iteration {k}: {dF}") 
         # print(f'%s %-23d: %10s%e [%+3.2f]\n','  ReML Iteration',k,'...',full(dF),t);
         if dF < 1e-2:
             break
@@ -736,16 +736,17 @@ def spm_reml_sc_demo(YY,Q,N,hE,hC,Qe):
     Ph    = -dFdhh
     
     # tr(hP*inv(Ph)) - nh + tr(pP*inv(Pp)) - np (pP = 0)
-    Ft = np.trace(hP/Ph) - len(Ph)
-
+    # Ft = np.trace(hP/Ph) - len(Ph)
+    Ft = 0
     # complexity - KL(Ph,hP)
-    Fc = Ft/2 + np.e*hP*np.e/2 + np.log(np.linalg.det( Ph/hP )) / 2
-
+    # Fc = Ft/2 + np.e*hP*np.e/2 + np.log(np.linalg.det( Ph/hP )) / 2
+    Fc = 0
     # Accuracy - ln p(Y|h)
-    Fa = Ft/2 - np.trace(C*P*YY*P)/2 - N*n*np.log(2*np.pi)/2  - N * np.log(np.linalg.det(C))/2
-
+    # Fa = Ft/2 - np.trace(C*P*YY*P)/2 - N*n*np.log(2*np.pi)/2  - N * np.log(np.linalg.det(C))/2
+    Fa = 0
     # Free-energy
-    F  = Fa - Fc - N*n*np.log(sY)/2;
+    # F  = Fa - Fc - N*n*np.log(sY)/2;
+    F = 0
     # print('Free-energy: ', F)
     
     

@@ -1,4 +1,46 @@
 from esinet import Simulation, Net
+from .base import BaseSolver, InverseOperator
+import mne
+
+class SolverFullyConnected(BaseSolver):
+    ''' Class for the Fully-Connected (FC) neural network's inverse solution.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+    def __init__(self, name="Fully-Connected"):
+        self.name = name
+        return super().__init__()
+
+    def make_inverse_operator(self, forward, info, alpha='auto', 
+        n_simulations=5000, activation_function="tanh", verbose=0):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        self.forward = forward
+        settings = dict(duration_of_trial=0.)
+        sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)
+
+        model_args = dict(model_type="FC", activation_function=activation_function, )
+        inverse_operator = InverseOperator(Net(forward, **model_args, verbose=verbose).fit(sim), self.name)
+        self.inverse_operators = [inverse_operator,]
+        
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
 
 def make_fullyconnected_inverse_operator(fwd, info, verbose=0):
     """ Calculate the inverse operator using the Fully-Connected artificial neural network model.

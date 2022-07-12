@@ -117,7 +117,8 @@ class SolverLAURA(BaseSolver):
             non_neighbors = np.append(non_neighbors, i)
             # set non-neighbors to zero
             d[i, non_neighbors] = 0
-        A = -d**-drop_off
+        A = -d
+        A[A!=0] **= -drop_off
         A[np.isinf(A)] = 0
         W = np.identity(A.shape[0])
         M_j = W @ A

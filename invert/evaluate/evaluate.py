@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import pearsonr
+
 def nmse(y_true, y_pred):
     error = np.zeros(y_true.shape[1])
     for i, (y_true_slice, y_pred_slice) in enumerate(zip(y_true.T, y_pred.T)):
