@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 import mne
-from ..invert import BaseSolver, InverseOperator
+# from ..invert import BaseSolver, InverseOperator
+from .base import BaseSolver, InverseOperator
 from ..util import pos_from_forward
 
 class SolverBackusGilbert(BaseSolver):

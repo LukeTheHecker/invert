@@ -3,7 +3,10 @@ import numpy as np
 from copy import deepcopy
 import mne
 from scipy.sparse.csgraph import laplacian
-from ..invert import BaseSolver, InverseOperator
+# from ..invert import BaseSolver, InverseOperator
+# from .. import invert
+from .base import BaseSolver, InverseOperator
+
 
 class SolverLORETA(BaseSolver):
     ''' Class for the Low Resolution Tomography (LORETA) inverse solution.

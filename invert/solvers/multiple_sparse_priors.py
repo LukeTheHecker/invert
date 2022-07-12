@@ -8,7 +8,12 @@ from scipy.fftpack import dct
 from scipy.linalg import toeplitz
 import matplotlib.pyplot as plt
 from ..util import pos_from_forward
-from ..invert import BaseSolver, InverseOperator
+# from ..invert import BaseSolver, InverseOperator
+# from .. import invert
+from .base import BaseSolver, InverseOperator
+
+# from .. import invert
+# import BaseSolver, InverseOperator
 
 class SolverMultipleSparsePriors(BaseSolver):
     ''' Class for the Multiple Sparse Priors (MSP) inverse solution.
@@ -18,13 +23,22 @@ class SolverMultipleSparsePriors(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Multiple Sparse Priors"):
-        self.name = name
+    def __init__(self, name="Multiple Sparse Priors", inversion_type="MSP"):
+        if inversion_type == "MSP":
+            self.name = name
+        elif inversion_type == "LORETA":
+            self.name = "Bayesian LORETA"
+        elif inversion_type == "MNE":
+            self.name = "Bayesian Minimum Norm Estimates"
+        elif inversion_type == "BMF":
+            self.name = "Bayesian Beamformer"
+        elif inversion_type == "BMF-LOR":
+            self.name = "Bayesian Beamformer + LORETA"
+        self.inversion_type = inversion_type
         return super().__init__()
 
     def make_inverse_operator(self, forward, evoked,Np=64, 
-                              max_iter=128, inversion_type='MSP', 
-                              smoothness=0.6, alpha='auto', 
+                              max_iter=128, smoothness=0.6, alpha='auto', 
                               verbose=0):
         ''' Calculate inverse operator.
 
@@ -51,7 +65,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         Y_ = A @ Y @ S
         leadfield_ = A @ leadfield
         maximum_a_posteriori = make_msp_map(Y_, leadfield_, pos, adjacency, A, Np=Np, max_iter=max_iter, 
-            inversion_type=inversion_type, smoothness=smoothness)
+            inversion_type=self.inversion_type, smoothness=smoothness)
         inverse_operators = [maximum_a_posteriori, A, S]
         
         
@@ -732,13 +746,13 @@ def spm_reml_sc_demo(YY,Q,N,hE,hC,Qe):
 
     # Free-energy
     F  = Fa - Fc - N*n*np.log(sY)/2;
-    print('Free-energy: ', F)
+    # print('Free-energy: ', F)
     
     
 
     # return exp(h) hyperpriors and rescale
     # h  = np.log(sY*np.exp(h) / sh)
-    print("final h: ", h)
+    # print("final h: ", h)
     C  = sY*C;
     return C,h,Ph,F,Fa,Fc
     

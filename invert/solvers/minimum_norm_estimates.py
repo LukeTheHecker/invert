@@ -1,7 +1,6 @@
 import numpy as np
 import mne
-from ..invert import BaseSolver, InverseOperator
-# from ..util import 
+from .base import BaseSolver, InverseOperator
 
 class SolverMinimumNorm(BaseSolver):
     ''' Class for the Minimum Norm Estimate (MNE) inverse solution.
