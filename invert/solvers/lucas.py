@@ -68,7 +68,7 @@ class SolverLUCAS(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         all_stcs = []
         for solver in self.solvers:
-            print(solver.name)
+            # print(solver.name)
             stc = solver.apply_inverse_operator(evoked)
             all_stcs.append( stc )
         
@@ -76,7 +76,7 @@ class SolverLUCAS(BaseSolver):
         stc_lucas.data = np.average(np.stack([stc.data for stc in all_stcs], axis=0), axis=0, weights=self.weights)
         return stc_lucas
     
-    def optimize_weights(self, forward, info, n_samples=256):
+    def optimize_weights(self, forward, info, n_samples=1024):
         if self.solvers is None:
             msg = f'No solvers found. Please call --make_inverse_operator(forward)-- first!'
             raise Error(msg)
@@ -86,17 +86,21 @@ class SolverLUCAS(BaseSolver):
         sim = Simulation(forward, info, settings=settings).simulate(n_samples=n_samples)
         coefficients = []
         for i in range(n_samples):
-            print("sample ", i)
+            # print("sample ", i)
             evoked = sim.eeg_data[i].average()
             stc = sim.source_data[i]
             J_true = stc.data[:, 0]
             J = np.stack([solver.apply_inverse_operator(evoked).data[:, 0] for solver in self.solvers], axis=1)
+            # Normalize sources
+            # J_true /= np.max(np.abs(J_true))
+            # J = np.stack([jj / np.max(np.abs(jj)) for jj in J.T], axis=1)
+
             coefficients.append( LinearRegression().fit(J, J_true).coef_ )
         
         weights = np.array(coefficients).mean(axis=0)
         weights = np.clip(weights, a_min=0, a_max=None)
 
-        weights /= weights.sum()
+        weights /= weights.mean()
 
         self.weights = weights
     
