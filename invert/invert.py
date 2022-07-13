@@ -46,9 +46,10 @@ def Solver(solver="mne"):
     elif solver.lower() == "bayesian beamformer loreta" or solver.lower() == "bbmf-lor" or solver.lower() == "bmf-lor":
         inversion_type = "BMF-LOR"
         solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type)
-
-    # elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
-    #     solver_object = make_fullyconnected_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
+    elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
+        solver_object = solvers.SolverFullyConnected()
+    elif solver.lower() == "lucas":
+        solver_object = solvers.SolverLUCAS()
     # elif solver.lower() == "lstm":
     #     solver_object = make_lstm_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
     else:

@@ -17,7 +17,7 @@ class SolverBackusGilbert(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -85,7 +85,7 @@ class SolverLAURA(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, noise_cov=None, alpha='auto', drop_off=2, verbose=0):
+    def make_inverse_operator(self, forward, *args, noise_cov=None, alpha='auto', drop_off=2, verbose=0):
         ''' Calculate inverse operator.
 
         Parameters

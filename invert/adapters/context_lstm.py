@@ -8,7 +8,7 @@ from keras.layers import LSTM
 
 def contextualize(stc_instant, forward, lstm_look_back=80, 
                 num_units=128, num_epochs=100, steps_per_ep=25, 
-                batch_size=32, optimizer="adam", loss="mean_squared_error",
+                batch_size=32, fast=True, optimizer="adam", loss="mean_squared_error",
                 verbose=0):
     """
     Temporal contextualization of inverse solutions using Long-Short Term Memory
@@ -59,7 +59,12 @@ def contextualize(stc_instant, forward, lstm_look_back=80,
     # time axis must be second-to-last
     x_train = np.swapaxes(x_train, 1,2)
 
-    callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
+    if fast:
+        num_epochs = 50
+        num_units = 64
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True, monitor="val_cosine_similarity", min_delta=0.01),]
+    else:
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
 
     model = Sequential()
     model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
@@ -84,7 +89,7 @@ def contextualize(stc_instant, forward, lstm_look_back=80,
     for i in range(steps):
         # print(f"Time Step {i}/{steps}")
         stc_prior = np.expand_dims(stc_cmne[:, i:i+lstm_look_back], axis=0)
-        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=verbose)
+        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=0)
         stc_pred = abs(stc_pred) / abs(stc_pred).max()
         stc_lstm[:, i+lstm_look_back] = stc_pred
         stc_cmne[:, i+lstm_look_back] = stc_instant_scaled[:, i+lstm_look_back] * stc_pred
@@ -97,8 +102,8 @@ def contextualize(stc_instant, forward, lstm_look_back=80,
 
 def contextualize_bd(stc_instant, forward, lstm_look_back=80, 
                 num_units=128, num_epochs=100, steps_per_ep=25, 
-                batch_size=32, optimizer="adam", loss="mean_squared_error",
-                verbose=0):
+                batch_size=32, fast=True, optimizer="adam", 
+                loss="mean_squared_error", verbose=0):
     """
     Bi-directional temporal contextualization of inverse solutions using
     Long-Short Term Memory (LSTM) Networks as described in [1] using both past
@@ -154,7 +159,12 @@ def contextualize_bd(stc_instant, forward, lstm_look_back=80,
     # time axis must be second-to-last
     x_train = np.swapaxes(x_train, 1,2)
 
-    callbacks = [tf.keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True),]
+    if fast:
+        num_epochs = 50
+        num_units = 64
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True, monitor="val_cosine_similarity", min_delta=0.01),]
+    else:
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=15, restore_best_weights=True),]
 
     model = Sequential(name="Contextual_LSTM")
     model.add(LSTM(num_units, activation='tanh', return_sequences=False, input_shape=(lstm_look_back, n_dipoles)))
@@ -183,7 +193,7 @@ def contextualize_bd(stc_instant, forward, lstm_look_back=80,
         # if verbose>0:
         #     print(f"Time Step {i}/{steps}")
         stc_prior = np.expand_dims(stc_cmne_forward[:, i:i+lstm_look_back], axis=0)
-        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=verbose)
+        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=0)
         stc_pred = abs(stc_pred) / abs(stc_pred).max()
         stc_lstm_forward[:, i+lstm_look_back] = stc_pred
         stc_cmne_forward[:, i+lstm_look_back] = stc_instant_forward[:, i+lstm_look_back] * stc_pred
@@ -197,18 +207,17 @@ def contextualize_bd(stc_instant, forward, lstm_look_back=80,
 
     steps = stc_instant_backwards.shape[1] - lstm_look_back
     if verbose>0:
-        print("Forward Steps:")
+        print("Backwards Steps:")
     for i in range(steps):
         # if verbose>0:
         #     print(f"Time Step {i}/{steps}")
         stc_prior = np.expand_dims(stc_cmne_backwards[:, i:i+lstm_look_back], axis=0)
-        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=verbose)
+        stc_pred = model.predict(np.swapaxes(stc_prior, 1,2), verbose=0)
         stc_pred = abs(stc_pred) / abs(stc_pred).max()
         stc_lstm_backwards[:, i+lstm_look_back] = stc_pred
         stc_cmne_backwards[:, i+lstm_look_back] = stc_instant_backwards[:, i+lstm_look_back] * stc_pred
 
-    stc_cmne_backwards_reverse = stc_cmne_backwards[:, ::-1]   
-
+    
     stc_lstm_combined = deepcopy(stc_lstm_forward)
     stc_lstm_backwards_rev = stc_lstm_backwards[:, ::-1]
     stc_lstm_combined[:, :lstm_look_back] = stc_lstm_backwards_rev[:, :lstm_look_back]
@@ -221,6 +230,10 @@ def contextualize_bd(stc_instant, forward, lstm_look_back=80,
     stc_context_data *= stc_lstm_combined
     stc_context = stc_instant.copy()
     stc_context.data = stc_context_data
+
+    # if verbose>0:
+    #     avg_attenuation = 100*(1 -stc_lstm_combined.mean())
+    #     print(f"Temporal context attenuated {avg_attenuation:.1f} % of the source signal.")
 
     return stc_context
 

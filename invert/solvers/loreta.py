@@ -20,7 +20,7 @@ class SolverLORETA(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -70,7 +70,7 @@ class SolverSLORETA(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -128,7 +128,7 @@ class SolverELORETA(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0, stop_crit=0.005):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, stop_crit=0.005):
         ''' Calculate inverse operator.
 
         Parameters

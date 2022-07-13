@@ -14,8 +14,9 @@ class SolverFullyConnected(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, info, alpha='auto', 
-        n_simulations=5000, activation_function="tanh", verbose=0):
+    def make_inverse_operator(self, forward, evoked, alpha='auto', 
+                            n_simulations=5000, activation_function="tanh", 
+                            verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -29,6 +30,7 @@ class SolverFullyConnected(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        info = evoked.info
         self.forward = forward
         settings = dict(duration_of_trial=0.)
         sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)

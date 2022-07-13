@@ -14,7 +14,7 @@ class SolverMinimumNorm(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -62,7 +62,7 @@ class SolverWeightedMinimumNorm(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
 
         Parameters
@@ -79,7 +79,6 @@ class SolverWeightedMinimumNorm(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         W = np.diag(np.linalg.norm(leadfield, axis=0))
-
         n_chans, _ = leadfield.shape
 
         if isinstance(alpha, (int, float)):
@@ -112,7 +111,7 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
         self.name = name
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha=0.01, noise_cov=None, source_cov=None,
+    def make_inverse_operator(self, forward, *args, alpha=0.01, noise_cov=None, source_cov=None,
                             verbose=0):
         ''' Calculate inverse operator.
 

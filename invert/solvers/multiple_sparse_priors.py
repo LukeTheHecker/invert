@@ -37,7 +37,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         self.inversion_type = inversion_type
         return super().__init__()
 
-    def make_inverse_operator(self, forward, evoked,Np=64, 
+    def make_inverse_operator(self, forward, evoked, Np=64, 
                               max_iter=128, smoothness=0.6, alpha='auto', 
                               verbose=0):
         ''' Calculate inverse operator.

@@ -1,24 +1,27 @@
 # Let Us Combine All Source estimates (LUCAS)
-from aifc import Error
 import numpy as np
 import mne
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from esinet import Simulation
-from .base import BaseSolver, InverseOperator
-# from ..invert import config
+from .base import BaseSolver
+# from ..adapters import contextualize_bd, focuss
+
+# from ..config import all_solvers
+
+
 # import ..config
 # import sys; sys.path.insert(0, '../')
 
 
-all_solvers = [ "MNE", "wMNE", "dSPM", 
-                "LORETA", "sLORETA", "eLORETA", 
-                "LAURA", "Backus-Gilbert", 
-                "S-MAP",
-                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA"]
-                # "Fully-Connected", "LSTM"]
+# all_solvers = [ "MNE", "wMNE", "dSPM", 
+#                 "LORETA", "sLORETA", "eLORETA", 
+#                 "LAURA", "Backus-Gilbert", 
+#                 "S-MAP",
+#                 "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
+#                 "Fully-Connected", 
+#                 "LUCAS"
+#             ]
 
 class SolverLUCAS(BaseSolver):
     ''' Class for the combined LUCAS inverse solution.
@@ -33,7 +36,7 @@ class SolverLUCAS(BaseSolver):
         self.solvers = None
         return super().__init__()
 
-    def make_inverse_operator(self, forward, alpha='auto', 
+    def make_inverse_operator(self, forward, evoked, alpha='auto', 
                                 verbose=0):
         ''' Calculate inverse operator.
 
@@ -41,6 +44,8 @@ class SolverLUCAS(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        evoked : mne.EvokedArray
+            Evoked EEG data object.
         alpha : float
             The regularization parameter.
         
@@ -53,9 +58,18 @@ class SolverLUCAS(BaseSolver):
         leadfield = self.forward['sol']['data']
         n_chans, _ = leadfield.shape
         solvers = []
-        for solver_name in all_solvers[:9]:
+        all_solvers = [ "MNE", "wMNE", "dSPM", 
+                "LORETA", "sLORETA", "eLORETA", 
+                "LAURA", "Backus-Gilbert", 
+                "S-MAP",
+                "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
+                "Fully-Connected", 
+                "LUCAS"
+            ]
+        self.all_solvers = self.filter_solvers(all_solvers)
+        for solver_name in self.all_solvers:
             print(f"Preparing {solver_name}")
-            solver = Solver(solver=solver_name).make_inverse_operator(forward, alpha=alpha, verbose=verbose)
+            solver = Solver(solver=solver_name).make_inverse_operator(forward, evoked, alpha=alpha, verbose=verbose)
             solvers.append(solver)
 
         
@@ -68,7 +82,7 @@ class SolverLUCAS(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         all_stcs = []
         for solver in self.solvers:
-            # print(solver.name)
+            print("Applying ", solver.name)
             stc = solver.apply_inverse_operator(evoked)
             all_stcs.append( stc )
         
@@ -112,3 +126,11 @@ class SolverLUCAS(BaseSolver):
         plt.bar(range(len(weight_dict)), list(weight_dict.values()), align='center')
         plt.xticks(range(len(weight_dict)), list(weight_dict.keys()))
         plt.title("Weights of the LUCAS procedure")
+    
+    @staticmethod
+    def filter_solvers(all_solvers):
+        keepers = []
+        for s in all_solvers:
+            if not (s == "LUCAS" or "bayes" in s.lower() or s.lower() == "multiple sparse priors" or "backus" in s.lower()):
+                keepers.append(s)
+        return keepers
