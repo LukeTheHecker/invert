@@ -1,4 +1,4 @@
-from .multiple_sparse_priors import *
+from .empirical_bayes import *
 from .wrop import *
 from .minimum_norm_estimates import *
 from .loreta import *

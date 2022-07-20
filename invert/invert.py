@@ -50,6 +50,8 @@ def Solver(solver="mne"):
         solver_object = solvers.SolverFullyConnected()
     elif solver.lower() == "lucas":
         solver_object = solvers.SolverLUCAS()
+    elif solver.lower() == "champagne" or solver.lower() == "champ":
+        solver_object = solvers.SolverChampagne()
     # elif solver.lower() == "lstm":
     #     solver_object = make_lstm_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
     else:
