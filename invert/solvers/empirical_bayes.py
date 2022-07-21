@@ -15,6 +15,125 @@ from .base import BaseSolver, InverseOperator
 # from .. import invert
 # import BaseSolver, InverseOperator
 
+class SolverChampagne(BaseSolver):
+    ''' Class for the Champagne inverse solution. Code is based on the
+    implementation from the BSI-Zoo: https://github.com/braindatalab/BSI-Zoo/
+    
+    References
+    ----------
+    [1] Owen, J., Attias, H., Sekihara, K., Nagarajan, S., & Wipf, D. (2008).
+    Estimating the location and orientation of complex, correlated neural
+    activity using MEG. Advances in Neural Information Processing Systems, 21.
+    
+    [2] Wipf, D. P., Owen, J. P., Attias, H. T., Sekihara, K., & Nagarajan, S.
+    S. (2010). Robust Bayesian estimation of the location, orientation, and time
+    course of multiple correlated neural sources using MEG. NeuroImage, 49(1),
+    641-655. 
+    
+    [3] Owen, J. P., Wipf, D. P., Attias, H. T., Sekihara, K., &
+    Nagarajan, S. S. (2012). Performance evaluation of the Champagne source
+    reconstruction algorithm on simulated and real M/EEG data. Neuroimage,
+    60(1), 305-323.
+    '''
+
+    def __init__(self, name="Champagne"):
+        self.name = name
+        return super().__init__()
+
+    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        self.forward = forward
+        self.leadfield = self.forward['sol']['data']
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+
+        self.noise_cov = noise_cov
+        self.inverse_operators = []
+        return self
+
+    def apply_inverse_operator(self, evoked, max_iter=1000) -> mne.SourceEstimate:
+
+        source_mat = self.champagne(self.leadfield, evoked.data, self.noise_cov, max_iter=max_iter)
+        stc = self.source_to_object(source_mat, evoked)
+        return stc
+    
+    @staticmethod
+    def champagne(L, y, cov, max_iter=1000):
+        """Champagne method based on our MATLAB codes  
+        -> copied as mentioned in class docstring
+
+        Parameters
+        ----------
+        L : array, shape (n_sensors, n_sources)
+            lead field matrix modeling the forward operator or dictionary matrix
+        y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        cov : float | array, shape (n_sensors, n_sensors)
+            noise covariance matrix. If float it corresponds to the noise variance
+            assumed to be diagonal.
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+
+        Returns
+        -------
+        x : array, shape (n_sources,)
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        """
+        n_sensors, n_sources = L.shape
+        _, n_times = y.shape
+        gammas = np.ones(n_sources)
+        eps = np.finfo(float).eps
+        threshold = 0.2 * np.mean(np.diag(cov))
+        x = np.zeros((n_sources, n_times))
+        n_active = n_sources
+        active_set = np.arange(n_sources)
+        # H = np.concatenate(L, np.eyes(n_sensors), axis = 1)
+
+        for _ in range(max_iter):
+            gammas[np.isnan(gammas)] = 0.0
+            gidx = np.abs(gammas) > threshold
+            active_set = active_set[gidx]
+            gammas = gammas[gidx]
+
+            # update only active gammas (once set to zero it stays at zero)
+            if n_active > len(active_set):
+                n_active = active_set.size
+                L = L[:, gidx]
+
+            Gamma = spdiags(gammas, 0, len(active_set), len(active_set))
+            Sigma_y = (L @ Gamma @ L.T) + cov
+            U, S, _ = np.linalg.svd(Sigma_y, full_matrices=False)
+            S = S[np.newaxis, :]
+            del Sigma_y
+            Sigma_y_inv = np.dot(U / (S + eps), U.T)
+            # Sigma_y_inv = linalg.inv(Sigma_y)
+            x_bar = Gamma @ L.T @ Sigma_y_inv @ y
+            gammas = np.sqrt(
+                np.diag(x_bar @ x_bar.T / n_times) / np.diag(L.T @ Sigma_y_inv @ L)
+            )
+            e_bar = y - (L @ x_bar)
+            cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
+            threshold = 0.2 * np.mean(np.diag(cov))
+
+        x[active_set, :] = x_bar
+
+        return x
+
 class SolverMultipleSparsePriors(BaseSolver):
     ''' Class for the Multiple Sparse Priors (MSP) inverse solution.
     

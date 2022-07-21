@@ -164,3 +164,51 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
+    
+
+# class SolverMinimumL1Norm(BaseSolver):
+#     ''' Class for the Minimum Norm Estimate (MNE) inverse solution.
+    
+#     Attributes
+#     ----------
+#     forward : mne.Forward
+#         The mne-python Forward model instance.
+#     '''
+#     def __init__(self, name="Minimum Norm Estimate"):
+#         self.name = name
+#         return super().__init__()
+
+#     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+#         ''' Calculate inverse operator.
+
+#         Parameters
+#         ----------
+#         forward : mne.Forward
+#             The mne-python Forward model instance.
+#         alpha : float
+#             The regularization parameter.
+        
+#         Return
+#         ------
+#         self : object returns itself for convenience
+#         '''
+#         self.forward = forward
+#         leadfield = self.forward['sol']['data']
+#         n_chans, _ = leadfield.shape
+        
+#         if isinstance(alpha, (int, float)):
+#             alphas = [alpha,]
+#         else:
+#             eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
+#             alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
+        
+#         inverse_operators = []
+#         for alpha in alphas:
+#             inverse_operator = leadfield.T @ np.linalg.inv(leadfield @ leadfield.T + alpha * np.identity(n_chans))
+#             inverse_operators.append(inverse_operator)
+
+#         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+#         return self
+
+#     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+#         return super().apply_inverse_operator(evoked)
