@@ -71,7 +71,7 @@ class SolverChampagne(BaseSolver):
         return stc
     
     @staticmethod
-    def champagne(L, y, cov, max_iter=1000):
+    def champagne(L, y, cov, max_iter=1000, alpha=1.0):
         """Champagne method based on our MATLAB codes  
         -> copied as mentioned in class docstring
 
@@ -84,6 +84,8 @@ class SolverChampagne(BaseSolver):
         cov : float | array, shape (n_sensors, n_sensors)
             noise covariance matrix. If float it corresponds to the noise variance
             assumed to be diagonal.
+        alpha : float
+            The regularization parameter
         max_iter : int, optional
             The maximum number of inner loop iterations
 
@@ -103,7 +105,7 @@ class SolverChampagne(BaseSolver):
         n_active = n_sources
         active_set = np.arange(n_sources)
         # H = np.concatenate(L, np.eyes(n_sensors), axis = 1)
-
+        cov = alpha*cov
         for _ in range(max_iter):
             gammas[np.isnan(gammas)] = 0.0
             gidx = np.abs(gammas) > threshold
