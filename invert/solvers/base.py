@@ -197,6 +197,9 @@ class BaseSolver:
         tstep = 1/sfreq
         subject = evoked.info["subject_info"]
 
+        if type(subject) == dict:
+            subject = "bst_raw"
+
         if subject is None:
             subject = "fsaverage"
         

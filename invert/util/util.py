@@ -33,3 +33,27 @@ def pos_from_forward(forward, verbose=0):
     pos = np.concatenate([pos_left, pos_right], axis=0)
 
     return pos
+
+# def pos_from_forward(forward, verbose=0):
+#     ''' Get vertex/dipole positions from mne.Forward model
+
+#     Parameters
+#     ----------
+#     forward : instance of mne.Forward
+#         The forward model. 
+    
+#     Return
+#     ------
+#     pos : numpy.ndarray
+#         A 2D matrix containing the MNI coordinates of the vertices/ dipoles
+
+#     Note
+#     ----
+#     forward must contain some subject id in forward["src"][0]["subject_his_id"]
+#     in order to work.
+#     '''
+#     pos_left = forward["src"][0]["rr"][forward["src"][0]["vertno"], :]
+#     pos_right = forward["src"][1]["rr"][forward["src"][1]["vertno"], :]
+#     pos = np.concatenate((pos_left, pos_right), axis=0)
+
+#     return pos
