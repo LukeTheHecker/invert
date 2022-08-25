@@ -57,7 +57,7 @@ class SolverSMAP(BaseSolver):
             # alphas = np.insert(np.logspace(-3, 1, 12), 0, 0)
         
         inverse_operators = []
-        GG_inv = np.linalg.inv(gradient.T @ gradient)
+        # GG_inv = np.linalg.inv(gradient.T @ gradient)
         for alpha in alphas:
             inverse_operator = np.linalg.inv(leadfield.T @ leadfield + alpha * gradient.T @ gradient) @ leadfield.T
             # inverse_operator = GG_inv @ leadfield.T @ np.linalg.inv(leadfield @ GG_inv @ leadfield.T + alpha * np.identity(n_chans))
