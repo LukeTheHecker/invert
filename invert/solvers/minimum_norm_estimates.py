@@ -168,7 +168,7 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
     
 
 class SolverMinimumL1Norm(BaseSolver):
-    ''' Class for the Minimum Norm Estimate (MNE) inverse solution.
+    ''' Class for the Minimum Current Estimate (MCE) inverse solution using the FISTA solver.
     
     Attributes
     ----------
