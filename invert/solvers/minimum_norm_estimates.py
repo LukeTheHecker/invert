@@ -175,7 +175,7 @@ class SolverMinimumL1Norm(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Minimum Norm Estimate"):
+    def __init__(self, name="Minimum Current Estimate"):
         self.name = name
         return super().__init__()
 
@@ -193,6 +193,8 @@ class SolverMinimumL1Norm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        if self.verbose>0:
+            print(f"No inverse operator is computed for {self.name}")
         self.forward = forward
         self.leadfield = self.forward['sol']['data']
         n_chans = self.leadfield.shape[0]
