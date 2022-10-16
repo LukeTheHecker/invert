@@ -36,10 +36,11 @@ class SolverLORETA(BaseSolver):
         '''
         self.forward = forward
         leadfield = self.forward['sol']['data']
-        
+        LTL = leadfield.T @ leadfield
         B = np.diag(np.linalg.norm(leadfield, axis=0))
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
         laplace_operator = laplacian(adjacency)
+        BLapTLapB = B @ laplace_operator.T @ laplace_operator @ B
 
         if isinstance(alpha, (int, float)):
             alphas = [alpha,]
@@ -49,7 +50,7 @@ class SolverLORETA(BaseSolver):
         
         inverse_operators = []
         for alpha in alphas:
-            inverse_operator = np.linalg.inv(leadfield.T @ leadfield + alpha * B @ laplace_operator.T @ laplace_operator @ B) @ leadfield.T
+            inverse_operator = np.linalg.inv(LTL + alpha * BLapTLapB) @ leadfield.T
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -87,6 +88,7 @@ class SolverSLORETA(BaseSolver):
         '''
         self.forward = forward
         leadfield = self.forward['sol']['data']
+        LTL = leadfield @ leadfield.T
         n_chans = leadfield.shape[0]
 
 
@@ -100,7 +102,7 @@ class SolverSLORETA(BaseSolver):
         
         inverse_operators = []
         for alpha in alphas:
-            K_MNE = leadfield.T @ np.linalg.inv(leadfield @ leadfield.T + alpha * np.identity(n_chans))
+            K_MNE = leadfield.T @ np.linalg.inv(LTL + alpha * np.identity(n_chans))
             W_diag = 1 / np.diag(K_MNE @ leadfield)
 
             W_slor = np.diag(W_diag)

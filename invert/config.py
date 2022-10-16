@@ -4,5 +4,7 @@ all_solvers = [ "MNE", "wMNE", "dSPM",
                 "S-MAP",
                 "Champagne", "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
                 "Fully-Connected", 
-                "LUCAS"
+                "LUCAS",
+                "FISTA",
+                "COSAMP", "SOMP"
             ]

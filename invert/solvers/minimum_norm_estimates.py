@@ -81,6 +81,8 @@ class SolverWeightedMinimumNorm(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         W = np.diag(np.linalg.norm(leadfield, axis=0))
+        WTW = np.linalg.inv(W.T @ W)
+        LWTWL = leadfield @ WTW @ leadfield.T
         n_chans, _ = leadfield.shape
 
         if isinstance(alpha, (int, float)):
@@ -91,7 +93,7 @@ class SolverWeightedMinimumNorm(BaseSolver):
 
         inverse_operators = []
         for alpha in alphas:
-            inverse_operator = np.linalg.inv(W.T @ W) @ leadfield.T  @ np.linalg.inv(leadfield @ np.linalg.inv(W.T @ W) @ leadfield.T + alpha * np.identity(n_chans))
+            inverse_operator = WTW @ leadfield.T  @ np.linalg.inv(LWTWL + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -155,9 +157,9 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
             # alphas = [0.01,]
         inverse_operators = []
         leadfield_source_cov = source_cov @ leadfield.T
-        
+        LLS = leadfield @ leadfield_source_cov
         for alpha in alphas:
-            K = leadfield_source_cov @ np.linalg.inv(leadfield @ leadfield_source_cov + alpha * noise_cov)
+            K = leadfield_source_cov @ np.linalg.inv(LLS + alpha * noise_cov)
             W_dSPM = np.diag( np.sqrt( 1 / np.diagonal(K @ noise_cov @ K.T) ) )
             inverse_operator = W_dSPM @ K
             inverse_operators.append(inverse_operator)

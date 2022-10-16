@@ -45,9 +45,10 @@ class SolverSMAP(BaseSolver):
         '''
         self.forward = forward
         leadfield = self.forward['sol']['data']
+        LTL = leadfield.T @ leadfield 
         n_chans, n_dipoles = leadfield.shape
         gradient = self.calculate_gradient(verbose=verbose)
-       
+        GTG = gradient.T @ gradient
         if isinstance(alpha, (int, float)):
             alphas = [alpha,]
         else:
@@ -59,7 +60,7 @@ class SolverSMAP(BaseSolver):
         inverse_operators = []
         # GG_inv = np.linalg.inv(gradient.T @ gradient)
         for alpha in alphas:
-            inverse_operator = np.linalg.inv(leadfield.T @ leadfield + alpha * gradient.T @ gradient) @ leadfield.T
+            inverse_operator = np.linalg.inv(LTL + alpha * GTG) @ leadfield.T
             # inverse_operator = GG_inv @ leadfield.T @ np.linalg.inv(leadfield @ GG_inv @ leadfield.T + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
         

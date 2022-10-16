@@ -54,11 +54,10 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverChampagne(**kwargs)
     elif solver.lower() == "cosamp":
         solver_object = solvers.SolverCOSAMP(**kwargs)
-    elif solver.lower() == "SOMP":
+    elif solver.lower() == "somp":
         solver_object = solvers.SolverSOMP(**kwargs)
-    
-    # elif solver.lower() == "lstm":
-    #     solver_object = make_lstm_inverse_operator(forward, kwargs["evoked"].info, verbose=verbose)
+    elif solver.lower() == "l1" or solver.lower() == "fista":
+        solver_object = solvers.SolverMinimumL1Norm(**kwargs)
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {config.all_solvers}"
         raise AttributeError(msg)

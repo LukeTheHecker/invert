@@ -62,7 +62,7 @@ class BaseSolver:
             "CRESO"     -> Composite Residual and Smoothing Operator (CRESO)
             
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=500, verbose=0):
+    def __init__(self, regularisation_method="GCV", n_reg_params=50, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
         self.r_values = np.insert(np.logspace(0, 7, n_reg_params), 0, 0)
@@ -106,7 +106,7 @@ class BaseSolver:
         return evoked
 
     def regularise_lcurve(self, evoked):
-        print("L-CURVE")
+        # print("L-CURVE")
         M = evoked.data
         leadfield = self.forward["sol"]["data"]
         source_mats = [inverse_operator.apply( evoked ) for inverse_operator in self.inverse_operators]
@@ -155,7 +155,7 @@ class BaseSolver:
         return curvature_val
 
     def regularise_gcv(self, evoked):
-        print("GCV")
+        # print("GCV")
         self.leadfield = self.forward["sol"]["data"]
         n_chans = self.leadfield.shape[0]
         M = evoked.data
@@ -213,7 +213,7 @@ class BaseSolver:
     #     return source_mat[0]
     
     def regularise_product(self, evoked):
-        print("Product")
+        # print("Product")
         self.leadfield = self.forward["sol"]["data"]
         M = evoked.data
         product_values = []
