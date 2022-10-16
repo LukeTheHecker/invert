@@ -11,9 +11,9 @@ class SolverMinimumNorm(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Minimum Norm Estimate"):
+    def __init__(self, name="Minimum Norm Estimate", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -45,6 +45,7 @@ class SolverMinimumNorm(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -59,9 +60,9 @@ class SolverWeightedMinimumNorm(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Weighted Minimum Norm Estimate"):
+    def __init__(self, name="Weighted Minimum Norm Estimate", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -94,6 +95,7 @@ class SolverWeightedMinimumNorm(BaseSolver):
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -108,9 +110,9 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Dynamic Statistical Parametric Mapping"):
+    def __init__(self, name="Dynamic Statistical Parametric Mapping", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha=0.01, noise_cov=None, source_cov=None,
                             verbose=0):
@@ -147,10 +149,10 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
         else:
             # eigenvals = np.linalg.eig(leadfield @ source_cov @ leadfield.T)[0]
             # alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-            # alphas = self.r_values
+            alphas = self.r_values
             # alphas = self.r_values = np.insert(np.logspace(-6, 6, 50), 0, 0)
-            print(f"alpha must be set to a float when using {self.name}, auto does not work yet.")
-            alphas = [0.01,]
+            # print(f"alpha must be set to a float when using {self.name}, auto does not work yet.")
+            # alphas = [0.01,]
         inverse_operators = []
         leadfield_source_cov = source_cov @ leadfield.T
         
@@ -161,6 +163,7 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -175,9 +178,9 @@ class SolverMinimumL1Norm(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Minimum Current Estimate"):
+    def __init__(self, name="Minimum Current Estimate", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
         ''' Calculate inverse operator.

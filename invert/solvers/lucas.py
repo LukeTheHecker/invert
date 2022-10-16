@@ -31,10 +31,10 @@ class SolverLUCAS(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="LUCAS"):
+    def __init__(self, name="LUCAS", **kwargs):
         self.name = name
         self.solvers = None
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, evoked, alpha='auto', 
                                 verbose=0):

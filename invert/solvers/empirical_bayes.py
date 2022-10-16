@@ -36,9 +36,9 @@ class SolverChampagne(BaseSolver):
     60(1), 305-323.
     '''
 
-    def __init__(self, name="Champagne"):
+    def __init__(self, name="Champagne", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
         ''' Calculate inverse operator.
@@ -144,7 +144,7 @@ class SolverMultipleSparsePriors(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Multiple Sparse Priors", inversion_type="MSP"):
+    def __init__(self, name="Multiple Sparse Priors", inversion_type="MSP", **kwargs):
         if inversion_type == "MSP":
             self.name = name
         elif inversion_type == "LORETA":
@@ -156,7 +156,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         elif inversion_type == "BMF-LOR":
             self.name = "Bayesian Beamformer + LORETA"
         self.inversion_type = inversion_type
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, evoked, Np=64, 
                               max_iter=128, smoothness=0.6, alpha='auto', 

@@ -16,9 +16,9 @@ class SolverLORETA(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Low Resolution Tomography"):
+    def __init__(self, name="Low Resolution Tomography", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -53,6 +53,7 @@ class SolverLORETA(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -66,9 +67,9 @@ class SolverSLORETA(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Standardized Low Resolution Tomography"):
+    def __init__(self, name="Standardized Low Resolution Tomography", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -110,6 +111,7 @@ class SolverSLORETA(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -124,9 +126,9 @@ class SolverELORETA(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Exact Low Resolution Tomography"):
+    def __init__(self, name="Exact Low Resolution Tomography", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, stop_crit=0.005):
         ''' Calculate inverse operator.
@@ -151,9 +153,9 @@ class SolverELORETA(BaseSolver):
             alphas = [alpha,]
         else:
             # No eigenvalue-based regularization yielded best results for LORETA.
-            # alphas = self.r_values
-            eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
+            alphas = self.r_values
+            # eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
+            # alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
         
         inverse_operators = []
         for alpha in alphas:
@@ -163,6 +165,7 @@ class SolverELORETA(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:

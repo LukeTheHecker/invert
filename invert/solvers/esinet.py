@@ -10,9 +10,9 @@ class SolverFullyConnected(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Fully-Connected"):
+    def __init__(self, name="Fully-Connected", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, evoked, alpha='auto', 
                             n_simulations=5000, activation_function="tanh", 

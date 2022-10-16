@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 import mne
 import matplotlib.pyplot as plt
@@ -49,78 +50,205 @@ class InverseOperator:
         
 
 class BaseSolver:
-    def __init__(self, verbose=0):
+    '''
+    Parameters
+    ----------
+    regularisation_method : str
+        Can be either 
+            "GCV"       -> generalized cross validation
+            "L"         -> L-Curve method using triangle method
+            "Product"   -> Minimal product method
+            tbd:
+            "CRESO"     -> Composite Residual and Smoothing Operator (CRESO)
+            
+    '''
+    def __init__(self, regularisation_method="GCV", n_reg_params=500, verbose=0):
         self.verbose = verbose
-        self.r_values = np.insert(np.logspace(-2, 2, 12), 0, 0)
+        # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
+        self.r_values = np.insert(np.logspace(0, 7, n_reg_params), 0, 0)
+        self.alphas = deepcopy(self.r_values)
+        self.regularisation_method = regularisation_method
         
     def make_inverse_operator(self, forward: mne.Forward, *args):
         self.forward = forward
+        self.leadfield = self.forward['sol']['data']
+
         pass
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         ''' Apply the inverse operator '''
-        M = evoked.data
-        leadfield = self.forward['sol']['data']
+        evoked = self.prep_data(evoked)
 
-        
-        source_mats = []
-        l2_norms = []
-        l2_norms_eeg = []
-        l2_residual = []
-        # inverse_operators = self.inverse_operator.data
-        for inverse_operator in self.inverse_operators:
-            # source_mat = inverse_operator.data @ M
-            source_mat = inverse_operator.apply( evoked )
-            source_mats.append(  source_mat )
-            l2_norms.append( np.linalg.norm( source_mat ) )
-            l2_norms_eeg.append( np.linalg.norm( leadfield@ source_mat ) )
-            l2_residual.append( np.linalg.norm( leadfield@source_mat - M ) )
-        if len(self.inverse_operators)>1:
-            # Filter non-monotonic decreasing values
-            bad_idc = self.filter_norms(self.r_values, l2_norms)
-            r_values = np.delete(self.r_values, bad_idc)
-            l2_norms = np.delete(l2_norms, bad_idc)
-            l2_norms_eeg = np.delete(l2_norms_eeg, bad_idc)
-            l2_residual = np.delete(l2_residual, bad_idc)
-
-            corner_idx = self.find_corner(l2_norms)
-            source_mat = source_mats[corner_idx]
-            # print(f"idx = {corner_idx}, r={r_values[corner_idx]}")
-
-            # plt.figure()
-            # plt.subplot(311)            
-            # plt.plot(r_values, l2_norms, 'r*')
-            # plt.vlines(r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
-            # plt.xlabel("R values")
-            # plt.ylabel("Norms of the source")
-
-            # plt.subplot(312)
-            # plt.plot(r_values[:-1], np.diff(l2_norms), 'r*')
-            # plt.vlines(r_values[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
-            # plt.xlabel("R values")
-            # plt.ylabel("delta Norms of the source")
-
-
-            # plt.subplot(313)
-            # plt.loglog(l2_norms, l2_norms_eeg, 'r*')
-            # plt.vlines(l2_norms[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
-            # plt.ylabel("Norms of the eeg")
-            # plt.xlabel("Norms of the source")
-
-            # plt.figure()
-            # plt.loglog(l2_residual, l2_norms, 'r*')
-            # plt.vlines(l2_residual[corner_idx], ymin=plt.ylim()[0], ymax=plt.ylim()[1])
-            # plt.xlabel("l2_residual")
-            # plt.ylabel("l2_norms")
+        if len(self.inverse_operators) == 1:
+            source_mat = self.inverse_operators[0].apply(evoked)
         else:
-            source_mat = source_mats[0]
+            if self.regularisation_method.lower() == "l":
+                source_mat = self.regularise_lcurve(evoked)
+            elif self.regularisation_method.lower() == "gcv":
+                source_mat = self.regularise_gcv(evoked)
+            # elif self.regularisation_method.lower() == "creso":
+            #     source_mat = self.regularise_creso(evoked)
+            elif self.regularisation_method.lower() == "product":
+                source_mat = self.regularise_product(evoked)
+            else:
+                msg = f"{self.regularisation_method} is no valid regularisation method."
+                raise AttributeError(msg)
+            
             
         # print(type(source_mat), source_mat.shape)
         stc = self.source_to_object(source_mat, evoked)
         return stc
+        
+    @staticmethod
+    def prep_data(evoked):
+        evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
+        
+        return evoked
+
+    def regularise_lcurve(self, evoked):
+        print("L-CURVE")
+        M = evoked.data
+        leadfield = self.forward["sol"]["data"]
+        source_mats = [inverse_operator.apply( evoked ) for inverse_operator in self.inverse_operators]
+        
+        l2_norms = [np.log(np.linalg.norm( leadfield @ source_mat )) for source_mat in source_mats]
+        residual_norms = [np.log(np.linalg.norm( leadfield @ source_mat - M )) for source_mat in source_mats]
 
 
-    def find_corner(self, l2_norms):
+        # Filter non-monotonic decreasing values
+        # bad_idc = self.filter_norms(self.r_values, l2_norms)
+        # l2_norms = np.delete(l2_norms, bad_idc)
+        # source_mats = self.delete_from_list(source_mats, bad_idc)
+        
+        optimum_idx = self.find_corner(l2_norms, residual_norms)
+        
+        # curvature = self.get_curvature(residual_norms, l2_norms)
+        # print(curvature)
+        # optimum_idx = np.argmax(curvature)
+
+
+        source_mat = source_mats[optimum_idx]
+        
+        # plt.figure()
+        # plt.loglog(residual_norms, l2_norms)
+        # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
+        # alpha = self.alphas[optimum_idx]
+        # plt.title(f"L-Curve: {alpha}")
+
+        return source_mat
+        
+    @staticmethod
+    def get_curvature(x, y):
+        
+        x_t = np.gradient(x)
+        y_t = np.gradient(y)
+        vel = np.array([ [x_t[i], y_t[i]] for i in range(x_t.size)])
+        speed = np.sqrt(x_t * x_t + y_t * y_t)
+        tangent = np.array([1/speed] * 2).transpose() * vel
+
+        ss_t = np.gradient(speed)
+        xx_t = np.gradient(x_t)
+        yy_t = np.gradient(y_t)
+
+        curvature_val = np.abs(xx_t * y_t - x_t * yy_t) / (x_t * x_t + y_t * y_t)**1.5
+
+        return curvature_val
+
+    def regularise_gcv(self, evoked):
+        print("GCV")
+        self.leadfield = self.forward["sol"]["data"]
+        n_chans = self.leadfield.shape[0]
+        M = evoked.data
+        I = np.identity(n_chans)
+        gcv_values = []
+        for inverse_operator in self.inverse_operators:
+            x = inverse_operator.data @ M
+            residual_norm = np.linalg.norm(self.leadfield@x - M)
+            denom = np.trace(I - self.leadfield @ inverse_operator.data[0])**2
+    
+            gcv_value = residual_norm / denom
+            gcv_values.append(gcv_value)
+
+        optimum_idx = np.argmin(gcv_values)
+        
+        # plt.figure()
+        # plt.loglog(self.alphas, gcv_values)
+        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        # alpha = self.alphas[optimum_idx]
+        # print(alpha)
+        # plt.title(f"GCV: {alpha}")
+        source_mat = self.inverse_operators[optimum_idx].data @ M
+        return source_mat[0]
+    
+    # def regularise_creso(self, evoked):
+    #     print("CRESO")
+    #     self.leadfield = self.forward["sol"]["data"]
+    #     M = evoked.data
+    #     creso_values = []
+
+    #     for alpha, inverse_operator in zip(self.alphas, self.inverse_operators):
+    #         x = inverse_operator.data @ M
+    #         M_hat = self.leadfield@x
+    #         residual_norm = np.linalg.norm(M_hat - M)
+    #         semi_norm = np.linalg.norm(M_hat)
+    #         creso_value = (alpha**2) * semi_norm - residual_norm 
+    #         creso_values.append(creso_value)
+
+    #     print(creso_values[::20], ' ...')
+    #     creso_values_diff = np.diff(creso_values)
+    #     print(creso_values_diff[::20], ' ...')
+        
+    #     optimum_idx = np.argmax(creso_values_diff)
+    #     # optimum_idx = np.argmax(creso_values)
+
+    #     plt.figure()
+    #     # plt.loglog(self.alphas, creso_values, 'k*')
+    #     # plt.plot(self.alphas[optimum_idx], creso_values[optimum_idx], 'r*')
+        
+    #     plt.plot(self.alphas[:-1], creso_values_diff, 'k*')
+    #     plt.plot(self.alphas[optimum_idx], creso_values_diff[optimum_idx], 'r*')
+    #     alpha = self.alphas[optimum_idx]
+    #     plt.title(f"CRESO: {alpha}")
+    #     source_mat = self.inverse_operators[optimum_idx].data @ M
+    #     return source_mat[0]
+    
+    def regularise_product(self, evoked):
+        print("Product")
+        self.leadfield = self.forward["sol"]["data"]
+        M = evoked.data
+        product_values = []
+
+        for alpha, inverse_operator in zip(self.alphas, self.inverse_operators):
+            x = np.squeeze(inverse_operator.data @ M)
+
+            M_hat = self.leadfield@x
+            residual_norm = np.linalg.norm(M_hat - M)
+            semi_norm = np.linalg.norm(x)
+            product_value = semi_norm * residual_norm 
+            product_values.append(product_value)
+
+        optimum_idx = np.argmin(product_values)
+
+        plt.figure()
+        plt.plot(self.alphas, product_values)
+        plt.plot(self.alphas[optimum_idx], product_values[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        plt.title(f"Product: {alpha}")
+        source_mat = self.inverse_operators[optimum_idx].data @ M
+        return source_mat[0]
+    
+
+
+    @staticmethod
+    def delete_from_list(a, idc):
+        ''' Delete elements of list at idc.'''
+
+        idc = np.sort(idc)[::-1]
+        for idx in idc:
+            a.pop(idx)
+        return a
+
+    def find_corner(self, l2_norms, residual_norms):
         ''' Find the corner of the l-curve given by plotting regularization
         levels (r_vals) against norms of the inverse solutions (l2_norms).
 
@@ -142,21 +270,59 @@ class BaseSolver:
         # Normalize l2 norms
         l2_norms /= np.max(l2_norms)
 
-        A = np.array([self.r_values[0], l2_norms[0]])
-        C = np.array([self.r_values[-1], l2_norms[-1]])
+        A = np.array([residual_norms[0], l2_norms[0]])
+        C = np.array([residual_norms[-1], l2_norms[-1]])
         areas = []
         for j in range(1, len(l2_norms)-1):
-            B = np.array([self.r_values[j], l2_norms[j]])
+            B = np.array([residual_norms[j], l2_norms[j]])
             AB = self.euclidean_distance(A, B)
             AC = self.euclidean_distance(A, C)
             CB = self.euclidean_distance(C, B)
-            area = self.calc_area_tri(AB, AC, CB)
+            area = abs(self.calc_area_tri(AB, AC, CB))
             areas.append(area)
         if len(areas) > 0:
             idx = np.argmax(areas)+1
         else:
             idx = 0
         return idx
+
+    # def find_corner(self, l2_norms):
+    #     ''' Find the corner of the l-curve given by plotting regularization
+    #     levels (r_vals) against norms of the inverse solutions (l2_norms).
+
+    #     Parameters
+    #     ----------
+    #     r_vals : list
+    #         Levels of regularization
+    #     l2_norms : list
+    #         L2 norms of the inverse solutions per level of regularization.
+        
+    #     Return
+    #     ------
+    #     idx : int
+    #         Index at which the L-Curve has its corner.
+    
+        
+    #     '''
+        
+    #     # Normalize l2 norms
+    #     l2_norms /= np.max(l2_norms)
+
+    #     A = np.array([self.r_values[0], l2_norms[0]])
+    #     C = np.array([self.r_values[-1], l2_norms[-1]])
+    #     areas = []
+    #     for j in range(1, len(l2_norms)-1):
+    #         B = np.array([self.r_values[j], l2_norms[j]])
+    #         AB = self.euclidean_distance(A, B)
+    #         AC = self.euclidean_distance(A, C)
+    #         CB = self.euclidean_distance(C, B)
+    #         area = self.calc_area_tri(AB, AC, CB)
+    #         areas.append(area)
+    #     if len(areas) > 0:
+    #         idx = np.argmax(areas)+1
+    #     else:
+    #         idx = 0
+    #     return idx
 
     @staticmethod
     def filter_norms(r_vals, l2_norms):

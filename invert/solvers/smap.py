@@ -25,9 +25,9 @@ class SolverSMAP(BaseSolver):
     on Biomedical Engineering, 44(5), 374-385.
     
     '''
-    def __init__(self, name="S-MAP"):
+    def __init__(self, name="S-MAP", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -64,6 +64,7 @@ class SolverSMAP(BaseSolver):
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:

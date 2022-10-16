@@ -13,9 +13,9 @@ class SolverBackusGilbert(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Backus-Gilbert"):
+    def __init__(self, name="Backus-Gilbert", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
         ''' Calculate inverse operator.
@@ -81,9 +81,9 @@ class SolverLAURA(BaseSolver):
     forward : mne.Forward
         The mne-python Forward model instance.
     '''
-    def __init__(self, name="Local Auto-Regressive Average"):
+    def __init__(self, name="Local Auto-Regressive Average", **kwargs):
         self.name = name
-        return super().__init__()
+        return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, noise_cov=None, alpha='auto', drop_off=2, verbose=0):
         ''' Calculate inverse operator.
@@ -142,6 +142,7 @@ class SolverLAURA(BaseSolver):
             inverse_operators.append(inverse_operator)
             
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
