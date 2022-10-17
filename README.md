@@ -9,6 +9,7 @@ Minimum-Norm based:
 * Minimum Norm Estimates
 * Weighted Minimum Norm Estimates
 * Dynamic Statistical Parametric Mapping (dSPM)
+* Minimum Current Estimates (FISTA solver)
 
 LORETA Family:
 * Low-Resolution Tomography (LORETA)
@@ -25,6 +26,13 @@ Bayesian Family:
 * Bayesian MNE
 * Bayesian Beamformer
 
+Greedy Algorithms (Matching Pursuit):
+* Orthogonal Matching Pursuit (OMP)
+* Simultaneous Orthogonal Matching Pursuit (SOMP)
+* Compressed Sampling Matching Pursuit (CoSaMP)
+* Reduce Multi-Measurement-Vector and Boost (ReMBo)
+* Subspace Pursuit (SP)
+
 Other:
 * S-MAP
 
@@ -36,6 +44,7 @@ by enforcing temporal constraints or by iteratively promoting sparsity.
 * FOCUSS - decreases blurring in the inverse solutions [11].
 
 # References
+
 [10] Dinh, C., Samuelsson, J. G., Hunold, A., Hämäläinen, M. S., & Khan, S.
 (2021). Contextual MEG and EEG source estimates using spatiotemporal LSTM
 networks. Frontiers in neuroscience, 15, 552666. 

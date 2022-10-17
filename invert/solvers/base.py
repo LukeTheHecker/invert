@@ -101,7 +101,8 @@ class BaseSolver:
         
     @staticmethod
     def prep_data(evoked):
-        evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
+        if not evoked.proj:
+            evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
         
         return evoked
 

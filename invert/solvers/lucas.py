@@ -1,27 +1,11 @@
 # Let Us Combine All Source estimates (LUCAS)
 import numpy as np
+from copy import deepcopy
 import mne
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 from esinet import Simulation
 from .base import BaseSolver
-# from ..adapters import contextualize_bd, focuss
-
-# from ..config import all_solvers
-
-
-# import ..config
-# import sys; sys.path.insert(0, '../')
-
-
-# all_solvers = [ "MNE", "wMNE", "dSPM", 
-#                 "LORETA", "sLORETA", "eLORETA", 
-#                 "LAURA", "Backus-Gilbert", 
-#                 "S-MAP",
-#                 "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
-#                 "Fully-Connected", 
-#                 "LUCAS"
-#             ]
 
 class SolverLUCAS(BaseSolver):
     ''' Class for the combined LUCAS inverse solution.
@@ -36,7 +20,7 @@ class SolverLUCAS(BaseSolver):
         self.solvers = None
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, alpha='auto', 
+    def make_inverse_operator(self, forward, evoked, alpha='auto', solvers="all",
                                 verbose=0):
         ''' Calculate inverse operator.
 
@@ -54,20 +38,28 @@ class SolverLUCAS(BaseSolver):
         self : object returns itself for convenience
         '''
         from invert import Solver
+        
         self.forward = forward
         leadfield = self.forward['sol']['data']
         n_chans, _ = leadfield.shape
+
+        if solvers == "all":
+            solver_names = [ "MNE", "wMNE", "dSPM", 
+                    "LORETA", "sLORETA", "eLORETA", 
+                    "LAURA",  
+                    "S-MAP",
+                    "Champagne", "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
+                    "Fully-Connected", 
+                    "LUCAS",
+                    "FISTA",
+                    "OMP", "COSAMP", "SOMP", "REMBO",
+                ]
+        else:
+            solver_names = deepcopy(solvers)
+
         solvers = []
-        all_solvers = [ "MNE", "wMNE", "dSPM", 
-                "LORETA", "sLORETA", "eLORETA", 
-                "LAURA", "Backus-Gilbert", 
-                "S-MAP",
-                "Champagne", "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
-                "Fully-Connected", 
-                "LUCAS"
-            ]
-        self.all_solvers = self.filter_solvers(all_solvers)
-        for solver_name in self.all_solvers:
+        self.solver_names = solver_names
+        for solver_name in self.solver_names:
             print(f"Preparing {solver_name}")
             solver = Solver(solver=solver_name).make_inverse_operator(forward, evoked, alpha=alpha, verbose=verbose)
             solvers.append(solver)
@@ -93,7 +85,7 @@ class SolverLUCAS(BaseSolver):
     def optimize_weights(self, forward, info, n_samples=1024):
         if self.solvers is None:
             msg = f'No solvers found. Please call --make_inverse_operator(forward)-- first!'
-            raise Error(msg)
+            raise AttributeError(msg)
 
         # duration_of_trial = info["sfreq"]
         settings = dict(duration_of_trial=0)
@@ -105,11 +97,15 @@ class SolverLUCAS(BaseSolver):
             stc = sim.source_data[i]
             J_true = stc.data[:, 0]
             J = np.stack([solver.apply_inverse_operator(evoked).data[:, 0] for solver in self.solvers], axis=1)
-            # Normalize sources
-            # J_true /= np.max(np.abs(J_true))
-            # J = np.stack([jj / np.max(np.abs(jj)) for jj in J.T], axis=1)
+            # Normalize Source Vectors
+            J_true /= np.linalg.norm(J_true)
+            J /= np.linalg.norm(J, axis=0)
+            
 
-            coefficients.append( LinearRegression().fit(J, J_true).coef_ )
+            coef = LinearRegression().fit(J, J_true).coef_
+            # coef = Lasso().fit(J, J_true).coef_
+            
+            coefficients.append( coef )
         
         weights = np.array(coefficients).mean(axis=0)
         weights = np.clip(weights, a_min=0, a_max=None)

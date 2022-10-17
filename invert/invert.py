@@ -52,10 +52,16 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverLUCAS(**kwargs)
     elif solver.lower() == "champagne" or solver.lower() == "champ":
         solver_object = solvers.SolverChampagne(**kwargs)
+    elif solver.lower() == "omp":
+        solver_object = solvers.SolverOMP(**kwargs)
     elif solver.lower() == "cosamp":
         solver_object = solvers.SolverCOSAMP(**kwargs)
     elif solver.lower() == "somp":
         solver_object = solvers.SolverSOMP(**kwargs)
+    elif solver.lower() == "rembo":
+        solver_object = solvers.SolverREMBO(**kwargs)
+    elif solver.lower() == "sp":
+        solver_object = solvers.SolverSP(**kwargs)
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
     else:
