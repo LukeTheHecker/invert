@@ -58,19 +58,25 @@ class BaseSolver:
             "GCV"       -> generalized cross validation
             "L"         -> L-Curve method using triangle method
             "Product"   -> Minimal product method
-            tbd:
-            "CRESO"     -> Composite Residual and Smoothing Operator (CRESO)
-            
+
+    n_reg_params : int
+        The number of regularisation parameters to use. The higher, the 
+        more accurate the regularisation and the slower the computations.
+    car_leadfield : bool
+        If True -> Apply common average referencing on the leadfield columns.
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=50, verbose=0):
+    def __init__(self, regularisation_method="GCV", n_reg_params=50, 
+        car_leadfield=True, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
         self.r_values = np.insert(np.logspace(0, 7, n_reg_params), 0, 0)
         self.alphas = deepcopy(self.r_values)
         self.regularisation_method = regularisation_method
+        self.car_leadfield = car_leadfield
         
     def make_inverse_operator(self, forward: mne.Forward, *args):
         self.forward = forward
+        self.prepare_forward()
         self.leadfield = self.forward['sol']['data']
 
         pass
@@ -86,8 +92,6 @@ class BaseSolver:
                 source_mat = self.regularise_lcurve(evoked)
             elif self.regularisation_method.lower() == "gcv":
                 source_mat = self.regularise_gcv(evoked)
-            # elif self.regularisation_method.lower() == "creso":
-            #     source_mat = self.regularise_creso(evoked)
             elif self.regularisation_method.lower() == "product":
                 source_mat = self.regularise_product(evoked)
             else:
@@ -181,37 +185,6 @@ class BaseSolver:
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
     
-    # def regularise_creso(self, evoked):
-    #     print("CRESO")
-    #     self.leadfield = self.forward["sol"]["data"]
-    #     M = evoked.data
-    #     creso_values = []
-
-    #     for alpha, inverse_operator in zip(self.alphas, self.inverse_operators):
-    #         x = inverse_operator.data @ M
-    #         M_hat = self.leadfield@x
-    #         residual_norm = np.linalg.norm(M_hat - M)
-    #         semi_norm = np.linalg.norm(M_hat)
-    #         creso_value = (alpha**2) * semi_norm - residual_norm 
-    #         creso_values.append(creso_value)
-
-    #     print(creso_values[::20], ' ...')
-    #     creso_values_diff = np.diff(creso_values)
-    #     print(creso_values_diff[::20], ' ...')
-        
-    #     optimum_idx = np.argmax(creso_values_diff)
-    #     # optimum_idx = np.argmax(creso_values)
-
-    #     plt.figure()
-    #     # plt.loglog(self.alphas, creso_values, 'k*')
-    #     # plt.plot(self.alphas[optimum_idx], creso_values[optimum_idx], 'r*')
-        
-    #     plt.plot(self.alphas[:-1], creso_values_diff, 'k*')
-    #     plt.plot(self.alphas[optimum_idx], creso_values_diff[optimum_idx], 'r*')
-    #     alpha = self.alphas[optimum_idx]
-    #     plt.title(f"CRESO: {alpha}")
-    #     source_mat = self.inverse_operators[optimum_idx].data @ M
-    #     return source_mat[0]
     
     def regularise_product(self, evoked):
         # print("Product")
@@ -237,8 +210,6 @@ class BaseSolver:
         plt.title(f"Product: {alpha}")
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
-    
-
 
     @staticmethod
     def delete_from_list(a, idc):
@@ -264,10 +235,8 @@ class BaseSolver:
         ------
         idx : int
             Index at which the L-Curve has its corner.
-    
-        
         '''
-        
+
         # Normalize l2 norms
         l2_norms /= np.max(l2_norms)
 
@@ -287,44 +256,6 @@ class BaseSolver:
             idx = 0
         return idx
 
-    # def find_corner(self, l2_norms):
-    #     ''' Find the corner of the l-curve given by plotting regularization
-    #     levels (r_vals) against norms of the inverse solutions (l2_norms).
-
-    #     Parameters
-    #     ----------
-    #     r_vals : list
-    #         Levels of regularization
-    #     l2_norms : list
-    #         L2 norms of the inverse solutions per level of regularization.
-        
-    #     Return
-    #     ------
-    #     idx : int
-    #         Index at which the L-Curve has its corner.
-    
-        
-    #     '''
-        
-    #     # Normalize l2 norms
-    #     l2_norms /= np.max(l2_norms)
-
-    #     A = np.array([self.r_values[0], l2_norms[0]])
-    #     C = np.array([self.r_values[-1], l2_norms[-1]])
-    #     areas = []
-    #     for j in range(1, len(l2_norms)-1):
-    #         B = np.array([self.r_values[j], l2_norms[j]])
-    #         AB = self.euclidean_distance(A, B)
-    #         AC = self.euclidean_distance(A, C)
-    #         CB = self.euclidean_distance(C, B)
-    #         area = self.calc_area_tri(AB, AC, CB)
-    #         areas.append(area)
-    #     if len(areas) > 0:
-    #         idx = np.argmax(areas)+1
-    #     else:
-    #         idx = 0
-    #     return idx
-
     @staticmethod
     def filter_norms(r_vals, l2_norms):
         diffs = np.diff(l2_norms)
@@ -340,7 +271,9 @@ class BaseSolver:
             all_idc = np.delete(all_idc, pop_idx)
         return bad_idc
 
-
+    def prepare_forward(self):
+        if self.car_leadfield:
+            self.forward["sol"]["data"] -= self.forward["sol"]["data"].mean(axis=0)
 
     @staticmethod
     def euclidean_distance(A, B):

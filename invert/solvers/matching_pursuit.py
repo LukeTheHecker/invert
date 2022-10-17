@@ -307,11 +307,11 @@ class SolverCOSAMP(BaseSolver):
         
         
         iters = np.arange(len(residuals))
-        import matplotlib.pyplot as plt
-        plt.figure()
-        plt.plot(iters, unexplained_variance)
-        plt.xlabel("Iteration")
-        plt.ylabel("Residual")
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # plt.plot(iters, unexplained_variance)
+        # plt.xlabel("Iteration")
+        # plt.ylabel("Residual")
         corner_idx = find_corner(residuals, iters)
         x_hat = x_hats[corner_idx]
         return x_hat
@@ -561,6 +561,6 @@ class SolverSP(BaseSolver):
                 T_l = T_list[-2]
                 x_hat = np.zeros(n_dipoles)
                 x_hat[T_l] = np.linalg.pinv(self.leadfield[:, T_l]) @ y
-                print("i = ",i)
+                # print("i = ",i)
                 break
         return x_hat

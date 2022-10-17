@@ -88,7 +88,7 @@ class SolverLUCAS(BaseSolver):
             raise AttributeError(msg)
 
         # duration_of_trial = info["sfreq"]
-        settings = dict(duration_of_trial=0)
+        settings = dict(duration_of_trial=0.003)
         sim = Simulation(forward, info, settings=settings).simulate(n_samples=n_samples)
         coefficients = []
         for i in range(n_samples):
@@ -96,10 +96,14 @@ class SolverLUCAS(BaseSolver):
             evoked = sim.eeg_data[i].average()
             stc = sim.source_data[i]
             J_true = stc.data[:, 0]
+
             J = np.stack([solver.apply_inverse_operator(evoked).data[:, 0] for solver in self.solvers], axis=1)
             # Normalize Source Vectors
             J_true /= np.linalg.norm(J_true)
             J /= np.linalg.norm(J, axis=0)
+            # Remove nans and infs
+            J = self.nans_to_zero(J)
+            J = self.infs_to_zero(J)
             
 
             coef = LinearRegression().fit(J, J_true).coef_
@@ -130,3 +134,13 @@ class SolverLUCAS(BaseSolver):
             if not (s == "LUCAS" or "bayes" in s.lower() or s.lower() == "multiple sparse priors" or "backus" in s.lower()):
                 keepers.append(s)
         return keepers
+
+    def nans_to_zero(self, x):
+        bad_cols = np.where(np.array([np.any(np.isnan(xx)) for xx in x.T]))[0]
+        x[:, bad_cols] = 0
+        return x
+    
+    def infs_to_zero(self, x):
+        bad_cols = np.where(np.array([np.any(np.isinf(xx)) for xx in x.T]))[0]
+        x[:, bad_cols] = 0
+        return x

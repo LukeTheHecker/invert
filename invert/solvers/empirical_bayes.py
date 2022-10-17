@@ -178,12 +178,15 @@ class SolverMultipleSparsePriors(BaseSolver):
         leadfield = self.forward['sol']['data']
         pos = pos_from_forward(forward, verbose=verbose)
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
-
-        A = get_spatial_projector(leadfield)
-        S, V = get_temporal_projector(evoked, leadfield, A)
         Y = evoked.data
-
+        A = get_spatial_projector(leadfield)
+        
+        S, V = get_temporal_projector(evoked, leadfield, A)
+                
         Y_ = A @ Y @ S
+        
+        
+
         leadfield_ = A @ leadfield
         maximum_a_posteriori = make_msp_map(Y_, leadfield_, pos, adjacency, A, Np=Np, max_iter=max_iter, 
             inversion_type=self.inversion_type, smoothness=smoothness)
@@ -195,6 +198,11 @@ class SolverMultipleSparsePriors(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        S = self.inverse_operators[0].data[-1]
+        if S.shape[1] != evoked.data.shape[1]:
+            # print("\tRe-calculating projectors...")
+            self.make_inverse_operator(self.forward, evoked)
+            # print("\T...done!")
         return super().apply_inverse_operator(evoked)
 
 def make_msp_inverse_operator(leadfield, pos, adjacency, evoked,Np=64, 
