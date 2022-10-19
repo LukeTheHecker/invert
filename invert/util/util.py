@@ -107,7 +107,7 @@ def find_corner(source_power, residual):
     '''
     
     # Normalize l2 norms
-    source_power /= np.max(source_power)
+    # source_power /= np.max(source_power)
 
     A = np.array([residual[0], source_power[0]])
     C = np.array([residual[-1], source_power[-1]])
