@@ -59,13 +59,13 @@ class SolverSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=False) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
         source_mat = np.stack([self.calc_smp_solution(y, include_singletons=include_singletons) for y in evoked.data.T], axis=1)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
 
-    def calc_smp_solution(self, y, include_singletons=False):
+    def calc_smp_solution(self, y, include_singletons=True):
         """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
         
         Parameters
@@ -180,13 +180,13 @@ class SolverSSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=False) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
         source_mat = self.calc_ssmp_solution(evoked.data, include_singletons=include_singletons)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
 
-    def calc_ssmp_solution(self, y, include_singletons=False):
+    def calc_ssmp_solution(self, y, include_singletons=True):
         """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
         
         Parameters
