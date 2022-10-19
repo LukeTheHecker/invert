@@ -2,7 +2,7 @@ import numpy as np
 import mne
 from copy import deepcopy
 from .base import BaseSolver, InverseOperator
-from ..util import calc_residual_variance, thresholding, find_corner
+from ..util import calc_residual_variance, thresholding, find_corner, best_index_residual
 
 class SolverOMP(BaseSolver):
     ''' Class for the Orthogonal Matching Pursuit (OMP) inverse
@@ -41,7 +41,7 @@ class SolverOMP(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         self.leadfield = leadfield
-        
+        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
         
         
         self.inverse_operators = []
@@ -82,8 +82,10 @@ class SolverOMP(BaseSolver):
         source_norms = np.array([0,])
         x_hats = [deepcopy(x_hat), ]
 
-        for i in range(n_chans):
-            b = self.leadfield.T @ r
+        for _ in range(n_chans):
+            # b = self.leadfield.T @ r
+            b = self.leadfield_normed.T @ r
+
             b_thresh = thresholding(b, K)
             omega = np.append(omega, np.where(b_thresh!=0)[0])  # non-zero idc
             omega = omega.astype(int)
@@ -97,9 +99,10 @@ class SolverOMP(BaseSolver):
 
 
             
-        iters = np.arange(len(residuals)).astype(float)
-        corner_idx = find_corner(iters, residuals)
-        x_hat = x_hats[corner_idx]
+        # iters = np.arange(len(residuals)).astype(float)
+        # corner_idx = find_corner(iters, residuals)
+        x_hats = best_index_residual(residuals, x_hats)
+        # x_hat = x_hats[corner_idx]
         return x_hat
 
 class SolverSOMP(BaseSolver):
@@ -139,9 +142,8 @@ class SolverSOMP(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         self.leadfield = leadfield
-        
-        
-        
+        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+                
         self.inverse_operators = []
         return self
 
@@ -171,14 +173,15 @@ class SolverSOMP(BaseSolver):
         x_hat = np.zeros((n_dipoles, n_time))
         x_hats = [deepcopy(x_hat)]
         residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
-        unexplained_variance = np.array([calc_residual_variance(y, self.leadfield@x_hat),])
+        # unexplained_variance = np.array([calc_residual_variance(y, self.leadfield@x_hat),])
         source_norms = np.array([0,])
 
         R = deepcopy(y)
         omega = np.array([])
         q = 1
         for i in range(n_chans):
-            b_n = np.linalg.norm(self.leadfield.T@R, axis=1, ord=q)
+            # b_n = np.linalg.norm(self.leadfield.T@R, axis=1, ord=q)
+            b_n = np.linalg.norm(self.leadfield_normed.T@R, axis=1, ord=q)
 
             # if len(omega)>0:
             #     b_n[omega] = 0
@@ -191,14 +194,15 @@ class SolverSOMP(BaseSolver):
             R = y - self.leadfield@x_hat
             
             residuals = np.append(residuals, np.linalg.norm(R))
-            unexplained_variance = np.append(unexplained_variance, calc_residual_variance(y, self.leadfield@x_hat))
+            # unexplained_variance = np.append(unexplained_variance, calc_residual_variance(y, self.leadfield@x_hat))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             x_hats.append( deepcopy(x_hat) )
         
-        unexplained_variance[0] = unexplained_variance[1]
-        iters = np.arange(len(residuals))
-        corner_idx = find_corner(residuals, iters)
-        x_hat = x_hats[corner_idx]
+        # unexplained_variance[0] = unexplained_variance[1]
+        # iters = np.arange(len(residuals))
+        # corner_idx = find_corner(residuals, iters)
+        x_hat = best_index_residual(residuals, x_hats)
+        # x_hat = x_hats[corner_idx]
         
         # import matplotlib.pyplot as plt
         # plt.figure()
@@ -244,20 +248,20 @@ class SolverCOSAMP(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         self.leadfield = leadfield
-        
+        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
         
         
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=25) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, K="auto") -> mne.SourceEstimate:
         evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj()
         source_mat = np.stack([self.calc_cosamp_solution(y, K=K) for y in evoked.data.T], axis=1)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
 
-    def calc_cosamp_solution(self, y, K=25):
+    def calc_cosamp_solution(self, y, K='auto'):
         """ Calculates the CoSaMP inverse solution.
         
         Parameters
@@ -275,7 +279,8 @@ class SolverCOSAMP(BaseSolver):
         n_chans = len(y)
         _, n_dipoles = self.leadfield.shape
 
-        
+        if K == "auto":
+            K = int(n_chans/2)
         x_hat = np.zeros(n_dipoles)
         x_hats = [deepcopy(x_hat)]
         b = np.zeros((n_dipoles, ))
@@ -286,7 +291,8 @@ class SolverCOSAMP(BaseSolver):
         unexplained_variance = np.array([calc_residual_variance(self.leadfield@x_hat, y),])
 
         for i in range(1, n_chans+1):
-            e = self.leadfield.T @ r
+            # e = self.leadfield.T @ r
+            e = self.leadfield_normed.T @ r
             e_thresh = thresholding(e, 2*K)
             omega = np.where(e_thresh!=0)[0]
             old_activations = np.where(x_hats[i-1]!=0)[0]
@@ -306,14 +312,15 @@ class SolverCOSAMP(BaseSolver):
             #     break
         
         
-        iters = np.arange(len(residuals))
+        # iters = np.arange(len(residuals))
         # import matplotlib.pyplot as plt
         # plt.figure()
         # plt.plot(iters, unexplained_variance)
         # plt.xlabel("Iteration")
         # plt.ylabel("Residual")
-        corner_idx = find_corner(residuals, iters)
-        x_hat = x_hats[corner_idx]
+        # corner_idx = find_corner(residuals, iters)
+        # x_hat = x_hats[corner_idx]
+        x_hat = best_index_residual(residuals, x_hats)
         return x_hat
         # return x_hats[-1]
 
@@ -394,7 +401,7 @@ class SolverREMBO(BaseSolver):
 
         for i in range(n_chans):
             a = rand(n_time)
-            y_vec = y@a
+            y_vec = y@a  # sample randomly from the measurement matrix
             x_hat = self.calc_omp_solution(y_vec, K=K)
             S_hat = np.where(x_hat!=0)[0].astype(int)
             As_pinv = np.linalg.pinv(self.leadfield[:, S_hat])
@@ -505,7 +512,7 @@ class SolverSP(BaseSolver):
         self.forward = forward
         leadfield = self.forward['sol']['data']
         self.leadfield = leadfield
-        
+        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
         
         
         self.inverse_operators = []
@@ -538,8 +545,8 @@ class SolverSP(BaseSolver):
 
         resid = lambda y, phi: y - phi@np.linalg.pinv(phi)@y
         y -= y.mean()
-
-        K = int(n_chans/2)
+        if K == "auto":
+            K = int(n_chans/2)
         b = self.leadfield.T @ y
         T0 = np.where(thresholding(b, K) != 0)[0]
         R = resid(y, self.leadfield[:, T0])
@@ -547,7 +554,9 @@ class SolverSP(BaseSolver):
         R_list = [R, ]
 
         for i in range(1, n_chans+1):
-            b = self.leadfield.T @ R_list[-1]
+            # b = self.leadfield.T @ R_list[-1]
+            b = self.leadfield_normed.T @ R_list[-1]
+
             new_T = np.where(thresholding(b, K) != 0)[0]
             T_tilde = np.unique(np.concatenate([T_list[i-1], new_T]))
             
@@ -564,3 +573,5 @@ class SolverSP(BaseSolver):
                 # print("i = ",i)
                 break
         return x_hat
+
+

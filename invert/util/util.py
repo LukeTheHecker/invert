@@ -1,5 +1,6 @@
 import mne
 import numpy as np
+import matplotlib.pyplot as plt
 
 def pos_from_forward(forward, verbose=0):
     ''' Get vertex/dipole positions from mne.Forward model
@@ -124,3 +125,35 @@ def find_corner(source_power, residual):
     else:
         idx = 0
     return idx
+
+def best_index_residual(residuals, x_hats, plot=False):
+    ''' Finds the idx that optimally regularises the inverse solution.
+    Parameters
+    ----------
+    residuals : numpy.ndarray
+        The residual variances of the inverse solutions to the data.
+    
+    Return
+    ------
+    corner_idx : int
+        The index at which the trade-off between explaining 
+        data and source complexity is optimal.
+    '''
+    iters = np.arange(len(residuals)).astype(float)
+    # Remove indices where residual variance started to rise
+    if np.any(np.diff(residuals)>0):
+        bad_idx = (np.where(np.diff(residuals)>0)[0]+1)[0]
+    else:
+        bad_idx = len(residuals)
+    iters = iters[1:bad_idx]
+    x_hats = x_hats[1:bad_idx]
+    residuals = residuals[1:bad_idx]
+    corner_idx = find_corner(iters, residuals)
+    if plot:
+        plt.figure()
+        plt.plot(iters, residuals, '*k')
+        plt.plot(iters[corner_idx], residuals[corner_idx], 'or')
+        plt.ylabel("residual")
+        plt.xlabel("iteration no.")
+    
+    return x_hats[corner_idx]

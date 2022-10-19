@@ -62,6 +62,11 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverREMBO(**kwargs)
     elif solver.lower() == "sp":
         solver_object = solvers.SolverSP(**kwargs)
+    elif solver.lower() == "smp":
+        solver_object = solvers.SolverSMP(**kwargs)
+    elif solver.lower() == "ssmp":
+        solver_object = solvers.SolverSSMP(**kwargs)
+    
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
     else:
