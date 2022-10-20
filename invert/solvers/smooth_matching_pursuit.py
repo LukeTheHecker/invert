@@ -54,8 +54,8 @@ class SolverSMP(BaseSolver):
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)
         self.leadfield_smooth = leadfield_smooth
-        self.leadfield_smooth_normed = self.leadfield_smooth / self.leadfield_smooth.std(axis=0)
-        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        self.leadfield_smooth_normed = self.leadfield_smooth / np.linalg.norm(self.leadfield_smooth, axis=0)
+        self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield, axis=0)
         
         return self
 
@@ -91,7 +91,9 @@ class SolverSMP(BaseSolver):
         x_hat = np.zeros((n_dipoles, ))
         omega = np.array([])
         r = deepcopy(y)
-        residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
+        y_hat = self.leadfield@x_hat
+        y_hat -= y_hat.mean(axis=0)
+        residuals = np.array([np.linalg.norm(y - y_hat), ])
         source_norms = np.array([0,])
         x_hats = [deepcopy(x_hat), ]
 
@@ -111,9 +113,11 @@ class SolverSMP(BaseSolver):
             omega = np.append(omega, new_patch)
             omega = omega.astype(int)
             x_hat[omega] = np.linalg.pinv(self.leadfield[:, omega]) @ y
-            r = y - self.leadfield@x_hat
+            y_hat = self.leadfield@x_hat
+            y_hat -= y_hat.mean(axis=0)
+            r = y - y_hat
 
-            residuals = np.append(residuals, np.linalg.norm(y - self.leadfield@x_hat))
+            residuals = np.append(residuals, np.linalg.norm(y - y_hat))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             x_hats.append(deepcopy(x_hat))
             if residuals[-1] > residuals[-2]:
@@ -175,8 +179,8 @@ class SolverSSMP(BaseSolver):
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)
         self.leadfield_smooth = leadfield_smooth
-        self.leadfield_smooth_normed = self.leadfield_smooth / self.leadfield_smooth.std(axis=0)
-        self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        self.leadfield_smooth_normed = self.leadfield_smooth / np.linalg.norm(self.leadfield_smooth, axis=0)
+        self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield, axis=0)
         
         return self
 
@@ -212,7 +216,9 @@ class SolverSSMP(BaseSolver):
         x_hat = np.zeros((n_dipoles, n_time))
         omega = np.array([])
         R = deepcopy(y)
-        residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
+        y_hat = self.leadfield@x_hat
+        y_hat -= y_hat.mean(axis=0)
+        residuals = np.array([np.linalg.norm(y - y_hat), ])
         source_norms = np.array([0,])
         x_hats = [deepcopy(x_hat), ]
         q = 1
@@ -232,9 +238,12 @@ class SolverSSMP(BaseSolver):
             omega = np.append(omega, new_patch)
             omega = omega.astype(int)
             x_hat[omega] = np.linalg.pinv(self.leadfield[:, omega]) @ y
-            R = y - self.leadfield@x_hat
+            
+            y_hat = self.leadfield@x_hat
+            y_hat -= y_hat.mean(axis=0)
+            R = y - y_hat
 
-            residuals = np.append(residuals, np.linalg.norm(y - self.leadfield@x_hat))
+            residuals = np.append(residuals, np.linalg.norm(y - y_hat))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             x_hats.append(deepcopy(x_hat))
             if residuals[-1] > residuals[-2]:

@@ -141,14 +141,17 @@ def best_index_residual(residuals, x_hats, plot=False):
     '''
     iters = np.arange(len(residuals)).astype(float)
     # Remove indices where residual variance started to rise
+
     if np.any(np.diff(residuals)>0):
         bad_idx = (np.where(np.diff(residuals)>0)[0]+1)[0]
     else:
         bad_idx = len(residuals)
+    # bad_idx = len(residuals)
     iters = iters[1:bad_idx]
     x_hats = x_hats[1:bad_idx]
     residuals = residuals[1:bad_idx]
     corner_idx = find_corner(iters, residuals)
+    # print("corner_idx: ", corner_idx, " non-zeros: ", (x_hats[corner_idx]!=0).sum() )
     if plot:
         plt.figure()
         plt.plot(iters, residuals, '*k')
