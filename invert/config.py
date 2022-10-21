@@ -7,5 +7,5 @@ all_solvers = [ "MNE", "wMNE", "dSPM",
                 "LUCAS",
                 "FISTA",
                 "OMP", "COSAMP", "SOMP", "REMBO", "SP",
-                "SMP", "SSMP", 
+                "SMP", "SSMP", "SubSMP"
             ]

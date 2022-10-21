@@ -146,11 +146,23 @@ def best_index_residual(residuals, x_hats, plot=False):
         bad_idx = (np.where(np.diff(residuals)>0)[0]+1)[0]
     else:
         bad_idx = len(residuals)
-    # bad_idx = len(residuals)
+    bad_idx = len(residuals)
     iters = iters[1:bad_idx]
     x_hats = x_hats[1:bad_idx]
     residuals = residuals[1:bad_idx]
-    corner_idx = find_corner(iters, residuals)
+
+    # L-Curve Corner
+    # corner_idx = find_corner(iters, residuals)
+
+    # Residual criterion
+    span = abs(residuals[-1] - residuals[0])
+    min_change = span*0.1
+    try:
+        corner_idx = np.where(abs(np.diff(residuals)) < min_change)[0][0]
+    except:
+        corner_idx = np.argmin(residuals)
+    
+
     # print("corner_idx: ", corner_idx, " non-zeros: ", (x_hats[corner_idx]!=0).sum() )
     if plot:
         plt.figure()

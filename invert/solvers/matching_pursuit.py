@@ -213,7 +213,7 @@ class SolverSOMP(BaseSolver):
         # unexplained_variance[0] = unexplained_variance[1]
         # iters = np.arange(len(residuals))
         # corner_idx = find_corner(residuals, iters)
-        x_hat = best_index_residual(residuals, x_hats, plot=True)
+        x_hat = best_index_residual(residuals, x_hats, plot=False)
         # x_hat = x_hats[corner_idx]
         
         # import matplotlib.pyplot as plt
@@ -406,13 +406,14 @@ class SolverREMBO(BaseSolver):
 
         rand = np.random.rand
         n_chans, n_time = y.shape
+        max_iter = int(n_chans/2)
         n_dipoles = self.leadfield.shape[1]
 
         unexplained_variance = np.array([calc_residual_variance(np.zeros(y.shape), y),])
         n_sources = np.array([0,])
         x_hats = [np.zeros((n_dipoles, n_time))]
 
-        for i in range(n_chans):
+        for i in range(max_iter):
             a = rand(n_time)
             y_vec = y@a  # sample randomly from the measurement matrix
             x_hat = self.calc_omp_solution(y_vec, K=K)
@@ -431,8 +432,27 @@ class SolverREMBO(BaseSolver):
         n_sources = n_sources[idc]
         unexplained_variance = unexplained_variance[idc]
 
-        corner_idx = find_corner(n_sources[1:], unexplained_variance[1:])+1
-        corner_idx = idc[corner_idx]
+        # REFACTOR THIS:
+        unique_sources = np.sort(np.unique(n_sources))
+        n_sources_new = []
+        unexp_new = []
+        x_hats_new = []
+        for k in unique_sources:
+            idc = np.where(n_sources == k)[0]
+            values = unexplained_variance[idc]
+            min_sidx = np.argmin(values)
+            good_index = idc[min_sidx]
+
+            n_sources_new.append(k)
+            unexp_new.append(values.min())
+            x_hats_new.append( x_hats[good_index] )
+        n_sources = np.array(n_sources_new)[1:]
+        unexplained_variance = np.array(unexp_new)[1:]
+        x_hats = x_hats_new[1:]
+        corner_idx = find_corner(n_sources, unexplained_variance)
+        
+        # corner_idx = find_corner(n_sources[1:], unexplained_variance[1:])+1
+        # corner_idx = idc[corner_idx]
         x_hat = x_hats[corner_idx]
         import matplotlib.pyplot as plt
         plt.figure()
