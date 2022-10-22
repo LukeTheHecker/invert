@@ -352,9 +352,16 @@ class SolverSubSMP(BaseSolver):
 
         ## Use different y without unnecessary components here:
         x_hat[omegas, :] = np.linalg.pinv(self.leadfield[:, omegas]) @ y
+        
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # plt.plot(np.arange(len(s)), s, '*k')
+        # plt.plot(np.arange(len(s))[idx], s[idx], 'or')
+        
+
         return x_hat
 
-    def calc_smp_solution(self, y, include_singletons=True, residual_thresh=0.01):
+    def calc_smp_solution(self, y, include_singletons=True, var_thresh=1):
         """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
         
         Parameters
@@ -421,8 +428,10 @@ class SolverSubSMP(BaseSolver):
         # print(keep_idc)
         # unexplained_variance = unexplained_variance[keep_idc]
         # x_hats = [x_hats[idx] for idx in keep_idc]
-        
-        x_hat = best_index_residual(unexplained_variance, x_hats, plot=False)
+        if unexplained_variance[1] > var_thresh:
+            x_hat = best_index_residual(unexplained_variance, x_hats, plot=False)
+        else:
+            x_hat = x_hats[1]
         
         # x_hat = x_hats[corner_idx]
         return x_hat

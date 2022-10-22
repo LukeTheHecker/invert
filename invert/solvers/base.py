@@ -78,6 +78,7 @@ class BaseSolver:
         self.forward = forward
         self.prepare_forward()
         self.leadfield = self.forward['sol']['data']
+        self.alphas = self.get_alphas()
 
         pass
 
@@ -109,6 +110,11 @@ class BaseSolver:
             evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
         
         return evoked
+
+    def get_alphas(self):
+        _, eigs, _ = np.linalg.svd(self.leadfield) 
+        alphas = eigs.max() * self.r_values
+        return alphas
 
     def regularise_lcurve(self, evoked):
         # print("L-CURVE")

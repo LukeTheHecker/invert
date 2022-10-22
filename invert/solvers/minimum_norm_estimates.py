@@ -279,3 +279,82 @@ class SolverMinimumL1Norm(BaseSolver):
         r = np.squeeze(np.array(r))
         C = np.sign(r) * np.clip(abs(r) - lam, a_min=0, a_max=None)
         return C
+
+class SolverMinimumL1L2Norm(BaseSolver):
+    ''' Class for the Minimum L1-L2 Norm solution (MCE) inverse solution. It
+        imposes a L1 norm on the source and L2 on the source time courses.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+    def __init__(self, name="Minimum L1-L2 Norm", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, *args, alpha=0.01, verbose=0):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        self.forward = forward
+        leadfield = self.forward['sol']['data']
+        n_chans, _ = leadfield.shape
+        
+        self.alpha = alpha
+        return self
+
+    def apply_inverse_operator(self, evoked, max_iter=100, min_change=0.005) -> mne.SourceEstimate:
+        source_mat = self.calc_l1l2_solution(evoked.data, max_iter=max_iter, min_change=min_change)
+        stc = self.source_to_object(source_mat, evoked)
+        return stc
+    
+    def calc_l1l2_solution(self, y, max_iter=100, min_change=0.005):
+        leadfield = self.forward['sol']['data']
+        _, n_dipoles = leadfield.shape
+        n_chans, n_time = y.shape
+
+        if self.alpha == "auto":
+            _, s, _ = np.linalg.svd(leadfield)
+            self.alpha = 0.01 * s.max()
+        eps = 1e-16
+        leadfield -= leadfield.mean(axis=0)
+        y -= y.mean(axis=0)
+        I = np.identity(n_chans)
+        x_hat = np.ones((n_dipoles, n_time))
+
+        LLT = [ leadfield[:, rr][:, np.newaxis] @ leadfield[:, rr][:, np.newaxis].T for rr in range(n_dipoles)]
+        L1_norms = [1e99,]
+
+        for i in range(max_iter):
+            y_hat = leadfield @ x_hat
+            y_hat -= y_hat.mean(axis=0)
+            # R = np.linalg.norm(y - y_hat)
+            # print(i, " Residual: ", R)
+            norms = [self.calc_norm(x_hat[rr, :], n_time) for rr in range(n_dipoles)]
+            ALLT = np.stack( [ norms[rr] * LLT[rr]  for rr in range(n_dipoles)], axis=0).sum(axis=0)
+            for r in range(n_dipoles):
+                Lr = leadfield[:, r][:, np.newaxis]
+                x_hat[r, :] = norms[r] * Lr.T @ np.linalg.inv( ALLT + self.alpha * I ) @ y
+            L1_norms.append( np.abs(x_hat).sum() )
+            current_change = 1 - L1_norms[-1] / (L1_norms[-2]+eps)
+            if current_change < min_change:
+                # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - stopping")
+                break
+        return x_hat
+
+
+    @staticmethod
+    def calc_norm(x, n_time):
+        return np.sqrt( (x**2).sum() / n_time )
+        
