@@ -40,7 +40,7 @@ class SolverChampagne(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -56,7 +56,7 @@ class SolverChampagne(BaseSolver):
         '''
         self.forward = forward
         self.leadfield = self.forward['sol']['data']
-        self.alpha = alpha
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         n_chans = self.leadfield.shape[0]
         if noise_cov is None:
             noise_cov = np.identity(n_chans)
@@ -102,7 +102,8 @@ class SolverChampagne(BaseSolver):
         active_set = np.arange(n_sources)
         # H = np.concatenate(L, np.eyes(n_sensors), axis = 1)
         self.noise_cov = self.alpha*self.noise_cov
-        for _ in range(max_iter):
+        x_bars = []
+        for i in range(max_iter):
             gammas[np.isnan(gammas)] = 0.0
             gidx = np.abs(gammas) > threshold
             active_set = active_set[gidx]
@@ -130,6 +131,13 @@ class SolverChampagne(BaseSolver):
             e_bar = y - (self.leadfield @ x_bar)
             self.noise_cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
             threshold = 0.2 * np.mean(np.diag(self.noise_cov))
+            x_bars.append(x_bar)
+
+            if i>0:
+                if np.linalg.norm(x_bars[-1]) == 0:
+                    x_bar = x_bars[-2]
+                    break
+
 
         x[active_set, :] = x_bar
 
@@ -157,9 +165,9 @@ class SolverMultipleSparsePriors(BaseSolver):
         self.inversion_type = inversion_type
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, Np=64, 
+    def make_inverse_operator(self, forward, evoked, *args, Np=64, 
                               max_iter=128, smoothness=0.6, alpha='auto', 
-                              verbose=0):
+                              verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -173,7 +181,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         pos = pos_from_forward(forward, verbose=verbose)
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()

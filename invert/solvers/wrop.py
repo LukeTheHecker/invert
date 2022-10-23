@@ -17,7 +17,7 @@ class SolverBackusGilbert(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -31,9 +31,8 @@ class SolverBackusGilbert(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        _, n_dipoles = leadfield.shape
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        _, n_dipoles = self.leadfield.shape
         pos = pos_from_forward(forward, verbose=verbose)
         dist = cdist(pos, pos)
         if verbose>0:
@@ -47,17 +46,17 @@ class SolverBackusGilbert(BaseSolver):
 
         C = []
         for i in range(n_dipoles):
-            C_gamma = leadfield @ W_BG[i] @ leadfield.T
+            C_gamma = self.leadfield @ W_BG[i] @ self.leadfield.T
             C.append(C_gamma)
 
-        F = leadfield @ leadfield.T
+        F = self.leadfield @ self.leadfield.T
 
         E = []
         for i in range(n_dipoles):
             E_gamma = C[i] + F
             E.append(E_gamma)
 
-        L = leadfield @ np.ones((n_dipoles, 1))
+        L = self.leadfield @ np.ones((n_dipoles, 1))
 
         T = []
         for i in range(n_dipoles):
@@ -85,7 +84,7 @@ class SolverLAURA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, noise_cov=None, alpha='auto', drop_off=2, verbose=0):
+    def make_inverse_operator(self, forward, *args, noise_cov=None, alpha='auto', drop_off=2, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -99,10 +98,9 @@ class SolverLAURA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
-        n_chans, _ = leadfield.shape
+        n_chans, _ = self.leadfield.shape
         pos = pos_from_forward(forward, verbose=verbose)
         if noise_cov is None:
             noise_cov = np.identity(n_chans)
@@ -128,21 +126,15 @@ class SolverLAURA(BaseSolver):
         W_j_inv = np.linalg.inv(W_j)
         W_d = np.linalg.inv(noise_cov)
 
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            eigenvals = np.linalg.eig(leadfield @ W_j_inv @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-            # alphas = self.r_values
+       
  
         inverse_operators = []
-        for alpha in alphas:
+        for alpha in self.alphas:
             noise_term = (alpha**2) * np.linalg.inv(W_d)
-            inverse_operator = W_j_inv @ leadfield.T @ np.linalg.inv(leadfield @ W_j_inv @ leadfield.T + noise_term)
+            inverse_operator = W_j_inv @ self.leadfield.T @ np.linalg.inv(self.leadfield @ W_j_inv @ self.leadfield.T + noise_term)
             inverse_operators.append(inverse_operator)
             
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:

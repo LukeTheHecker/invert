@@ -27,7 +27,7 @@ class SolverSMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -41,15 +41,13 @@ class SolverSMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.inverse_operators = []
         
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0).toarray()
         laplace_operator = laplacian(adjacency)
         self.laplace_operator = laplace_operator
-        leadfield_smooth = leadfield @ abs(laplace_operator)
+        leadfield_smooth = self.leadfield @ abs(laplace_operator)
 
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)
@@ -160,7 +158,7 @@ class SolverSSMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -174,15 +172,13 @@ class SolverSSMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.inverse_operators = []
         
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0).toarray()
         laplace_operator = laplacian(adjacency)
         self.laplace_operator = laplace_operator
-        leadfield_smooth = leadfield @ abs(laplace_operator)
+        leadfield_smooth = self.leadfield @ abs(laplace_operator)
 
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)
@@ -286,7 +282,7 @@ class SolverSubSMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -300,15 +296,13 @@ class SolverSubSMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.inverse_operators = []
         
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0).toarray()
         laplace_operator = laplacian(adjacency)
         self.laplace_operator = laplace_operator
-        leadfield_smooth = leadfield @ abs(laplace_operator)
+        leadfield_smooth = self.leadfield @ abs(laplace_operator)
 
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)

@@ -15,7 +15,7 @@ class SolverMinimumNorm(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -29,28 +29,20 @@ class SolverMinimumNorm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         n_chans, _ = leadfield.shape
         
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-        
         inverse_operators = []
-        for alpha in alphas:
+        for alpha in self.alphas:
             inverse_operator = leadfield.T @ np.linalg.inv(leadfield @ leadfield.T + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
-
 
 class SolverWeightedMinimumNorm(BaseSolver):
     ''' Class for the Weighted Minimum Norm Estimate (wMNE) inverse solution.
@@ -64,7 +56,7 @@ class SolverWeightedMinimumNorm(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -78,26 +70,19 @@ class SolverWeightedMinimumNorm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        W = np.diag(np.linalg.norm(leadfield, axis=0))
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        W = np.diag(np.linalg.norm(self.leadfield, axis=0))
         WTW = np.linalg.inv(W.T @ W)
-        LWTWL = leadfield @ WTW @ leadfield.T
-        n_chans, _ = leadfield.shape
+        LWTWL = self.leadfield @ WTW @ self.leadfield.T
+        n_chans, _ = self.leadfield.shape
 
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            eigenvals = np.linalg.eig(leadfield @ W @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-
+      
         inverse_operators = []
-        for alpha in alphas:
-            inverse_operator = WTW @ leadfield.T  @ np.linalg.inv(LWTWL + alpha * np.identity(n_chans))
+        for alpha in self.alphas:
+            inverse_operator = WTW @ self.leadfield.T  @ np.linalg.inv(LWTWL + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -117,7 +102,7 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, alpha=0.01, noise_cov=None, source_cov=None,
-                            verbose=0):
+                            verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -136,9 +121,8 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        n_chans, n_dipoles = leadfield.shape
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        n_chans, n_dipoles = self.leadfield.shape
 
         if noise_cov is None:
             noise_cov = np.identity(n_chans)
@@ -146,26 +130,16 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
             source_cov = np.identity(n_dipoles)
         
 
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            # eigenvals = np.linalg.eig(leadfield @ source_cov @ leadfield.T)[0]
-            # alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-            alphas = self.r_values
-            # alphas = self.r_values = np.insert(np.logspace(-6, 6, 50), 0, 0)
-            # print(f"alpha must be set to a float when using {self.name}, auto does not work yet.")
-            # alphas = [0.01,]
         inverse_operators = []
-        leadfield_source_cov = source_cov @ leadfield.T
-        LLS = leadfield @ leadfield_source_cov
-        for alpha in alphas:
+        leadfield_source_cov = source_cov @ self.leadfield.T
+        LLS = self.leadfield @ leadfield_source_cov
+        for alpha in self.alphas:
             K = leadfield_source_cov @ np.linalg.inv(LLS + alpha * noise_cov)
             W_dSPM = np.diag( np.sqrt( 1 / np.diagonal(K @ noise_cov @ K.T) ) )
             inverse_operator = W_dSPM @ K
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -184,7 +158,7 @@ class SolverMinimumL1Norm(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -198,10 +172,9 @@ class SolverMinimumL1Norm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        if self.verbose>0:
-            print(f"No inverse operator is computed for {self.name}")
-        self.forward = forward
-        self.leadfield = self.forward['sol']['data']
+        # if self.verbose>0:
+        #     print(f"No inverse operator is computed for {self.name}")
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         n_chans = self.leadfield.shape[0]
         if noise_cov is None:
             noise_cov = np.identity(n_chans)
@@ -293,7 +266,7 @@ class SolverMinimumL1L2Norm(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha=0.01, verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha=0.01, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -307,11 +280,8 @@ class SolverMinimumL1L2Norm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        n_chans, _ = leadfield.shape
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         
-        self.alpha = alpha
         return self
 
     def apply_inverse_operator(self, evoked, max_iter=100, min_change=0.005) -> mne.SourceEstimate:
@@ -326,7 +296,7 @@ class SolverMinimumL1L2Norm(BaseSolver):
 
         if self.alpha == "auto":
             _, s, _ = np.linalg.svd(leadfield)
-            self.alpha = 0.01 * s.max()
+            self.alpha = 1e-7 # * s.max()
         eps = 1e-16
         leadfield -= leadfield.mean(axis=0)
         y -= y.mean(axis=0)
@@ -348,6 +318,7 @@ class SolverMinimumL1L2Norm(BaseSolver):
                 x_hat[r, :] = norms[r] * Lr.T @ np.linalg.inv( ALLT + self.alpha * I ) @ y
             L1_norms.append( np.abs(x_hat).sum() )
             current_change = 1 - L1_norms[-1] / (L1_norms[-2]+eps)
+            # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - ({L1_norms[-2]} -> {L1_norms[-1]})not stopping")
             if current_change < min_change:
                 # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - stopping")
                 break

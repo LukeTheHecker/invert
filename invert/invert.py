@@ -19,7 +19,7 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverWeightedMinimumNorm(**kwargs)
     elif solver.lower() == "dspm":
         solver_object = solvers.SolverDynamicStatisticalParametricMapping(**kwargs)
-    elif solver.lower() == "L1L2":
+    elif solver.lower() == "l1l2":
         solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)

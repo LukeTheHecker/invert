@@ -65,19 +65,23 @@ class BaseSolver:
     car_leadfield : bool
         If True -> Apply common average referencing on the leadfield columns.
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=50, 
+    def __init__(self, regularisation_method="GCV", n_reg_params=24, 
         car_leadfield=True, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
-        self.r_values = np.insert(np.logspace(0, 7, n_reg_params), 0, 0)
-        self.alphas = deepcopy(self.r_values)
+        self.r_values = np.insert(np.logspace(-3, 2, n_reg_params), 0, 0)
+        # self.r_values = np.arange(13)
+        
+        # self.alphas = deepcopy(self.r_values)
         self.regularisation_method = regularisation_method
         self.car_leadfield = car_leadfield
         
-    def make_inverse_operator(self, forward: mne.Forward, *args):
+    def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", **kwargs):
+      
         self.forward = forward
         self.prepare_forward()
         self.leadfield = self.forward['sol']['data']
+        self.alpha = alpha
         self.alphas = self.get_alphas()
 
         pass
@@ -112,8 +116,11 @@ class BaseSolver:
         return evoked
 
     def get_alphas(self):
-        _, eigs, _ = np.linalg.svd(self.leadfield) 
-        alphas = eigs.max() * self.r_values
+        if self.alpha == "auto":
+            _, eigs, _ = np.linalg.svd(self.leadfield) 
+            alphas = list(eigs.max() * self.r_values)
+        else:
+            alphas = [self.alpha, ]
         return alphas
 
     def regularise_lcurve(self, evoked):
@@ -122,6 +129,10 @@ class BaseSolver:
         leadfield = self.forward["sol"]["data"]
         source_mats = [inverse_operator.apply( evoked ) for inverse_operator in self.inverse_operators]
         
+        M -= M.mean(axis=0)
+        leadfield -= leadfield.mean(axis=0)
+        
+
         l2_norms = [np.log(np.linalg.norm( leadfield @ source_mat )) for source_mat in source_mats]
         residual_norms = [np.log(np.linalg.norm( leadfield @ source_mat - M )) for source_mat in source_mats]
 
@@ -141,7 +152,7 @@ class BaseSolver:
         source_mat = source_mats[optimum_idx]
         
         # plt.figure()
-        # plt.loglog(residual_norms, l2_norms)
+        # plt.plot(residual_norms, l2_norms, 'ok')
         # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
         # alpha = self.alphas[optimum_idx]
         # plt.title(f"L-Curve: {alpha}")
@@ -170,11 +181,14 @@ class BaseSolver:
         self.leadfield = self.forward["sol"]["data"]
         n_chans = self.leadfield.shape[0]
         M = evoked.data
+        # M -= M.mean(axis=0)
         I = np.identity(n_chans)
         gcv_values = []
         for inverse_operator in self.inverse_operators:
             x = inverse_operator.data @ M
-            residual_norm = np.linalg.norm(self.leadfield@x - M)
+            M_hat = self.leadfield @ x 
+            # M_hat -= M_hat.mean(axis=0)
+            residual_norm = np.linalg.norm(M_hat- M)
             denom = np.trace(I - self.leadfield @ inverse_operator.data[0])**2
     
             gcv_value = residual_norm / denom
@@ -183,11 +197,12 @@ class BaseSolver:
         optimum_idx = np.argmin(gcv_values)
         
         # plt.figure()
-        # plt.loglog(self.alphas, gcv_values)
+        # plt.loglog(self.alphas, gcv_values, 'ok')
         # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
         # alpha = self.alphas[optimum_idx]
-        # print(alpha)
+        # print("alpha: ", alpha)
         # plt.title(f"GCV: {alpha}")
+
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
     
@@ -209,11 +224,11 @@ class BaseSolver:
 
         optimum_idx = np.argmin(product_values)
 
-        plt.figure()
-        plt.plot(self.alphas, product_values)
-        plt.plot(self.alphas[optimum_idx], product_values[optimum_idx], 'r*')
-        alpha = self.alphas[optimum_idx]
-        plt.title(f"Product: {alpha}")
+        # plt.figure()
+        # plt.plot(self.alphas, product_values)
+        # plt.plot(self.alphas[optimum_idx], product_values[optimum_idx], 'r*')
+        # alpha = self.alphas[optimum_idx]
+        # plt.title(f"Product: {alpha}")
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
 

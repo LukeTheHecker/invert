@@ -20,7 +20,7 @@ class SolverLORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -34,7 +34,7 @@ class SolverLORETA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         LTL = leadfield.T @ leadfield
         B = np.diag(np.linalg.norm(leadfield, axis=0))
@@ -42,19 +42,13 @@ class SolverLORETA(BaseSolver):
         laplace_operator = laplacian(adjacency)
         BLapTLapB = B @ laplace_operator.T @ laplace_operator @ B
 
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            # No eigenvalue-based regularization yielded best results for LORETA.
-            alphas = self.r_values
-        
+   
         inverse_operators = []
-        for alpha in alphas:
+        for alpha in self.alphas:
             inverse_operator = np.linalg.inv(LTL + alpha * BLapTLapB) @ leadfield.T
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -72,7 +66,7 @@ class SolverSLORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -86,34 +80,33 @@ class SolverSLORETA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
-        LTL = leadfield @ leadfield.T
         n_chans = leadfield.shape[0]
+        
+        LLT = leadfield @ leadfield.T
+        I = np.identity(n_chans)
+        one = np.ones((n_chans, 1))
+        H = I - (one @ one.T) / (one.T @ one)
+        
 
-
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            # No eigenvalue-based regularization yielded best results for LORETA.
-            # alphas = self.r_values
-            eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
         
         inverse_operators = []
-        for alpha in alphas:
-            K_MNE = leadfield.T @ np.linalg.inv(LTL + alpha * np.identity(n_chans))
-            W_diag = 1 / np.diag(K_MNE @ leadfield)
+        for alpha in self.alphas:
+            # according to Grech et al 2008
+            # K_MNE = leadfield.T @ np.linalg.inv(LLT + alpha * np.identity(n_chans))
+            # W_diag = 1 / np.diag(K_MNE @ leadfield)
+            # W_slor = np.diag(W_diag)
+            # W_slor = np.sqrt(W_slor)
+            
+            # according to pascual-marqui 2002
+            T = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
+            
 
-            W_slor = np.diag(W_diag)
-
-            W_slor = np.sqrt(W_slor)
-
-            inverse_operator = W_slor @ K_MNE
+            inverse_operator = T
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
@@ -132,7 +125,7 @@ class SolverELORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, stop_crit=0.005):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, stop_crit=0.005, max_iter=100, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -146,32 +139,59 @@ class SolverELORETA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         n_chans = leadfield.shape[0]
-        noise_cov = np.identity(n_chans)
-
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            # No eigenvalue-based regularization yielded best results for LORETA.
-            alphas = self.r_values
-            # eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            # alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
+        # noise_cov = np.identity(n_chans)
         
+        # Some pre-calculations
+        I = np.identity(n_chans)
+        one = np.ones((n_chans, 1))
+        H = I - (one @ one.T) / (one.T @ one)
+        W_MNE = np.diag(np.linalg.norm(leadfield, axis=0))
+        W_MNE_inv = np.linalg.inv(W_MNE)
+        
+        # No regularization leads to weird results with eLORETA
+        if self.alphas[0] == 0:
+            self.alphas[0] = 0.01
         inverse_operators = []
-        for alpha in alphas:
-            D = calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=stop_crit, verbose=verbose)
-            D_inv = np.linalg.inv(D)
-            inverse_operator = D_inv @ leadfield.T @ np.linalg.inv( leadfield @ D_inv @ leadfield.T + alpha * noise_cov )
+        for alpha in self.alphas:
+            
+            W = self.calc_W(H, W_MNE, W_MNE_inv, alpha, max_iter=max_iter, stop_crit=stop_crit)
+
+            inverse_operator = np.linalg.inv(W) @ leadfield.T @ np.linalg.pinv(leadfield @ np.linalg.inv(W) @ leadfield.T + alpha * H)
+            
+            # According to Grech 2008:
+            # D = calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=stop_crit, verbose=verbose)
+            # D_inv = np.linalg.inv(D)
+            # inverse_operator = D_inv @ leadfield.T @ np.linalg.inv( leadfield @ D_inv @ leadfield.T + alpha * noise_cov )
+
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
+    
+    def calc_W(self, H, W_MNE, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
+        n_chans, n_dipoles = self.leadfield.shape
+        
+        MM = np.linalg.pinv(self.leadfield @ W_MNE_inv @ self.leadfield.T + alpha * H)
+        W_last = np.zeros((n_dipoles, n_dipoles))
+        # changes = [1e99,]
+        # norms = [1e99,]
+        # eps = 1e-16
+        for i in range(max_iter):
+            W_i = self.leadfield.T @ MM @ self.leadfield
+            W_i = np.sqrt(np.diag(np.diagonal(W_i)))
+            w_change = np.linalg.norm(W_i - W_last)
+            
+            if w_change < stop_crit:
+                break    
+            W_last = deepcopy(W_i)
+            
+        return W_i
 
 
 def calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=0.005, verbose=0):
