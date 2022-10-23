@@ -285,13 +285,16 @@ class SolverCOSAMP(BaseSolver):
         _, n_dipoles = self.leadfield.shape
 
         if K == "auto":
-            K = int(n_chans/2)
+            K = 3
         x_hat = np.zeros(n_dipoles)
         x_hats = [deepcopy(x_hat)]
         b = np.zeros((n_dipoles, ))
         r = deepcopy(y)
-
-        residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
+        y -= y.mean()
+        self.leadfield -= self.leadfield.mean(axis=0)
+        y_hat = self.leadfield@x_hat
+        y_hat -= y_hat.mean()
+        residuals = np.array([np.linalg.norm(y - y_hat), ])
         source_norms = np.array([0,])
         unexplained_variance = np.array([calc_residual_variance(self.leadfield@x_hat, y),])
 
@@ -302,14 +305,17 @@ class SolverCOSAMP(BaseSolver):
             omega = np.where(e_thresh!=0)[0]
             old_activations = np.where(x_hats[i-1]!=0)[0]
             T = np.unique(np.concatenate([omega, old_activations]))
-            # leadfield_pinv = np.linalg.pinv(self.leadfield[:, T])
-            leadfield_pinv = np.linalg.pinv(self.leadfield)[T]
+            print(T)
+            leadfield_pinv = np.linalg.pinv(self.leadfield[:, T])
+            # leadfield_pinv = np.linalg.pinv(self.leadfield)[T]
             
             b[T] = leadfield_pinv @ y
             x_hat = thresholding(b, K)
-            r = y - self.leadfield@x_hat
+            y_hat = self.leadfield@x_hat
+            y_hat -= y_hat.mean()
+            r = y - y_hat
             
-            residuals = np.append(residuals, np.linalg.norm(y - self.leadfield@x_hat))
+            residuals = np.append(residuals, np.linalg.norm(r))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             unexplained_variance = np.append(unexplained_variance, calc_residual_variance(self.leadfield@x_hat, y))
             x_hats.append(deepcopy(x_hat))

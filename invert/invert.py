@@ -74,6 +74,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverSSMP(**kwargs)
     elif solver.lower() == "subsmp":
         solver_object = solvers.SolverSubSMP(**kwargs)
+    elif solver.lower() == "bcs":
+        solver_object = solvers.SolverBCS(**kwargs)
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {config.all_solvers}"
         raise AttributeError(msg)

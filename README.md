@@ -35,6 +35,9 @@ Greedy Algorithms (Matching Pursuit):
 
 Other:
 * S-MAP
+* Smooth Orthogonal Matching Pursuit (SMP)
+* Smooth Simultaneous Orthogonal Matching Pursuit (SSOMP)
+* Smooth Subspace Simultaneous Orthogonal Matching Pursuit (SubSMP)
 
 ## Adapters
 Adapters are methods that optimize an already calculated inverse solution, e.g.,

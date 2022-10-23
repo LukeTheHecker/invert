@@ -30,7 +30,7 @@ class SolverMinimumNorm(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         n_chans, _ = leadfield.shape
         
         inverse_operators = []

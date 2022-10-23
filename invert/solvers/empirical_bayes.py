@@ -133,10 +133,9 @@ class SolverChampagne(BaseSolver):
             threshold = 0.2 * np.mean(np.diag(self.noise_cov))
             x_bars.append(x_bar)
 
-            if i>0:
-                if np.linalg.norm(x_bars[-1]) == 0:
-                    x_bar = x_bars[-2]
-                    break
+            if i>0 and np.linalg.norm(x_bars[-1]) == 0:
+                x_bar = x_bars[-2]
+                break
 
 
         x[active_set, :] = x_bar
