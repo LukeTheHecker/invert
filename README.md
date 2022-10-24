@@ -21,10 +21,11 @@ Weighted Resolution Optimization:
 * Local Autoregressive Average (LAURA)
 
 Bayesian Family:
-* Multiple Sparse Priors
+* Multiple Sparse Priors (MSP)
 * Bayesian LORETA
 * Bayesian MNE
 * Bayesian Beamformer
+* Bayesian Compressed Sensing (BCS)
 
 Greedy Algorithms (Matching Pursuit):
 * Orthogonal Matching Pursuit (OMP)
@@ -36,7 +37,7 @@ Greedy Algorithms (Matching Pursuit):
 Other:
 * S-MAP
 * Smooth Orthogonal Matching Pursuit (SMP)
-* Smooth Simultaneous Orthogonal Matching Pursuit (SSOMP)
+* Smooth Simultaneous Orthogonal Matching Pursuit (SSMP)
 * Smooth Subspace Simultaneous Orthogonal Matching Pursuit (SubSMP)
 
 ## Adapters
