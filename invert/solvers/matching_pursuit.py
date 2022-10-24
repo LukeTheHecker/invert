@@ -24,7 +24,7 @@ class SolverOMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -38,10 +38,7 @@ class SolverOMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
-        # self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield,axis=0)
         
         
@@ -129,7 +126,7 @@ class SolverSOMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -143,12 +140,9 @@ class SolverSOMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
-        # self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield,axis=0)
-                
+        
         self.inverse_operators = []
         return self
 
@@ -243,7 +237,7 @@ class SolverCOSAMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -257,11 +251,9 @@ class SolverCOSAMP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
-        # self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield,axis=0)
+  
         
         
         self.inverse_operators = []
@@ -293,13 +285,16 @@ class SolverCOSAMP(BaseSolver):
         _, n_dipoles = self.leadfield.shape
 
         if K == "auto":
-            K = int(n_chans/2)
+            K = 3
         x_hat = np.zeros(n_dipoles)
         x_hats = [deepcopy(x_hat)]
         b = np.zeros((n_dipoles, ))
         r = deepcopy(y)
-
-        residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
+        y -= y.mean()
+        self.leadfield -= self.leadfield.mean(axis=0)
+        y_hat = self.leadfield@x_hat
+        y_hat -= y_hat.mean()
+        residuals = np.array([np.linalg.norm(y - y_hat), ])
         source_norms = np.array([0,])
         unexplained_variance = np.array([calc_residual_variance(self.leadfield@x_hat, y),])
 
@@ -310,14 +305,17 @@ class SolverCOSAMP(BaseSolver):
             omega = np.where(e_thresh!=0)[0]
             old_activations = np.where(x_hats[i-1]!=0)[0]
             T = np.unique(np.concatenate([omega, old_activations]))
-            # leadfield_pinv = np.linalg.pinv(self.leadfield[:, T])
-            leadfield_pinv = np.linalg.pinv(self.leadfield)[T]
+            print(T)
+            leadfield_pinv = np.linalg.pinv(self.leadfield[:, T])
+            # leadfield_pinv = np.linalg.pinv(self.leadfield)[T]
             
             b[T] = leadfield_pinv @ y
             x_hat = thresholding(b, K)
-            r = y - self.leadfield@x_hat
+            y_hat = self.leadfield@x_hat
+            y_hat -= y_hat.mean()
+            r = y - y_hat
             
-            residuals = np.append(residuals, np.linalg.norm(y - self.leadfield@x_hat))
+            residuals = np.append(residuals, np.linalg.norm(r))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             unexplained_variance = np.append(unexplained_variance, calc_residual_variance(self.leadfield@x_hat, y))
             x_hats.append(deepcopy(x_hat))
@@ -361,7 +359,7 @@ class SolverREMBO(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -375,12 +373,8 @@ class SolverREMBO(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
-        
-        
-        
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
         self.inverse_operators = []
         return self
 
@@ -534,7 +528,7 @@ class SolverSP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -548,12 +542,8 @@ class SolverSP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        self.leadfield = leadfield
-        # self.leadfield_normed = self.leadfield / self.leadfield.std(axis=0)
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield,axis=0)
-        
         
         self.inverse_operators = []
         return self

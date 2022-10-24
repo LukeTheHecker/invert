@@ -40,7 +40,7 @@ class SolverChampagne(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', max_iter=1000, noise_cov=None, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -56,6 +56,7 @@ class SolverChampagne(BaseSolver):
         '''
         self.forward = forward
         self.leadfield = self.forward['sol']['data']
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         n_chans = self.leadfield.shape[0]
         if noise_cov is None:
             noise_cov = np.identity(n_chans)
@@ -66,26 +67,19 @@ class SolverChampagne(BaseSolver):
 
     def apply_inverse_operator(self, evoked, max_iter=1000) -> mne.SourceEstimate:
 
-        source_mat = self.champagne(self.leadfield, evoked.data, self.noise_cov, max_iter=max_iter)
+        source_mat = self.champagne(evoked.data, max_iter=max_iter)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
-    @staticmethod
-    def champagne(L, y, cov, max_iter=1000, alpha=1.0):
+    
+    def champagne(self, y, max_iter=1000):
         """Champagne method based on our MATLAB codes  
         -> copied as mentioned in class docstring
 
         Parameters
         ----------
-        L : array, shape (n_sensors, n_sources)
-            lead field matrix modeling the forward operator or dictionary matrix
         y : array, shape (n_sensors,)
             measurement vector, capturing sensor measurements
-        cov : float | array, shape (n_sensors, n_sensors)
-            noise covariance matrix. If float it corresponds to the noise variance
-            assumed to be diagonal.
-        alpha : float
-            The regularization parameter
         max_iter : int, optional
             The maximum number of inner loop iterations
 
@@ -96,17 +90,20 @@ class SolverChampagne(BaseSolver):
             function formula).
         
         """
-        n_sensors, n_sources = L.shape
+        _, n_sources = self.leadfield.shape
         _, n_times = y.shape
+        if self.alpha == "auto":
+            self.alpha = 1
         gammas = np.ones(n_sources)
         eps = np.finfo(float).eps
-        threshold = 0.2 * np.mean(np.diag(cov))
+        threshold = 0.2 * np.mean(np.diag(self.noise_cov))
         x = np.zeros((n_sources, n_times))
         n_active = n_sources
         active_set = np.arange(n_sources)
         # H = np.concatenate(L, np.eyes(n_sensors), axis = 1)
-        cov = alpha*cov
-        for _ in range(max_iter):
+        self.noise_cov = self.alpha*self.noise_cov
+        x_bars = []
+        for i in range(max_iter):
             gammas[np.isnan(gammas)] = 0.0
             gidx = np.abs(gammas) > threshold
             active_set = active_set[gidx]
@@ -115,22 +112,31 @@ class SolverChampagne(BaseSolver):
             # update only active gammas (once set to zero it stays at zero)
             if n_active > len(active_set):
                 n_active = active_set.size
-                L = L[:, gidx]
+                self.leadfield = self.leadfield[:, gidx]
 
             Gamma = spdiags(gammas, 0, len(active_set), len(active_set))
-            Sigma_y = (L @ Gamma @ L.T) + cov
+            # Calculate Source Covariance Matrix based on currently selected gammas
+            Sigma_y = (self.leadfield @ Gamma @ self.leadfield.T) + self.noise_cov
             U, S, _ = np.linalg.svd(Sigma_y, full_matrices=False)
             S = S[np.newaxis, :]
             del Sigma_y
             Sigma_y_inv = np.dot(U / (S + eps), U.T)
             # Sigma_y_inv = linalg.inv(Sigma_y)
-            x_bar = Gamma @ L.T @ Sigma_y_inv @ y
+            x_bar = Gamma @ self.leadfield.T @ Sigma_y_inv @ y
+
             gammas = np.sqrt(
-                np.diag(x_bar @ x_bar.T / n_times) / np.diag(L.T @ Sigma_y_inv @ L)
+                np.diag(x_bar @ x_bar.T / n_times) / np.diag(self.leadfield.T @ Sigma_y_inv @ self.leadfield)
             )
-            e_bar = y - (L @ x_bar)
-            cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
-            threshold = 0.2 * np.mean(np.diag(cov))
+            # Calculate Residual to the data
+            e_bar = y - (self.leadfield @ x_bar)
+            self.noise_cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
+            threshold = 0.2 * np.mean(np.diag(self.noise_cov))
+            x_bars.append(x_bar)
+
+            if i>0 and np.linalg.norm(x_bars[-1]) == 0:
+                x_bar = x_bars[-2]
+                break
+
 
         x[active_set, :] = x_bar
 
@@ -158,9 +164,9 @@ class SolverMultipleSparsePriors(BaseSolver):
         self.inversion_type = inversion_type
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, Np=64, 
+    def make_inverse_operator(self, forward, evoked, *args, Np=64, 
                               max_iter=128, smoothness=0.6, alpha='auto', 
-                              verbose=0):
+                              verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -174,7 +180,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         pos = pos_from_forward(forward, verbose=verbose)
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()

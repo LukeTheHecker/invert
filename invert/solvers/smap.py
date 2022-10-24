@@ -29,7 +29,7 @@ class SolverSMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0):
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -43,29 +43,21 @@ class SolverSMAP(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
-        LTL = leadfield.T @ leadfield 
-        n_chans, n_dipoles = leadfield.shape
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        LTL = self.leadfield.T @ self.leadfield 
+        n_chans, n_dipoles = self.leadfield.shape
         gradient = self.calculate_gradient(verbose=verbose)
         GTG = gradient.T @ gradient
-        if isinstance(alpha, (int, float)):
-            alphas = [alpha,]
-        else:
-            eigenvals = np.linalg.eig(leadfield @ leadfield.T)[0]
-            alphas = [r_value * np.max(eigenvals) / 2e4 for r_value in self.r_values]
-            # alphas = self.r_values
-            # alphas = np.insert(np.logspace(-3, 1, 12), 0, 0)
-        
+                
         inverse_operators = []
         # GG_inv = np.linalg.inv(gradient.T @ gradient)
-        for alpha in alphas:
-            inverse_operator = np.linalg.inv(LTL + alpha * GTG) @ leadfield.T
-            # inverse_operator = GG_inv @ leadfield.T @ np.linalg.inv(leadfield @ GG_inv @ leadfield.T + alpha * np.identity(n_chans))
+        for alpha in self.alphas:
+            inverse_operator = np.linalg.inv(LTL + alpha * GTG) @ self.leadfield.T
+            # inverse_operator = GG_inv @ self.leadfield.T @ np.linalg.inv(self.leadfield @ GG_inv @ self.leadfield.T + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        self.alphas = alphas
+        
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:

@@ -19,6 +19,10 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverWeightedMinimumNorm(**kwargs)
     elif solver.lower() == "dspm":
         solver_object = solvers.SolverDynamicStatisticalParametricMapping(**kwargs)
+    elif solver.lower() == "l1l2":
+        solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
+    elif solver.lower() == "l1" or solver.lower() == "fista":
+        solver_object = solvers.SolverMinimumL1Norm(**kwargs)
     elif solver.lower() == "loreta" or solver.lower() == "lor":
         solver_object = solvers.SolverLORETA(**kwargs)
     elif solver.lower() == "sloreta" or solver.lower() == "slor":
@@ -46,6 +50,8 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "bayesian beamformer loreta" or solver.lower() == "bbmf-lor" or solver.lower() == "bmf-lor":
         inversion_type = "BMF-LOR"
         solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
+    elif solver.lower() == "mvab":
+        solver_object = solvers.SolverMVAB(**kwargs)
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
         solver_object = solvers.SolverFullyConnected(**kwargs)
     elif solver.lower() == "lucas":
@@ -68,9 +74,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverSSMP(**kwargs)
     elif solver.lower() == "subsmp":
         solver_object = solvers.SolverSubSMP(**kwargs)
-    
-    elif solver.lower() == "l1" or solver.lower() == "fista":
-        solver_object = solvers.SolverMinimumL1Norm(**kwargs)
+    elif solver.lower() == "bcs":
+        solver_object = solvers.SolverBCS(**kwargs)
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {config.all_solvers}"
         raise AttributeError(msg)

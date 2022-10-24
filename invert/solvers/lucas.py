@@ -20,8 +20,8 @@ class SolverLUCAS(BaseSolver):
         self.solvers = None
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, alpha='auto', solvers="all",
-                                verbose=0):
+    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', solvers="all",
+                                verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -38,8 +38,7 @@ class SolverLUCAS(BaseSolver):
         self : object returns itself for convenience
         '''
         from invert import Solver
-        
-        self.forward = forward
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.forward['sol']['data']
         n_chans, _ = leadfield.shape
 

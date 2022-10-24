@@ -8,3 +8,5 @@ from .smap import *
 from .base import *
 from .matching_pursuit import *
 from .smooth_matching_pursuit import *
+from .beamformer import *
+from .bayes import *
