@@ -26,9 +26,9 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, verbose=0):
     leadfield_norm = leadfield / np.linalg.norm(leadfield, axis=0)
     
     D = stc.data
-    M = evoked.data
-    # M = leadfield @ D
-    # M -= M.mean(axis=0)
+    # M = evoked.data
+    M = leadfield @ D
+    M -= M.mean(axis=0)
     n_chans, n_dipoles = leadfield.shape
     n_time = M.shape[1]
 
