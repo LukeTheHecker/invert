@@ -46,7 +46,7 @@ by enforcing temporal constraints or by iteratively promoting sparsity.
 
 * Temporal contextualization using the approach described in [10].
 * FOCUSS - decreases blurring in the inverse solutions [11].
-
+* CAMP-C - Temporal contextualization using orthogonal matching pursuit
 # References
 
 [10] Dinh, C., Samuelsson, J. G., Hunold, A., Hämäläinen, M. S., & Khan, S.

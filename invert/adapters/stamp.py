@@ -1,9 +1,11 @@
 import numpy as np
 from copy import deepcopy
 import mne
+from scipy.sparse.csgraph import laplacian
 from ..util import calc_residual_variance
 
-def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, verbose=0):
+def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, 
+            n_orders=0, verbose=0):
     ''' Spatio-Temporal Matching Pursuit Contextualizer (STAMP-C)
 
     Parameters
@@ -22,15 +24,39 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, verbose=0):
     stc_focuss : mne.SourceEstimate
         The new focussed source estimate
     '''
-    leadfield = forward['sol']['data']
-    leadfield_norm = leadfield / np.linalg.norm(leadfield, axis=0)
-    
     D = stc.data
-    # M = evoked.data
-    M = leadfield @ D
-    M -= M.mean(axis=0)
-    n_chans, n_dipoles = leadfield.shape
-    n_time = M.shape[1]
+    M = evoked.data
+    # M = leadfield @ D
+    # M -= M.mean(axis=0)
+    n_dipoles, n_time = D.shape
+    
+    leadfield = forward['sol']['data']
+    leadfield -= leadfield.mean(axis=0)
+    leadfield_norm = leadfield / np.linalg.norm(leadfield, axis=0)
+
+    leadfields_norm = [leadfield_norm, ]
+    neighbors_bases = [np.arange(n_dipoles),]
+    
+    # Compute Leadfield bases and corresponding neighbors
+    adjacency = mne.spatial_src_adjacency(forward['src'], verbose=0)
+    for order in range(n_orders):
+        laplace_operator = laplacian(adjacency)
+        laplace_operator = laplace_operator
+
+        leadfield_smooth = leadfield @ abs(laplace_operator)
+        leadfield_smooth -= leadfield_smooth.mean(axis=0)
+        leadfield_smooth_norm = leadfield_smooth / np.linalg.norm(leadfield_smooth, axis=0)
+
+        neighbors_base = [np.where(adj !=0)[0] for adj in adjacency.toarray()]
+
+        leadfields_norm.append( leadfield_smooth_norm )
+        neighbors_bases.append( neighbors_base )
+        
+        adjacency = adjacency @ adjacency.T
+
+    
+    
+    
 
     # Compute the re-weighting gamma factor from the 
     # existing source estimate
@@ -48,30 +74,38 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, verbose=0):
     residual_norms = [1e99,]
     idc = np.array([])
     for i in range(max_iter):
-        # Calculate leadfield components of the Residual
-        mp = (leadfield_norm.T @ R )
-        gammas_mp = np.linalg.norm(mp, axis=1, ord=1)
+        # Calculate leadfield components of the largest eigenvector of the
+        # Residual
+        sigma_R = R@R.T
+        U, _, _ = np.linalg.svd(sigma_R, full_matrices=False)
+        
+        # Select Gammas of Matching pursuit using the orthogonal leadfield:
+        # gammas_mp = abs(leadfield_norm.T @ U[:, 0] )
+
+        # Select the most informativ basis of Gammas
+        gammas_bases = [abs(L_norm.T @ U[:, 0]) for L_norm in leadfields_norm]
+        basis_idx = np.argmax([gammas_base.max() for gammas_base in gammas_bases])
+        # basis_idx = np.argmax([np.mean(gammas_base) for gammas_base in gammas_bases])
+        gammas_mp = gammas_bases[basis_idx]
+        neighbors_base = neighbors_bases[basis_idx]
+
         gammas_mp /= gammas_mp.max()
         
+
         # Combine leadfield components with the source-gamma
         gammas = gammas_model * gammas_mp
-        
+        # gammas = gammas_mp + (gammas_model * gammas_mp)
+        # gammas = gammas_mp
+ 
         # Select the K dipoles with highest correlation (probability)
         idx = np.argsort(gammas)[-K:]
+        idx = [neighbors_base[idxx] for idxx in idx]
 
         # Add the new dipoles to the existing set of dipoles
         idc = np.unique(np.append(idc, idx)).astype(int)
 
-        # Experimental:
-        # -------------
-        # Remove IDC that dont really explain variance in the whole data
-        # Inversion
-        # corrs = np.mean(abs((leadfield_norm.T @ D)), axis=1)[idc]
-        # highest_K = corrs > corrs.max()/2#np.argsort(corrs)[-K:]
-        # idc = idc[highest_K]
-        # -------------
-
         # Inversion: Calculate the inverse solution based on current set
+        # V1
         leadfield_pinv = np.linalg.pinv(leadfield[:, idc])
         y_hat = np.zeros((n_dipoles, n_time))
         y_hat[idc] = leadfield_pinv @ M
@@ -89,7 +123,7 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1, verbose=0):
         residual_norms.append( residual_norm )
         # Calculate the percentage of residual variance
         rv = calc_residual_variance(X_hat, M)
-        print(i, " Res var: ", rv)
+        print(i, " Res var: ", round(rv, 2))
         if rv < rv_thresh:
             break
 
