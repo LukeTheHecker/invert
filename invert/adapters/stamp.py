@@ -93,9 +93,9 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1,
         
 
         # Combine leadfield components with the source-gamma
-        gammas = gammas_model * gammas_mp
+        # gammas = gammas_model * gammas_mp
         # gammas = gammas_mp + (gammas_model * gammas_mp)
-        # gammas = gammas_mp
+        gammas = gammas_mp
  
         # Select the K dipoles with highest correlation (probability)
         idx = np.argsort(gammas)[-K:]
