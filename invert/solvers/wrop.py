@@ -1,110 +1,141 @@
 import numpy as np
 from scipy.spatial.distance import cdist
+import mne
+# from ..invert import BaseSolver, InverseOperator
+from .base import BaseSolver, InverseOperator
+from ..util import pos_from_forward
 
-def make_backus_gilbert_inverse_operator(leadfield, pos):
-    """ Calculate the inverse operator using the Backus-Gilbert method.
-
-    Parameters
+class SolverBackusGilbert(BaseSolver):
+    ''' Class for the Backus Gilbert inverse solution.
+    
+    Attributes
     ----------
-    leadfield : numpy.ndarray
-        Leadfield (or gain matrix) G which constitutes the forward model of M =
-        J @ G, where sources J are projected through the leadfield producing the
-        observed EEG matrix M.
-    pos : numpy.ndarray
-        Position of the vertices in mm
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+    def __init__(self, name="Backus-Gilbert", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
 
+    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+        ''' Calculate inverse operator.
 
-    Return
-    ------
-    inverse_operator : numpy.ndarray
-        The inverse operator that is used to calculate source.
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        _, n_dipoles = self.leadfield.shape
+        pos = pos_from_forward(forward, verbose=verbose)
+        dist = cdist(pos, pos)
+        if verbose>0:
+            print(f"No regularization possible with {self.name} - alpha value is not used")
+        
 
-    """
-    _, n_dipoles = leadfield.shape
-  
+        W_BG = []
+        for i in range(n_dipoles):
+            W_gamma_BG = np.diag(dist[i, :])
+            W_BG.append(W_gamma_BG)
+
+        C = []
+        for i in range(n_dipoles):
+            C_gamma = self.leadfield @ W_BG[i] @ self.leadfield.T
+            C.append(C_gamma)
+
+        F = self.leadfield @ self.leadfield.T
+
+        E = []
+        for i in range(n_dipoles):
+            E_gamma = C[i] + F
+            E.append(E_gamma)
+
+        L = self.leadfield @ np.ones((n_dipoles, 1))
+
+        T = []
+        for i in range(n_dipoles):
+            E_gamma_pinv = np.linalg.pinv(E[i])
+            T_gamma = (E_gamma_pinv @ L) / (L.T @ E_gamma_pinv @ L)
+            T.append(T_gamma)
+
+        inverse_operators = [np.stack(T, axis=0)[:, :, 0],]
+        
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
+
+class SolverLAURA(BaseSolver):
+    ''' Class for the Local AUtoRegressive Average (LAURA) inverse solution.
     
-    dist = cdist(pos, pos)
-
-    W_BG = []
-    for i in range(n_dipoles):
-        W_gamma_BG = np.diag(dist[i, :])
-        W_BG.append(W_gamma_BG)
-
-    C = []
-    for i in range(n_dipoles):
-        C_gamma = leadfield @ W_BG[i] @ leadfield.T
-        C.append(C_gamma)
-
-    F = leadfield @ leadfield.T
-
-    E = []
-    for i in range(n_dipoles):
-        E_gamma = C[i] + F
-        E.append(E_gamma)
-
-    L = leadfield @ np.ones((n_dipoles, 1))
-
-    T = []
-    for i in range(n_dipoles):
-        E_gamma_pinv = np.linalg.pinv(E[i])
-        T_gamma = (E_gamma_pinv @ L) / (L.T @ E_gamma_pinv @ L)
-        T.append(T_gamma)
-
-    inverse_operator = np.stack(T, axis=0)[:, :, 0]
-    
-    return inverse_operator
-
-
-def make_laura_inverse_operator(leadfield, pos, adjacency, alpha=0.001, noise_cov=None,
-    drop_off=2):
-    """ Calculate the inverse operator using Local AUtoRegressive Average
-    (LAURA).
-
-    Parameters
+    Attributes
     ----------
-    leadfield : numpy.ndarray
-        Leadfield (or gain matrix) G which constitutes the forward model of M =
-        J @ G, where sources J are projected through the leadfield producing the
-        observed EEG matrix M.
-    pos : numpy.ndarray
-        Position of the vertices in mm
-    adjacency : numpy.ndarray
-        The source adjacency matrix (n_dipoles x n_dipoles) which represents the
-        connections of the dipole mesh.
-    alpha : float
-        The regularization parameter.
-    noise_cov : numpy.ndarray
-        The noise covariance matrix (channels x channels).
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+    def __init__(self, name="Local Auto-Regressive Average", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
 
-    Return
-    ------
-    inverse_operator : numpy.ndarray
-        The inverse operator that is used to calculate source.
+    def make_inverse_operator(self, forward, *args, noise_cov=None, alpha='auto', drop_off=2, verbose=0, **kwargs):
+        ''' Calculate inverse operator.
 
-    """
-    n_chans, _ = leadfield.shape
-    if noise_cov is None:
-        noise_cov = np.identity(n_chans)
-    
-    d = cdist(pos, pos)
-    # Get the adjacency matrix of the source spaces
-    for i in range(d.shape[0]):
-        # find dipoles that are no neighbor to dipole i
-        non_neighbors = np.where(~adjacency.astype(bool)[i, :])[0]
-        # append dipole itself
-        non_neighbors = np.append(non_neighbors, i)
-        # set non-neighbors to zero
-        d[i, non_neighbors] = 0
-    A = -d**-drop_off
-    A[np.isinf(A)] = 0
-    W = np.identity(A.shape[0])
-    M_j = W @ A
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
+        n_chans, _ = self.leadfield.shape
+        pos = pos_from_forward(forward, verbose=verbose)
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
 
-    # Source Space metric
-    W_j = np.linalg.inv(M_j.T @ M_j)
-    W_j_inv = np.linalg.inv(W_j)
+        d = cdist(pos, pos)
 
-    W_d = np.linalg.inv(noise_cov)
-    noise_term = (alpha**2) * np.linalg.inv(W_d)
-    inverse_operator = W_j_inv @ leadfield.T @ np.linalg.inv(leadfield @ W_j_inv @ leadfield.T + noise_term)
-    return inverse_operator
+        # Get the adjacency matrix of the source spaces
+        for i in range(d.shape[0]):
+            # find dipoles that are no neighbor to dipole i
+            non_neighbors = np.where(~adjacency.astype(bool)[i, :])[0]
+            # append dipole itself
+            non_neighbors = np.append(non_neighbors, i)
+            # set non-neighbors to zero
+            d[i, non_neighbors] = 0
+        A = -d
+        A[A!=0] **= -drop_off
+        A[np.isinf(A)] = 0
+        W = np.identity(A.shape[0])
+        M_j = W @ A
+
+        # Source Space metric
+        W_j = np.linalg.inv(M_j.T @ M_j)
+        W_j_inv = np.linalg.inv(W_j)
+        W_d = np.linalg.inv(noise_cov)
+
+       
+ 
+        inverse_operators = []
+        for alpha in self.alphas:
+            noise_term = (alpha**2) * np.linalg.inv(W_d)
+            inverse_operator = W_j_inv @ self.leadfield.T @ np.linalg.inv(self.leadfield @ W_j_inv @ self.leadfield.T + noise_term)
+            inverse_operators.append(inverse_operator)
+            
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
