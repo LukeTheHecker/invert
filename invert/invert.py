@@ -12,7 +12,7 @@ from . import config
 def Solver(solver="mne", **kwargs):
     """ Solver class ...
     """
-
+    # Minimum Norm Algorithms
     if solver.lower() == "mne":
         solver_object = solvers.SolverMinimumNorm(**kwargs)
     elif solver.lower() == "wmne":
@@ -23,18 +23,24 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
+    
+    # LORETA Algorithms
     elif solver.lower() == "loreta" or solver.lower() == "lor":
         solver_object = solvers.SolverLORETA(**kwargs)
     elif solver.lower() == "sloreta" or solver.lower() == "slor":
         solver_object = solvers.SolverSLORETA(**kwargs)
     elif solver.lower() == "eloreta" or solver.lower() == "elor":
         solver_object = solvers.SolverELORETA(**kwargs)
+    
+    # Various smooth Algorithms
     elif solver.lower() == "laura" or solver.lower() == "laur":
         solver_object = solvers.SolverLAURA(**kwargs)
     elif solver.lower() == "backus-gilbert" or solver.lower() == "b-g" or  solver.lower() == "bg":
         solver_object = solvers.SolverBackusGilbert(**kwargs)
     elif solver.lower() == "s-map" or solver.lower() == "smap":
         solver_object = solvers.SolverSMAP(**kwargs)
+    
+    # Bayesian Algorithms
     elif solver.lower() == "multiple sparse priors" or solver.lower() == "msp":
         inversion_type = "MSP"
         solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
@@ -50,14 +56,24 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "bayesian beamformer loreta" or solver.lower() == "bbmf-lor" or solver.lower() == "bmf-lor":
         inversion_type = "BMF-LOR"
         solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
+    elif solver.lower() == "champagne" or solver.lower() == "champ":
+        solver_object = solvers.SolverChampagne(**kwargs)
+    elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
+        solver_object = solvers.SolverGammaMAP(**kwargs)
+    elif solver.lower() == "source-map" or solver.lower() == "source map":
+        solver_object = solvers.SolverSourceMAP(**kwargs)
+    
+    # Beamformer Algorithms
     elif solver.lower() == "mvab":
         solver_object = solvers.SolverMVAB(**kwargs)
+
+    # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
         solver_object = solvers.SolverFullyConnected(**kwargs)
     elif solver.lower() == "lucas":
         solver_object = solvers.SolverLUCAS(**kwargs)
-    elif solver.lower() == "champagne" or solver.lower() == "champ":
-        solver_object = solvers.SolverChampagne(**kwargs)
+
+    # Matching Pursuit/ Compressive Sensing
     elif solver.lower() == "omp":
         solver_object = solvers.SolverOMP(**kwargs)
     elif solver.lower() == "cosamp":
@@ -80,8 +96,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverISubSMP(**kwargs)
     elif solver.lower() == "bcs":
         solver_object = solvers.SolverBCS(**kwargs)
-    elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
-        solver_object = solvers.SolverGammaMAP(**kwargs)
+
+    
     
     
     else:

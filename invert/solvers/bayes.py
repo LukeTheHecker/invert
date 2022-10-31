@@ -106,8 +106,12 @@ class SolverGammaMAP(BaseSolver):
     ----------
     forward : mne.Forward
         The mne-python Forward model instance.
+    
+    References
+    ----------
+
     '''
-    def __init__(self, name="Gamma MAP", **kwargs):
+    def __init__(self, name="Gamma-MAP", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
@@ -171,6 +175,95 @@ class SolverGammaMAP(BaseSolver):
             term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L.T @ sigma_b_inv @ B )**2, axis=1))
             term_2 = 1 / np.diagonal(np.sqrt((L.T @ sigma_b_inv @ L )))
             gammas = term_1 * term_2
+            if np.linalg.norm(gammas) == 0:
+                gammas = old_gammas
+                break
+            # gammas /= np.linalg.norm(gammas)
+
+        gammas_final = gammas / gammas.max()
+        sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
+        inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
+        # S = inverse_operator @ B
+        return inverse_operator
+        
+    @staticmethod
+    def frob(x):
+        if len(x.shape) == 1:
+            x = x[:, np.newaxis]
+        return np.sqrt(np.trace(x@x.T))
+
+class SolverSourceMAP(BaseSolver):
+    ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    
+    References
+    ----------
+    
+    '''
+    def __init__(self, name="Source-MAP", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+                              max_iter=100, p=0.5, verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        leadfield = self.leadfield
+        n_chans, _ = leadfield.shape
+        
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
+    
+    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
+        L = deepcopy(self.leadfield)
+        db, n = B.shape
+        ds = L.shape[1]
+
+        # Ensure Common average reference
+        B -= B.mean(axis=0)
+        L -= L.mean(axis=0)
+        
+ 
+        # Data Covariance Matrix
+        # Cb = B @ B.T
+        gammas = np.ones(ds)
+        sigma_e = alpha * np.identity(db)  
+        sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
+        sigma_b = sigma_e + L @ sigma_s @ L.T
+        sigma_b_inv = np.linalg.inv(sigma_b)
+        
+        for k in range(max_iter):
+            # print(k)
+            old_gammas = deepcopy(gammas)
+            
+            gammas = ((1/n) * np.sqrt(np.sum(( np.diag(gammas) @ L.T @ sigma_b_inv @ B )**2, axis=1)))**((2-p)/2)
+
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
                 break
