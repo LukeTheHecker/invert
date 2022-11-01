@@ -305,7 +305,7 @@ class SolverCOSAMP(BaseSolver):
             omega = np.where(e_thresh!=0)[0]
             old_activations = np.where(x_hats[i-1]!=0)[0]
             T = np.unique(np.concatenate([omega, old_activations]))
-            print(len(T))
+            # print(len(T))
             leadfield_pinv = np.linalg.pinv(self.leadfield[:, T])
             # leadfield_pinv = np.linalg.pinv(self.leadfield)[T]
             
@@ -604,7 +604,7 @@ class SolverSP(BaseSolver):
             R -= R.mean()
         
             R_list.append( R )
-            print(np.linalg.norm(R_list[-1]))
+            # print(np.linalg.norm(R_list[-1]))
             if np.linalg.norm(R_list[-1]) > np.linalg.norm(R_list[-2]) or i==n_chans:
                 T_l = T_list[-2]
             else:
@@ -658,7 +658,7 @@ class SolverSSP(BaseSolver):
 
     def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
         source_mat = self.calc_ssp_solution(evoked.data, K=K)
-        print("werks")
+        # print("werks")
         stc = self.source_to_object(source_mat, evoked)
         return stc
     

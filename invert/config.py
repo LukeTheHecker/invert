@@ -8,5 +8,6 @@ all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2",
                 "LUCAS",
                 "OMP", "COSAMP", "SOMP", "REMBO", "SP", "SSP"
                 "SMP", "SSMP", "SubSMP",
-                "BCS", "Gamma-MAP", "Source-MAP"
+                "BCS", "Gamma-MAP", "Source-MAP",
+                "EPIFOCUS",
             ]

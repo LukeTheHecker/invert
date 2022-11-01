@@ -250,7 +250,7 @@ class SolverSSMP(BaseSolver):
             residuals = np.append(residuals, np.linalg.norm(y - y_hat))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             x_hats.append(deepcopy(x_hat))
-            print(residuals[-1])
+            # print(residuals[-1])
             if residuals[-1] > residuals[-2]:
                 break
 
@@ -259,10 +259,17 @@ class SolverSSMP(BaseSolver):
         # Model selection (Regularisation)
         # x_hat = best_index_residual(residuals, x_hats)
         # L-Curve
+        
+        if len(residuals) == 2: # Only one succesful iteration
+            return x_hats[-1]
+        elif len(residuals) == 3: # Only two succesful iterations
+            return x_hats[-2]
         until = np.where(np.diff(residuals)>0)[0][0]
         residuals = residuals[1:until]
         x_hats = x_hats[1:until]
+        
         corner_idx = find_corner(np.arange(len(residuals)), residuals)
+        # print(len(residuals), len(x_hats), corner_idx)
         x_hat = x_hats[corner_idx]
 
         return x_hat
@@ -530,7 +537,7 @@ class SolverISubSMP(BaseSolver):
         
         y -= y.mean(axis=0)
 
-        print(y.shape)
+        # print(y.shape)
         x_hat = np.zeros((n_dipoles, n_time))
         omega = np.array([])
         r = deepcopy(y)

@@ -137,7 +137,6 @@ class SolverChampagne(BaseSolver):
                 x_bar = x_bars[-2]
                 break
 
-
         x[active_set, :] = x_bar
 
         return x

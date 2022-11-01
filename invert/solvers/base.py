@@ -116,11 +116,13 @@ class BaseSolver:
         return evoked
 
     def get_alphas(self):
+        _, eigs, _ = np.linalg.svd(self.leadfield) 
+        max_eig = eigs.max()
         if self.alpha == "auto":
-            _, eigs, _ = np.linalg.svd(self.leadfield) 
-            alphas = list(eigs.max() * self.r_values)
+            
+            alphas = list(max_eig * self.r_values)
         else:
-            alphas = [self.alpha, ]
+            alphas = [self.alpha*max_eig, ]
         return alphas
 
     def regularise_lcurve(self, evoked):

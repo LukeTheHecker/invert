@@ -121,8 +121,8 @@ def stampc(stc, evoked, forward, max_iter=25, K=1, rv_thresh=0.1,
         residual_norms.append( residual_norm )
         # Calculate the percentage of residual variance
         rv = calc_residual_variance(X_hat, M)
-        print(i, " Res var: ", round(rv, 2))
-        if rv < rv_thresh:
+        # print(i, " Res var: ", round(rv, 2))
+        if rv < rv_thresh or residual_norms[-2] == residual_norms[-1]:
             break
 
     

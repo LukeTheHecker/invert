@@ -50,7 +50,7 @@ class SolverSMAP(BaseSolver):
         GTG = gradient.T @ gradient
                 
         inverse_operators = []
-        # GG_inv = np.linalg.inv(gradient.T @ gradient)
+        # GG_inv = np.linalg.inv(GTG)
         for alpha in self.alphas:
             inverse_operator = np.linalg.inv(LTL + alpha * GTG) @ self.leadfield.T
             # inverse_operator = GG_inv @ self.leadfield.T @ np.linalg.inv(self.leadfield @ GG_inv @ self.leadfield.T + alpha * np.identity(n_chans))

@@ -96,6 +96,9 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverISubSMP(**kwargs)
     elif solver.lower() == "bcs":
         solver_object = solvers.SolverBCS(**kwargs)
+    
+    elif solver.lower() == "epifocus":
+        solver_object = solvers.SolverEPIFOCUS(**kwargs)
 
     
     

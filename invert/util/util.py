@@ -106,7 +106,8 @@ def find_corner(source_power, residual, plot=False):
 
     
     '''
-    
+    if len(residual)<3:
+        return len(residual) - 1
     # Normalize l2 norms
     # source_power /= np.max(source_power)
 
