@@ -1,0 +1,16 @@
+
+- Implement data whitening
+- Allow usage of different sensors (MEG/EEG/OPM...)/ leadfield normalization
+
+Subspace Techniques:
+
+- FINE/ FINES: Xu, X. L., Xu, B., & He, B. (2004). An alternative subspace
+approach to EEG dipole source localization. Physics in Medicine & Biology,
+49(2), 327.
+- MUSIC/FINES with smooth component choice (like smooth OMP etc.)
+
+Beamformers:
+
+- LCMV Beamformer
+- DICS Beamformer
+- SAM Beamformer
