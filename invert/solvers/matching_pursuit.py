@@ -260,7 +260,6 @@ class SolverCOSAMP(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, K="auto", rv_thresh=1) -> mne.SourceEstimate:
-        evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj()
         source_mat = np.stack([self.calc_cosamp_solution(y, K=K,  rv_thresh=rv_thresh) for y in evoked.data.T], axis=1)
         stc = self.source_to_object(source_mat, evoked)
         return stc

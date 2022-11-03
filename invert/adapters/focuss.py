@@ -112,11 +112,12 @@ def s_focuss(stc, evoked, forward, alpha=0.01, percentile=0.01, max_iter=10, ver
         
         # Initial weighting matrix
         W_i = np.diag(D[:, t])
+        WWL = W_i @ W_i.T @ leadfield.T
         sparsities = [1e9,]
         for iter in range(max_iter):
             # if verbose > 0:
                 # print(f'\tIteration {iter+1}')
-            WWL = W_i @ W_i.T @ leadfield.T
+            
             D_FOCUSS_t = WWL @ np.linalg.inv(leadfield @ WWL + alpha * np.identity(n_chans)) @ M[:, t][:, np.newaxis]
             # Smoothing operation (step 4 and 5)
             if do_smoothing:

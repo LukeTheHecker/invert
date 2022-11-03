@@ -126,9 +126,17 @@ class SolverChampagne(BaseSolver):
             # Sigma_y_inv = linalg.inv(Sigma_y)
             x_bar = Gamma @ leadfield.T @ Sigma_y_inv @ y
 
-            gammas = np.sqrt(
-                np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
-            )
+            # old gamma calculation throws warning
+            # gammas = np.sqrt(
+            #     np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
+            # )
+            # Calculate gammas 
+            gammas = np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
+            # set negative gammas to nan to avoid bad sqrt
+            gammas.astype(np.float64)  # this is required for numpy to accept nan
+            gammas[gammas<0] = np.nan
+            gammas = np.sqrt(gammas)
+
             # Calculate Residual to the data
             e_bar = y - (leadfield @ x_bar)
             self.noise_cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))

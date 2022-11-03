@@ -173,7 +173,10 @@ class SolverGammaMAP(BaseSolver):
             
 
             term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L.T @ sigma_b_inv @ B )**2, axis=1))
-            term_2 = 1 / np.diagonal(np.sqrt((L.T @ sigma_b_inv @ L )))
+
+            # term_2 = 1 / np.diagonal(np.sqrt((L.T @ sigma_b_inv @ L )))
+            term_2 = 1 / np.sqrt(np.diagonal((L.T @ sigma_b_inv @ L )))
+
             gammas = term_1 * term_2
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
