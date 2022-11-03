@@ -99,6 +99,20 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "bcs":
         solver_object = solvers.SolverBCS(**kwargs)
     
+    # Subspace Methods
+    elif solver.lower() == "music":
+        solver_object = solvers.SolverMUSIC(**kwargs)
+    elif solver.lower() == "rap-music":
+        solver_object = solvers.SolverRAPMUSIC(**kwargs)
+    elif solver.lower() == "trap-music":
+        solver_object = solvers.SolverTRAPMUSIC(**kwargs)
+    
+    elif solver.lower() == "bcs":
+        solver_object = solvers.SolverBCS(**kwargs)
+    elif solver.lower() == "bcs":
+        solver_object = solvers.SolverBCS(**kwargs)
+    
+    # Other
     elif solver.lower() == "epifocus":
         solver_object = solvers.SolverEPIFOCUS(**kwargs)
 

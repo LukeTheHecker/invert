@@ -4,6 +4,7 @@ from scipy.sparse.csgraph import laplacian
 from scipy.ndimage import gaussian_gradient_magnitude
 from scipy.spatial.distance import cdist
 from sklearn.metrics import adjusted_mutual_info_score
+from scipy.sparse.csgraph import laplacian
 
 from invert.util.util import pos_from_forward
 
@@ -46,7 +47,9 @@ class SolverSMAP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         LTL = self.leadfield.T @ self.leadfield 
         n_chans, n_dipoles = self.leadfield.shape
-        gradient = self.calculate_gradient(verbose=verbose)
+
+        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        gradient = laplacian(adjacency)
         GTG = gradient.T @ gradient
                 
         inverse_operators = []
@@ -63,13 +66,3 @@ class SolverSMAP(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def calculate_gradient(self, verbose=0):
-        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=verbose).toarray()
-
-        gradient = adjacency
-        n_dipoles = gradient.shape[0]
-        for i in range(n_dipoles):
-            row = gradient[i,:]
-            gradient[i,i] = np.sum(row)-1
-            gradient[i, row==1] = -1
-        return gradient

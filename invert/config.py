@@ -10,4 +10,5 @@ all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2",
                 "SMP", "SSMP", "SubSMP",
                 "BCS", "Gamma-MAP", "Source-MAP",
                 "EPIFOCUS",
+                "MUSIC", "RAP-MUSIC", "TRAP-MUSIC",
             ]
