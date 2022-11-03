@@ -44,6 +44,10 @@ class SolverMVAB(BaseSolver):
         inverse_operators = []
         for alpha in self.alphas:
             inverse_operator = 1/(leadfield.T @ R_inv @ leadfield + alpha * np.identity(n_dipoles)) @ leadfield.T @ R_inv
+            # R_inv = np.linalg.inv(y@y.T + alpha * np.identity(n_chans))
+            # inverse_operator = 1/(leadfield.T @ R_inv @ leadfield) @ leadfield.T @ R_inv
+            # inverse_operator = 1/(leadfield.T @ R_inv @ leadfield + alpha * np.identity(n_dipoles)) @ leadfield.T @ R_inv
+
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]

@@ -280,3 +280,98 @@ class SolverSourceMAP(BaseSolver):
         if len(x.shape) == 1:
             x = x[:, np.newaxis]
         return np.sqrt(np.trace(x@x.T))
+    
+class SolverBMVAB(BaseSolver):
+    ''' Class for the Bayesian Minimum Variance Beamformer (BMVAB) inverse
+    solution.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    
+    References
+    ----------
+    Wipf, D., & Nagarajan, S. (2007, June). Beamforming using the relevance
+    vector machine. In Proceedings of the 24th international conference on
+    Machine learning (pp. 1023-1030).
+    '''
+    def __init__(self, name="BMVAP", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+                              max_iter=100, p=0.5, verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        leadfield = self.leadfield
+        n_chans, _ = leadfield.shape
+        
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
+    
+    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
+        L = deepcopy(self.leadfield)
+        db, n = B.shape
+        ds = L.shape[1]
+
+        # Ensure Common average reference
+        B -= B.mean(axis=0)
+        L -= L.mean(axis=0)
+        
+ 
+        # Data Covariance Matrix
+        # Cb = B @ B.T
+        gammas = np.ones(ds)
+        sigma_e = alpha * np.identity(db)  
+        sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
+        sigma_b = sigma_e + L @ sigma_s @ L.T
+        sigma_b_inv = np.linalg.inv(sigma_b)
+        
+        for k in range(max_iter):
+            # print(k)
+            old_gammas = deepcopy(gammas)
+            
+            gammas = ((1/n) * np.sqrt(np.sum(( np.diag(gammas) @ L.T @ sigma_b_inv @ B )**2, axis=1)))**((2-p)/2)
+
+            if np.linalg.norm(gammas) == 0:
+                gammas = old_gammas
+                break
+            # gammas /= np.linalg.norm(gammas)
+
+        gammas_final = gammas / gammas.max()
+        R = np.stack( [gammas_final[i] * L[:, i] @ L[:, i].T   for i in range(ds)], axis=0 ).sum(axis=0)
+        # R = gammas * L@L.T
+        R_inv = np.linalg.inv(R + alpha * np.identity(db))
+        inverse_operator = 1/(L.T @ R_inv @ L + alpha * np.identity(ds)) @ L.T @ R_inv
+
+        # S = inverse_operator @ B
+        return inverse_operator
+        
+    @staticmethod
+    def frob(x):
+        if len(x.shape) == 1:
+            x = x[:, np.newaxis]
+        return np.sqrt(np.trace(x@x.T))

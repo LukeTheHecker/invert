@@ -3,7 +3,7 @@ all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2",
                 "LAURA", "Backus-Gilbert", 
                 "S-MAP",
                 "Champagne", "Multiple Sparse Priors", "Bayesian LORETA", "Bayesian MNE", "Bayesian Beamformer", "Bayesian Beamformer LORETA",
-                "MVAB",
+                "MVAB", "LCMV",
                 "Fully-Connected", 
                 "LUCAS",
                 "OMP", "COSAMP", "SOMP", "REMBO", "SP", "SSP"

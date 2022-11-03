@@ -66,6 +66,8 @@ def Solver(solver="mne", **kwargs):
     # Beamformer Algorithms
     elif solver.lower() == "mvab":
         solver_object = solvers.SolverMVAB(**kwargs)
+    elif solver.lower() == "lcmv":
+        solver_object = solvers.SolverLCMV(**kwargs)
 
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
