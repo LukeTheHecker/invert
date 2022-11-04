@@ -69,7 +69,7 @@ class BaseSolver:
         car_leadfield=True, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
-        self.r_values = np.insert(np.logspace(-3, 2, n_reg_params), 0, 0)
+        self.r_values = np.insert(np.logspace(-5, 2, n_reg_params), 0, 0)
         # self.r_values = np.arange(13)
         
         # self.alphas = deepcopy(self.r_values)
@@ -153,11 +153,11 @@ class BaseSolver:
 
         source_mat = source_mats[optimum_idx]
         
-        # plt.figure()
-        # plt.plot(residual_norms, l2_norms, 'ok')
-        # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # plt.title(f"L-Curve: {alpha}")
+        plt.figure()
+        plt.plot(residual_norms, l2_norms, 'ok')
+        plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        plt.title(f"L-Curve: {alpha}")
 
         return source_mat
         
@@ -196,14 +196,14 @@ class BaseSolver:
             gcv_value = residual_norm / denom
             gcv_values.append(gcv_value)
 
-        optimum_idx = np.argmin(gcv_values)
-        
-        # plt.figure()
-        # plt.loglog(self.alphas, gcv_values, 'ok')
-        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # print("alpha: ", alpha)
-        # plt.title(f"GCV: {alpha}")
+        optimum_idx = np.argmin(gcv_values[1:])+1
+
+        plt.figure()
+        plt.loglog(self.alphas, gcv_values, 'ok')
+        plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        print("alpha: ", alpha)
+        plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]

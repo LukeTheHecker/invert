@@ -68,6 +68,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverMVAB(**kwargs)
     elif solver.lower() == "lcmv":
         solver_object = solvers.SolverLCMV(**kwargs)
+    elif solver.lower() == "sam":
+        solver_object = solvers.SolverSAM(**kwargs)
 
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":

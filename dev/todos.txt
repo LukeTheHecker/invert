@@ -6,7 +6,7 @@ Subspace Techniques:
 
 - FINE/ FINES: Xu, X. L., Xu, B., & He, B. (2004). An alternative subspace
 approach to EEG dipole source localization. Physics in Medicine & Biology,
-49(2), 327.
+49(2), 327.  -> abandoned because super complicated
 - MUSIC/FINES with smooth component choice (like smooth OMP etc.)
 
 Beamformers:
@@ -14,3 +14,6 @@ Beamformers:
 - LCMV Beamformer
 - DICS Beamformer
 - SAM Beamformer
+
+Regularisation:
+- Lukas, M. A. (2008). Strong robust generalized cross-validation for choosing the regularization parameter. Inverse Problems, 24(3), 034006.
