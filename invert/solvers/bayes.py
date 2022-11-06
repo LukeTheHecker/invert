@@ -1,6 +1,8 @@
 import numpy as np
 import mne
 from copy import deepcopy
+from scipy.sparse.csgraph import laplacian
+from scipy.sparse import coo_matrix
 from .base import BaseSolver, InverseOperator
 
 class SolverBCS(BaseSolver):
@@ -109,7 +111,8 @@ class SolverGammaMAP(BaseSolver):
     
     References
     ----------
-
+    Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
+    source imaging. NeuroImage, 44(3), 947-966.
     '''
     def __init__(self, name="Gamma-MAP", **kwargs):
         self.name = name
@@ -123,8 +126,12 @@ class SolverGammaMAP(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        alpha : float
+        alpha : str/ float
             The regularization parameter.
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
+        
         
         Return
         ------
@@ -153,7 +160,8 @@ class SolverGammaMAP(BaseSolver):
         # Ensure Common average reference
         B -= B.mean(axis=0)
         L -= L.mean(axis=0)
-        
+        # L /= np.linalg.norm(L, axis=0)
+ 
  
         # Data Covariance Matrix
         # Cb = B @ B.T
@@ -205,7 +213,8 @@ class SolverSourceMAP(BaseSolver):
     
     References
     ----------
-    
+    Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
+    source imaging. NeuroImage, 44(3), 947-966.
     '''
     def __init__(self, name="Source-MAP", **kwargs):
         self.name = name
@@ -223,7 +232,9 @@ class SolverSourceMAP(BaseSolver):
             The regularization parameter.
         p : 0 < p < 2 
             Hyperparameter which controls sparsity. Default: p = 0
-        
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
         Return
         ------
         self : object returns itself for convenience
@@ -251,7 +262,7 @@ class SolverSourceMAP(BaseSolver):
         # Ensure Common average reference
         B -= B.mean(axis=0)
         L -= L.mean(axis=0)
-        
+        L /= np.linalg.norm(L, axis=0)
  
         # Data Covariance Matrix
         # Cb = B @ B.T
@@ -283,10 +294,10 @@ class SolverSourceMAP(BaseSolver):
         if len(x.shape) == 1:
             x = x[:, np.newaxis]
         return np.sqrt(np.trace(x@x.T))
-    
-class SolverBMVAB(BaseSolver):
-    ''' Class for the Bayesian Minimum Variance Beamformer (BMVAB) inverse
-    solution.
+
+class SolverSourceMAPMSP(BaseSolver):
+    ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution
+    using multiple sparse priors.
     
     Attributes
     ----------
@@ -295,16 +306,17 @@ class SolverBMVAB(BaseSolver):
     
     References
     ----------
-    Wipf, D., & Nagarajan, S. (2007, June). Beamforming using the relevance
-    vector machine. In Proceedings of the 24th international conference on
-    Machine learning (pp. 1023-1030).
+    Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
+    source imaging. NeuroImage, 44(3), 947-966.
+    
     '''
-    def __init__(self, name="BMVAP", **kwargs):
+    def __init__(self, name="Source-MAP-MSP", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
-                              max_iter=100, p=0.5, verbose=0, **kwargs):
+                              max_iter=100, p=0.5, smoothness_order=1, verbose=0, 
+                              **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -315,7 +327,9 @@ class SolverBMVAB(BaseSolver):
             The regularization parameter.
         p : 0 < p < 2 
             Hyperparameter which controls sparsity. Default: p = 0
-        
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA-like solution.
         Return
         ------
         self : object returns itself for convenience
@@ -326,7 +340,9 @@ class SolverBMVAB(BaseSolver):
         
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, 
+                                                                    max_iter=max_iter, p=p, 
+                                                                    smoothness_order=smoothness_order)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -335,7 +351,7 @@ class SolverBMVAB(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
+    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -347,29 +363,29 @@ class SolverBMVAB(BaseSolver):
  
         # Data Covariance Matrix
         # Cb = B @ B.T
+        L_smooth, gradient = self.get_smooth_prior_cov(L, smoothness_order)
         gammas = np.ones(ds)
         sigma_e = alpha * np.identity(db)  
         sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
-        sigma_b = sigma_e + L @ sigma_s @ L.T
+        sigma_b = sigma_e + L_smooth @ sigma_s @ L_smooth.T
         sigma_b_inv = np.linalg.inv(sigma_b)
         
         for k in range(max_iter):
             # print(k)
             old_gammas = deepcopy(gammas)
             
-            gammas = ((1/n) * np.sqrt(np.sum(( np.diag(gammas) @ L.T @ sigma_b_inv @ B )**2, axis=1)))**((2-p)/2)
+            gammas = ((1/n) * np.sqrt(np.sum(( np.diag(gammas) @ L_smooth.T @ sigma_b_inv @ B )**2, axis=1)))**((2-p)/2)
 
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
                 break
             # gammas /= np.linalg.norm(gammas)
-
+        
+        # Smooth gammas according to smooth priors
+        gammas_final = abs(gammas@gradient)
         gammas_final = gammas / gammas.max()
-        R = np.stack( [gammas_final[i] * L[:, i] @ L[:, i].T   for i in range(ds)], axis=0 ).sum(axis=0)
-        # R = gammas * L@L.T
-        R_inv = np.linalg.inv(R + alpha * np.identity(db))
-        inverse_operator = 1/(L.T @ R_inv @ L + alpha * np.identity(ds)) @ L.T @ R_inv
-
+        sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
+        inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
         # S = inverse_operator @ B
         return inverse_operator
         
@@ -378,3 +394,14 @@ class SolverBMVAB(BaseSolver):
         if len(x.shape) == 1:
             x = x[:, np.newaxis]
         return np.sqrt(np.trace(x@x.T))
+    
+    def get_smooth_prior_cov(self, L, smoothness_order):
+        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        gradient = laplacian(adjacency).toarray().astype(np.float32)
+        
+        for i in range(smoothness_order):
+            gradient = gradient @ gradient
+        L = L @ abs(gradient)
+        L -= L.mean(axis=0)
+        # L /= np.linalg.norm(L, axis=0)
+        return L, gradient

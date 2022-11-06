@@ -62,6 +62,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverGammaMAP(**kwargs)
     elif solver.lower() == "source-map" or solver.lower() == "source map":
         solver_object = solvers.SolverSourceMAP(**kwargs)
+    elif solver.lower() == "source-map-msp" or solver.lower() == "source map msp":
+        solver_object = solvers.SolverSourceMAPMSP(**kwargs)
     
     # Beamformer Algorithms
     elif solver.lower() == "mvab":
