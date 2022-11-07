@@ -70,6 +70,18 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverMVAB(**kwargs)
     elif solver.lower() == "lcmv":
         solver_object = solvers.SolverLCMV(**kwargs)
+    elif solver.lower() == "smv":
+        solver_object = solvers.SolverSMV(**kwargs)
+    elif solver.lower() == "wnmv":
+        solver_object = solvers.SolverWNMV(**kwargs)
+    elif solver.lower() == "hocmv":
+        solver_object = solvers.SolverHOCMV(**kwargs)
+    elif solver.lower() == "esmv":
+        solver_object = solvers.SolverESMV(**kwargs)
+    elif solver.lower() == "mcmv":
+        solver_object = solvers.SolverMCMV(**kwargs)
+    elif solver.lower() == "esmcmv":
+        solver_object = solvers.SolverESMCMV(**kwargs)
     elif solver.lower() == "sam":
         solver_object = solvers.SolverSAM(**kwargs)
 

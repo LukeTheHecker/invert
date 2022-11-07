@@ -25,6 +25,7 @@ integrates with the [mne-python](https://mne.tools) framework.
 ### Bayesian Family
 * Gamma - Maximum A Posteriori (Gamma-MAP)
 * Source - Maximum A Posteriori (Source-MAP)
+* Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
 * Bayesian Compressed Sensing (BCS)
 * Champagne
 * Multiple Sparse Priors (MSP)
@@ -53,11 +54,18 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Convolutional Neural Network for Distributed Dipole Solutions (ConvDip)
 
 ### Beamforming
-* Minimum Variance Adaptive Beamformer (MVAB)
+* Minimum Variance Adaptive (MVAB) Beamformer
+* Linearly Constrained Minimum Variance (LCMV) Beamformer
+* Standardized Minimum Variance (SMV) Beamformer
+* Weight-normalized Minimum Variance (WNMV) Beamformer
+* Higher-Order Minimum Variance (HOCMV) Beamformer
+* Eigenspace-Based Minimum Variance (ESMV) Beamformer
+* Multiple Constrained Minimum Variance (MCMV) Beamformer
+* Eigenspace-Based Multiple Constrained Minimum Variance (ESMCMV) Beamformer
+* Synthetic Aperture Magnetometry (SAM)
 
 ### Other
 * EPIFOCUS
-
 
 ## Adapters
 Adapters are methods that optimize an already calculated inverse solution, e.g.,

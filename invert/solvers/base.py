@@ -115,8 +115,11 @@ class BaseSolver:
         
         return evoked
 
-    def get_alphas(self):
-        _, eigs, _ = np.linalg.svd(self.leadfield) 
+    def get_alphas(self, reference=None):
+        if reference is None:
+            _, eigs, _ = np.linalg.svd(self.leadfield) 
+        else:
+            _, eigs, _ = np.linalg.svd(reference)
         max_eig = eigs.max()
         if self.alpha == "auto":
             

@@ -379,11 +379,13 @@ class SolverSourceMAPMSP(BaseSolver):
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
                 break
+            print(gammas.min(), gammas.max())
             # gammas /= np.linalg.norm(gammas)
         
         # Smooth gammas according to smooth priors
         gammas_final = abs(gammas@gradient)
         gammas_final = gammas / gammas.max()
+        gammas_final[gammas_final<1e-1] = 0
         sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
         inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
         # S = inverse_operator @ B
