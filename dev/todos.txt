@@ -9,11 +9,8 @@ approach to EEG dipole source localization. Physics in Medicine & Biology,
 49(2), 327.  -> abandoned because super complicated
 - MUSIC/FINES with smooth component choice (like smooth OMP etc.)
 
-Beamformers:
-
-- LCMV Beamformer
-- DICS Beamformer
-- SAM Beamformer
+Bayesian Formulations
+- check out these fellas: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8038037
 
 Regularisation:
 - Lukas, M. A. (2008). Strong robust generalized cross-validation for choosing the regularization parameter. Inverse Problems, 24(3), 034006.
