@@ -10,5 +10,5 @@ all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2",
                 "OMP", "COSAMP", "SOMP", "REMBO", "SP", "SSP",
                 "SMP", "SSMP", "SubSMP",
                 "EPIFOCUS",
-                "MUSIC", "RAP-MUSIC", "TRAP-MUSIC",
+                "MUSIC", "RAP-MUSIC", "TRAP-MUSIC", "JAZZ-MUSIC",
             ]

@@ -295,7 +295,7 @@ class SolverTRAPMUSIC(BaseSolver):
         return x_hat
 
 class SolverJAZZMUSIC(BaseSolver):
-    ''' Class for the JAZZ Multiple Signal Classification (JAZZ-MUSIC) inverse
+    ''' Class for the Smooth RAP Multiple Signal Classification (JAZZ-MUSIC) inverse
     solution.
     
     Attributes
@@ -332,7 +332,7 @@ class SolverJAZZMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n=10, k=5, stop_crit=0.95, truncate=False) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95, truncate=False) -> mne.SourceEstimate:
         source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
         stc = self.source_to_object(source_mat, evoked)
         return stc

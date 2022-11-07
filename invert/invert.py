@@ -122,6 +122,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverRAPMUSIC(**kwargs)
     elif solver.lower() == "trap-music":
         solver_object = solvers.SolverTRAPMUSIC(**kwargs)
+    elif solver.lower() == "jazz-music":
+        solver_object = solvers.SolverJAZZMUSIC(**kwargs)
     
     elif solver.lower() == "bcs":
         solver_object = solvers.SolverBCS(**kwargs)
