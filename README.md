@@ -49,6 +49,7 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Multiple Signal Classification (MUSIC)
 * Recursively Applied MUSIC (RAP-MUSIC)
 * Truncated RAP-Music (TRAP-MUSIC)
+* Smooth RAP-MUSIC (JAZZ-MUSIC)
 
 ### Artificial Neural Networks
 * Convolutional Neural Network for Distributed Dipole Solutions (ConvDip)
