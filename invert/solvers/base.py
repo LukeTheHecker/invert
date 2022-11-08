@@ -156,11 +156,11 @@ class BaseSolver:
 
         source_mat = source_mats[optimum_idx]
         
-        plt.figure()
-        plt.plot(residual_norms, l2_norms, 'ok')
-        plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
-        alpha = self.alphas[optimum_idx]
-        plt.title(f"L-Curve: {alpha}")
+        # plt.figure()
+        # plt.plot(residual_norms, l2_norms, 'ok')
+        # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
+        # alpha = self.alphas[optimum_idx]
+        # plt.title(f"L-Curve: {alpha}")
 
         return source_mat
         
@@ -201,12 +201,12 @@ class BaseSolver:
 
         optimum_idx = np.argmin(gcv_values[1:])+1
 
-        plt.figure()
-        plt.loglog(self.alphas, gcv_values, 'ok')
-        plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        alpha = self.alphas[optimum_idx]
-        print("alpha: ", alpha)
-        plt.title(f"GCV: {alpha}")
+        # plt.figure()
+        # plt.loglog(self.alphas, gcv_values, 'ok')
+        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        # alpha = self.alphas[optimum_idx]
+        # print("alpha: ", alpha)
+        # plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
