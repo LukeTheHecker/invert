@@ -155,7 +155,7 @@ class SolverRAPMUSIC(BaseSolver):
         # Data Covariance
         C = y@y.T
         I = np.identity(n_chans)
-
+        Q = np.identity(n_chans)
         dipole_idc = []
         n_time = y.shape[1]
         for i in range(k):
@@ -167,8 +167,9 @@ class SolverRAPMUSIC(BaseSolver):
             mu = np.zeros(n_dipoles)
             for p in range(n_dipoles):
                 l = leadfield[:, p][:, np.newaxis]
-                norm_1 = np.linalg.norm(Ps @ l)
-                norm_2 = np.linalg.norm(l)
+                norm_1 = np.linalg.norm(Ps @ Q @ l)
+                norm_2 = np.linalg.norm(Q @ l)
+                
                 mu[p] = norm_1 / norm_2
             dipole_idx = np.argmax(mu)
             dipole_idc.append( dipole_idx )
@@ -259,6 +260,7 @@ class SolverTRAPMUSIC(BaseSolver):
         # Data Covariance
         C = y@y.T
         I = np.identity(n_chans)
+        Q = np.identity(n_chans)
 
         dipole_idc = []
         n_time = y.shape[1]
@@ -271,8 +273,8 @@ class SolverTRAPMUSIC(BaseSolver):
             mu = np.zeros(n_dipoles)
             for p in range(n_dipoles):
                 l = leadfield[:, p][:, np.newaxis]
-                norm_1 = np.linalg.norm(Ps @ l)
-                norm_2 = np.linalg.norm(l)
+                norm_1 = np.linalg.norm(Ps @ Q @ l)
+                norm_2 = np.linalg.norm(Q @ l)
                 mu[p] = norm_1 / norm_2
             dipole_idx = np.argmax(mu)
             dipole_idc.append( dipole_idx )
@@ -332,7 +334,7 @@ class SolverJAZZMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95, truncate=False) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
         source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -371,6 +373,7 @@ class SolverJAZZMUSIC(BaseSolver):
         # Data Covariance
         C = y@y.T
         I = np.identity(n_chans)
+        Q = np.identity(n_chans)
         U, D, _= np.linalg.svd(C, full_matrices=True)
         if n == "auto":
             iters = np.arange(len(D))
@@ -388,8 +391,8 @@ class SolverJAZZMUSIC(BaseSolver):
             for nn in range(n_orders):
                 for p in range(n_dipoles):
                     l = leadfields[nn][:, p][:, np.newaxis]
-                    norm_1 = np.linalg.norm(Ps @ l)
-                    norm_2 = np.linalg.norm(l)
+                    norm_1 = np.linalg.norm(Ps @ Q @ l)
+                    norm_2 = np.linalg.norm(Q @ l)
                     mu[nn, p] = norm_1 / norm_2
             
             # Find the dipole/ patch with highest correlation with the residual
@@ -403,14 +406,16 @@ class SolverJAZZMUSIC(BaseSolver):
                 break
 
             if i == 0:
-                # B = leadfield[:, dipole_idx]
-                B = leadfields[best_order][:, best_dipole][:, np.newaxis]
+                B = leadfield[:, dipole_idx]
+                # B = leadfields[best_order][:, best_dipole][:, np.newaxis]
             else:
-                # B = np.hstack([B, leadfield[:, dipole_idx]])
-                B = np.hstack([B, leadfields[best_order][:, best_dipole][:, np.newaxis]])
-            
+                B = np.hstack([B, leadfield[:, dipole_idx]])
+                # B = np.hstack([B, leadfields[best_order][:, best_dipole][:, np.newaxis]])
+
+            # B = B / np.linalg.norm(B, axis=0)
             Q = I - B @ np.linalg.pinv(B)
             C = Q @ Us
+
             U, D, _= np.linalg.svd(C, full_matrices=False)
 
             # 
@@ -428,6 +433,11 @@ class SolverJAZZMUSIC(BaseSolver):
         n_dipoles = self.leadfield.shape[1]
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         self.gradient = abs(laplacian(self.adjacency))
+        
+        # Normalized Gradient
+        # self.gradient = abs(laplacian(self.adjacency)).toarray().astype(np.float64)
+        # self.gradient = np.stack([g / np.mean(g[g!=0]) for g in self.gradient], axis=0)
+
 
         new_leadfield = deepcopy(self.leadfield)
         new_adjacency = deepcopy(self.adjacency)

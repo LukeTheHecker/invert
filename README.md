@@ -24,6 +24,7 @@ integrates with the [mne-python](https://mne.tools) framework.
 
 ### Bayesian Family
 * Gamma - Maximum A Posteriori (Gamma-MAP)
+* Gamma - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
 * Source - Maximum A Posteriori (Source-MAP)
 * Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
 * Bayesian Compressed Sensing (BCS)
@@ -49,7 +50,7 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Multiple Signal Classification (MUSIC)
 * Recursively Applied MUSIC (RAP-MUSIC)
 * Truncated RAP-Music (TRAP-MUSIC)
-* Smooth RAP-MUSIC (JAZZ-MUSIC)
+* Smooth Truncated RAP-Music (JAZZ-MUSIC)
 
 ### Artificial Neural Networks
 * Convolutional Neural Network for Distributed Dipole Solutions (ConvDip)
@@ -63,6 +64,8 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Eigenspace-Based Minimum Variance (ESMV) Beamformer
 * Multiple Constrained Minimum Variance (MCMV) Beamformer
 * Eigenspace-Based Multiple Constrained Minimum Variance (ESMCMV) Beamformer
+* Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
+  Beamformer
 * Synthetic Aperture Magnetometry (SAM)
 
 ### Other

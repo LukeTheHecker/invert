@@ -62,6 +62,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverGammaMAP(**kwargs)
     elif solver.lower() == "source-map" or solver.lower() == "source map":
         solver_object = solvers.SolverSourceMAP(**kwargs)
+    elif solver.lower() == "gamma-map-msp" or solver.lower() == "gamma map msp":
+        solver_object = solvers.SolverGammaMAPMSP(**kwargs)
     elif solver.lower() == "source-map-msp" or solver.lower() == "source map msp":
         solver_object = solvers.SolverSourceMAPMSP(**kwargs)
     
@@ -82,6 +84,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverMCMV(**kwargs)
     elif solver.lower() == "esmcmv":
         solver_object = solvers.SolverESMCMV(**kwargs)
+    elif solver.lower() == "recipsiicos":
+        solver_object = solvers.SolverReciPSIICOS(**kwargs)
     elif solver.lower() == "sam":
         solver_object = solvers.SolverSAM(**kwargs)
 
@@ -118,11 +122,11 @@ def Solver(solver="mne", **kwargs):
     # Subspace Methods
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
-    elif solver.lower() == "rap-music":
+    elif solver.lower() == "rap-music" or solver.lower() == "rap music":
         solver_object = solvers.SolverRAPMUSIC(**kwargs)
-    elif solver.lower() == "trap-music":
+    elif solver.lower() == "trap-music" or solver.lower() == "trap music":
         solver_object = solvers.SolverTRAPMUSIC(**kwargs)
-    elif solver.lower() == "jazz-music":
+    elif solver.lower() == "jazz-music" or solver.lower() == "jazz music":
         solver_object = solvers.SolverJAZZMUSIC(**kwargs)
     
     elif solver.lower() == "bcs":

@@ -181,8 +181,6 @@ class SolverGammaMAP(BaseSolver):
             
 
             term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L.T @ sigma_b_inv @ B )**2, axis=1))
-
-            # term_2 = 1 / np.diagonal(np.sqrt((L.T @ sigma_b_inv @ L )))
             term_2 = 1 / np.sqrt(np.diagonal((L.T @ sigma_b_inv @ L )))
 
             gammas = term_1 * term_2
@@ -295,6 +293,124 @@ class SolverSourceMAP(BaseSolver):
             x = x[:, np.newaxis]
         return np.sqrt(np.trace(x@x.T))
 
+
+class SolverGammaMAPMSP(BaseSolver):
+    ''' Class for the Gamma Maximum A Posteriori (Gamma-MAP) inverse solution
+    using multiple sparse priors (MSP).
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    
+    References
+    ----------
+    Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
+    source imaging. NeuroImage, 44(3), 947-966.
+    
+    '''
+    def __init__(self, name="Gamma-MAP-MSP", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+                              max_iter=100, p=0.5, smoothness_order=1, verbose=0, 
+                              **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA-like solution.
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        leadfield = self.leadfield
+        n_chans, _ = leadfield.shape
+        
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, 
+                                                                    max_iter=max_iter, p=p, 
+                                                                    smoothness_order=smoothness_order)
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
+    
+    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
+        L = deepcopy(self.leadfield)
+        db, n = B.shape
+        ds = L.shape[1]
+
+        # Ensure Common average reference
+        B -= B.mean(axis=0)
+        L -= L.mean(axis=0)
+        
+ 
+        # Data Covariance Matrix
+        # Cb = B @ B.T
+        L_smooth, gradient = self.get_smooth_prior_cov(L, smoothness_order)
+        gammas = np.ones(ds)
+        sigma_e = alpha * np.identity(db)  
+        sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
+        sigma_b = sigma_e + L_smooth @ sigma_s @ L_smooth.T
+        sigma_b_inv = np.linalg.inv(sigma_b)
+        
+        for k in range(max_iter):
+            # print(k)
+            old_gammas = deepcopy(gammas)
+            
+            # gammas = ((1/n) * np.sqrt(np.sum(( np.diag(gammas) @ L_smooth.T @ sigma_b_inv @ B )**2, axis=1)))**((2-p)/2)
+            
+            term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L_smooth.T @ sigma_b_inv @ B )**2, axis=1))
+            term_2 = 1 / np.sqrt(np.diagonal((L_smooth.T @ sigma_b_inv @ L_smooth )))
+            gammas = term_1 * term_2
+
+            if np.linalg.norm(gammas) == 0:
+                gammas = old_gammas
+                break
+            # print(gammas.min(), gammas.max())
+            # gammas /= np.linalg.norm(gammas)
+        
+        # Smooth gammas according to smooth priors
+        gammas_final = abs(gammas@gradient)
+        gammas_final = gammas / gammas.max()
+
+        sigma_s_hat = np.diag(gammas_final) @ sigma_s
+        inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
+        # S = inverse_operator @ B
+        return inverse_operator
+        
+    @staticmethod
+    def frob(x):
+        if len(x.shape) == 1:
+            x = x[:, np.newaxis]
+        return np.sqrt(np.trace(x@x.T))
+    
+    def get_smooth_prior_cov(self, L, smoothness_order):
+        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        gradient = laplacian(adjacency).toarray().astype(np.float32)
+        
+        for i in range(smoothness_order):
+            gradient = gradient @ gradient
+        L = L @ abs(gradient)
+        L -= L.mean(axis=0)
+        # L /= np.linalg.norm(L, axis=0)
+        return L, gradient
+
 class SolverSourceMAPMSP(BaseSolver):
     ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution
     using multiple sparse priors.
@@ -379,13 +495,13 @@ class SolverSourceMAPMSP(BaseSolver):
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
                 break
-            print(gammas.min(), gammas.max())
+            # print(gammas.min(), gammas.max())
             # gammas /= np.linalg.norm(gammas)
         
         # Smooth gammas according to smooth priors
         gammas_final = abs(gammas@gradient)
         gammas_final = gammas / gammas.max()
-        gammas_final[gammas_final<1e-1] = 0
+
         sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
         inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
         # S = inverse_operator @ B
