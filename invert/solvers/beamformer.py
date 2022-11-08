@@ -546,8 +546,6 @@ class SolverESMCMV(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
 
-    
-
 class SolverMCMV(BaseSolver):
     ''' Class for the Multiple Constrained Minimum Variance (MCMV) Beamformer
     inverse solution.
@@ -608,8 +606,99 @@ class SolverMCMV(BaseSolver):
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
-    
 
+class SolverReciPSIICOS(BaseSolver):
+    ''' Class for the Reciprocal Phase Shift Invariant Imaging of Coherent
+    Sources (ReciPSIICOS) Beamformer inverse solution.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+
+    References
+    ----------    
+    Kuznetsova, A., Nurislamova, Y., & Ossadtchi, A. (2021). Modified covariance
+    beamformer for solving MEG inverse problem in the environment with
+    correlated sources. Neuroimage, 228, 117677.
+    '''
+    def __init__(self, name="ReciPSIICOS", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        self.forward = forward
+        leadfield = self.forward['sol']['data']
+        n_chans, n_dipoles = leadfield.shape
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
+        y = evoked.data
+        y -= y.mean(axis=0)
+        G = deepcopy(leadfield)
+        G -= G.mean(axis=0)
+        
+        # Step 1
+        # G_pwr = np.stack([g * g for g in G], axis=0)
+        G_pwr = G@G.T
+        # G_pwr = self.vec(G)
+        
+        I = np.identity(n_chans)
+        # Recompute regularization based on the max eigenvalue of the Covariance
+        # Matrix (opposed to that of the leadfield)
+        C = y@y.T
+        self.alphas = self.get_alphas(reference=C)
+        
+        inverse_operators = []
+        for alpha in self.alphas:
+            C = y@y.T + alpha * I
+
+            # Step 2
+            U_pwr, S_pwr, _ = np.linalg.svd(G_pwr, full_matrices=False)
+            k = find_corner(np.arange(len(S_pwr)), S_pwr)
+            P = U_pwr[:, :k] @ U_pwr[:, :k].T
+
+            # Step 3
+            C_x = (P@C).T
+            # C_x = self.vec( P @ self.vec(C)).T
+
+            # Step 4
+            E, A, _ = np.linalg.svd(C_x, full_matrices=False)
+            # Make new Covariance positive semidefinite
+            C_x = E @ np.diag(np.abs(A)) @ E.T
+            C_x_inv = np.linalg.inv(C_x)
+
+            W = []
+            for i in range(n_dipoles):
+                l = leadfield[:, i][:, np.newaxis]
+                w = np.linalg.inv(l.T @ C_x_inv @ l) @ l.T @ C_x_inv
+                W.append(w)
+            W = np.stack(W, axis=1)[0].T
+
+            inverse_operator = W.T
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)    
+    
+    def vec(self, X):
+        X_vec = np.stack([x * x for x in X], axis=0)
+        return X_vec
 class SolverSAM(BaseSolver):
     ''' Class for the Synthetic Aperture Magnetometry Beamformer (SAM) inverse
     solution.

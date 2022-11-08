@@ -11,6 +11,8 @@ approach to EEG dipole source localization. Physics in Medicine & Biology,
 
 Bayesian Formulations
 - check out these fellas: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8038037
+- or AR-EM Champagne here: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8553004 Improving EEG Source Localization through
+Spatio-temporal Sparse Bayesian Learning
 
 Regularisation:
 - Lukas, M. A. (2008). Strong robust generalized cross-validation for choosing the regularization parameter. Inverse Problems, 24(3), 034006.
