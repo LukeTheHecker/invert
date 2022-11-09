@@ -146,7 +146,7 @@ class SolverChampagne(BaseSolver):
             if i>0 and np.linalg.norm(x_bars[-1]) == 0:
                 x_bar = x_bars[-2]
                 break
-        active_set
+        # active_set
         gammas_full = np.zeros(n_sources)
         gammas_full[active_set] = gammas
         Gamma_full = spdiags(gammas_full, 0, n_sources, n_sources)
