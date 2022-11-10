@@ -214,12 +214,12 @@ class BaseSolver:
 
         # optimum_idx = np.argmin(gcv_values[1:])+1
 
-        # plt.figure()
-        # plt.loglog(self.alphas, gcv_values, 'ok')
-        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # print("alpha: ", alpha)
-        # plt.title(f"GCV: {alpha}")
+        plt.figure()
+        plt.loglog(self.alphas, gcv_values, 'ok')
+        plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        print("alpha: ", alpha)
+        plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
