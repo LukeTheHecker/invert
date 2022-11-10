@@ -69,8 +69,11 @@ class BaseSolver:
         car_leadfield=True, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
-        self.r_values = np.insert(np.logspace(-5, 2, n_reg_params), 0, 0)
+        self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
+        # self.r_values = np.insert(np.logspace(-20, 20, n_reg_params), 0, 0)
+        # self.r_values = np.linspace(1e-5, 1, n_reg_params)
         # self.r_values = np.arange(13)
+        # self.r_values = np.logspace(0, 1.1, n_reg_params)
         
         # self.alphas = deepcopy(self.r_values)
         self.regularisation_method = regularisation_method
@@ -138,8 +141,14 @@ class BaseSolver:
         leadfield -= leadfield.mean(axis=0)
         
 
-        l2_norms = [np.log(np.linalg.norm( leadfield @ source_mat )) for source_mat in source_mats]
-        residual_norms = [np.log(np.linalg.norm( leadfield @ source_mat - M )) for source_mat in source_mats]
+        # l2_norms = [np.log(np.linalg.norm( leadfield @ source_mat )) for source_mat in source_mats]
+        # l2_norms = [np.log(np.linalg.norm(source_mat )) for source_mat in source_mats]
+        l2_norms = [np.linalg.norm( source_mat ) for source_mat in source_mats]
+        
+        
+        # residual_norms = [np.log(np.linalg.norm( leadfield @ source_mat - M )) for source_mat in source_mats]
+        residual_norms = [np.linalg.norm( leadfield @ source_mat - M ) for source_mat in source_mats]
+
 
 
         # Filter non-monotonic decreasing values
@@ -156,11 +165,11 @@ class BaseSolver:
 
         source_mat = source_mats[optimum_idx]
         
-        # plt.figure()
-        # plt.plot(residual_norms, l2_norms, 'ok')
-        # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # plt.title(f"L-Curve: {alpha}")
+        plt.figure()
+        plt.plot(residual_norms, l2_norms, 'ok')
+        plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        plt.title(f"L-Curve: {alpha}")
 
         return source_mat
         
@@ -198,15 +207,19 @@ class BaseSolver:
     
             gcv_value = residual_norm / denom
             gcv_values.append(gcv_value)
+        
+        # Filter gcv_values that first increase
+        keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
+        optimum_idx = np.argmin(gcv_values[keep_idx:])+keep_idx
 
-        optimum_idx = np.argmin(gcv_values[1:])+1
+        # optimum_idx = np.argmin(gcv_values[1:])+1
 
-        # plt.figure()
-        # plt.loglog(self.alphas, gcv_values, 'ok')
-        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # print("alpha: ", alpha)
-        # plt.title(f"GCV: {alpha}")
+        plt.figure()
+        plt.loglog(self.alphas, gcv_values, 'ok')
+        plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        print("alpha: ", alpha)
+        plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0]
@@ -300,6 +313,8 @@ class BaseSolver:
     def prepare_forward(self):
         if self.car_leadfield:
             self.forward["sol"]["data"] -= self.forward["sol"]["data"].mean(axis=0)
+            self.forward["sol"]["data"] /= np.linalg.norm(self.forward["sol"]["data"], axis=0)
+            
 
     @staticmethod
     def euclidean_distance(A, B):
