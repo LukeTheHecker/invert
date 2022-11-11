@@ -122,17 +122,12 @@ def Solver(solver="mne", **kwargs):
     # Subspace Methods
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
-    elif solver.lower() == "rap-music" or solver.lower() == "rap music":
+    elif solver.lower() == "rap-music" or solver.lower() == "rap music" or solver.lower() == "rap":
         solver_object = solvers.SolverRAPMUSIC(**kwargs)
-    elif solver.lower() == "trap-music" or solver.lower() == "trap music":
+    elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
         solver_object = solvers.SolverTRAPMUSIC(**kwargs)
-    elif solver.lower() == "jazz-music" or solver.lower() == "jazz music":
+    elif solver.lower() == "jazz-music" or solver.lower() == "jazz music" or solver.lower() == "jazz":
         solver_object = solvers.SolverJAZZMUSIC(**kwargs)
-    
-    elif solver.lower() == "bcs":
-        solver_object = solvers.SolverBCS(**kwargs)
-    elif solver.lower() == "bcs":
-        solver_object = solvers.SolverBCS(**kwargs)
     
     # Other
     elif solver.lower() == "epifocus":

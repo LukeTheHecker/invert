@@ -7,12 +7,15 @@ Subspace Techniques:
 - FINE/ FINES: Xu, X. L., Xu, B., & He, B. (2004). An alternative subspace
 approach to EEG dipole source localization. Physics in Medicine & Biology,
 49(2), 327.  -> abandoned because super complicated
-- MUSIC/FINES with smooth component choice (like smooth OMP etc.)
+
+
 
 Bayesian Formulations
 - check out these fellas: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8038037
 - or AR-EM Champagne here: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8553004 Improving EEG Source Localization through
 Spatio-temporal Sparse Bayesian Learning
+  - need to be refined, then integrated
+- https://arxiv.org/pdf/1409.8109.pdf
 
 Regularisation:
 - Lukas, M. A. (2008). Strong robust generalized cross-validation for choosing the regularization parameter. Inverse Problems, 24(3), 034006.

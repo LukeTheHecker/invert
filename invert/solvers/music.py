@@ -38,7 +38,7 @@ class SolverMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n=6, stop_crit=0.95) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", stop_crit=0.95) -> mne.SourceEstimate:
         source_mat = self.apply_music(evoked.data, n, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -69,8 +69,26 @@ class SolverMUSIC(BaseSolver):
         
         # Data Covariance
         C = y@y.T
-        U, D, _  = np.linalg.svd(C, full_matrices=False)
-        Us = U[:, :n]
+        
+        # Get optimal eigenvectors
+        U, D, _ = np.linalg.svd(C, full_matrices=False)
+        if n == "auto":
+            # L-curve method
+            # D = D[:int(n_chans/2)]
+            # iters = np.arange(len(D))
+            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            
+            # eigenvalue magnitude-based
+            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D, '*k')
+            # plt.plot(iters[n_comp], D[n_comp], 'or')
+            # plt.plot(iters[n_comp], D[n_comp], 'og')
+        else:
+            n_comp = deepcopy(n)
+        Us = U[:, :n_comp]
         Ps = Us@Us.T
 
         mu = np.zeros(n_dipoles)
@@ -121,7 +139,7 @@ class SolverRAPMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n=10, k=5, stop_crit=0.95) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95) -> mne.SourceEstimate:
         source_mat = self.apply_rapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -156,12 +174,32 @@ class SolverRAPMUSIC(BaseSolver):
         C = y@y.T
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
+
+        U, D, _= np.linalg.svd(C, full_matrices=True)
+        if n == "auto":
+            # L-curve method
+            # D = D[:int(n_chans/2)]
+            # iters = np.arange(len(D))
+            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            
+            # eigenvalue magnitude-based
+            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D, '*k')
+            # plt.plot(iters[n_comp], D[n_comp], 'or')
+            # plt.plot(iters[n_comp], D[n_comp], 'og')
+            
+
+        else:
+            n_comp = deepcopy(n)
+        Us = U[:, :n_comp]
         dipole_idc = []
         n_time = y.shape[1]
         for i in range(k):
             # print(i)
-            U, D, _= np.linalg.svd(C, full_matrices=False)
-            Us = U[:, :n]
+            
             Ps = Us@Us.T
 
             mu = np.zeros(n_dipoles)
@@ -185,6 +223,9 @@ class SolverRAPMUSIC(BaseSolver):
             
             Q = I - B @ np.linalg.pinv(B)
             C = Q @ Us
+
+            U, D, _= np.linalg.svd(C, full_matrices=False)
+            Us = U[:, :n_comp]
 
         dipole_idc = np.array(dipole_idc)
         x_hat = np.zeros((n_dipoles, n_time))
@@ -225,7 +266,7 @@ class SolverTRAPMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n=10, k=5, stop_crit=0.95) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95) -> mne.SourceEstimate:
         source_mat = self.apply_trapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -261,13 +302,31 @@ class SolverTRAPMUSIC(BaseSolver):
         C = y@y.T
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
+        U, D, _= np.linalg.svd(C, full_matrices=True)
+        if n == "auto":
+            # L-curve method
+            # D = D[:int(n_chans/2)]
+            # iters = np.arange(len(D))
+            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            
+            # eigenvalue magnitude-based
+            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
 
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D, '*k')
+            # plt.plot(iters[n_comp], D[n_comp], 'or')
+            # plt.plot(iters[n_comp], D[n_comp], 'og')
+            
+
+        else:
+            n_comp = deepcopy(n)
+        Us = U[:, :n_comp]
         dipole_idc = []
         n_time = y.shape[1]
         for i in range(k):
             # print(i)
-            U, D, _= np.linalg.svd(C, full_matrices=False)
-            Us = U[:, :n-i]
+            
             Ps = Us@Us.T
 
             mu = np.zeros(n_dipoles)
@@ -290,7 +349,8 @@ class SolverTRAPMUSIC(BaseSolver):
             
             Q = I - B @ np.linalg.pinv(B)
             C = Q @ Us
-
+            U, D, _= np.linalg.svd(C, full_matrices=False)
+            Us = U[:, :n_comp-i]
         dipole_idc = np.array(dipole_idc)
         x_hat = np.zeros((n_dipoles, n_time))
         x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
@@ -376,8 +436,21 @@ class SolverJAZZMUSIC(BaseSolver):
         Q = np.identity(n_chans)
         U, D, _= np.linalg.svd(C, full_matrices=True)
         if n == "auto":
-            iters = np.arange(len(D))
-            n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            # L-curve method
+            # D = D[:int(n_chans/2)]
+            # iters = np.arange(len(D))
+            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            
+            # eigenvalue magnitude-based
+            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D, '*k')
+            # plt.plot(iters[n_comp], D[n_comp], 'or')
+            # plt.plot(iters[n_comp], D[n_comp], 'og')
+            
+
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]
@@ -385,6 +458,7 @@ class SolverJAZZMUSIC(BaseSolver):
         dipole_idc = []
         n_time = y.shape[1]
         for i in range(k):
+            # print(Us.shape)
             Ps = Us@Us.T
 
             mu = np.zeros((n_orders, n_dipoles))
@@ -392,7 +466,7 @@ class SolverJAZZMUSIC(BaseSolver):
                 for p in range(n_dipoles):
                     l = leadfields[nn][:, p][:, np.newaxis]
                     norm_1 = np.linalg.norm(Ps @ Q @ l)
-                    norm_2 = np.linalg.norm(Q @ l)
+                    norm_2 = np.linalg.norm(Q @ l) # Q @ l
                     mu[nn, p] = norm_1 / norm_2
             
             # Find the dipole/ patch with highest correlation with the residual
@@ -403,14 +477,15 @@ class SolverJAZZMUSIC(BaseSolver):
             dipole_idc.extend( dipole_idx )
 
             if np.max(mu) < stop_crit:
+                # print("stopping at ", np.max(mu))
                 break
 
             if i == 0:
-                B = leadfield[:, dipole_idx]
-                # B = leadfields[best_order][:, best_dipole][:, np.newaxis]
+                # B = leadfield[:, dipole_idx]
+                B = leadfields[best_order][:, best_dipole][:, np.newaxis]
             else:
-                B = np.hstack([B, leadfield[:, dipole_idx]])
-                # B = np.hstack([B, leadfields[best_order][:, best_dipole][:, np.newaxis]])
+                # B = np.hstack([B, leadfield[:, dipole_idx]])
+                B = np.hstack([B, leadfields[best_order][:, best_dipole][:, np.newaxis]])
 
             # B = B / np.linalg.norm(B, axis=0)
             Q = I - B @ np.linalg.pinv(B)
@@ -423,10 +498,13 @@ class SolverJAZZMUSIC(BaseSolver):
                 Us = U[:, :n_comp-i]
             else:
                 Us = U[:, :n_comp]
-
+            
         dipole_idc = np.array(dipole_idc)
+
+        # Simple minimum norm inversion using found dipoles
         x_hat = np.zeros((n_dipoles, n_time))
         x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
+        
         return x_hat
 
     def make_jazz(self, n_orders):
@@ -450,7 +528,9 @@ class SolverJAZZMUSIC(BaseSolver):
             new_leadfield -= new_leadfield.mean(axis=0)
             new_adjacency = new_adjacency @ self.adjacency
             neighbors = [np.where(ad!=0)[0] for ad in self.adjacency.toarray()]
-            
+            new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
             self.leadfields.append( new_leadfield )
             self.neighbors.append( neighbors )
 
+        # self.leadfields = [self.leadfields[1],]
+        # self.neighbors = [self.neighbors[1],]

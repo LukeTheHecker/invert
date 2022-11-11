@@ -118,7 +118,7 @@ class SolverGammaMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", smoothness_prior=False,
                               max_iter=100, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -140,10 +140,16 @@ class SolverGammaMAP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
         n_chans, _ = leadfield.shape
-        
+
+        if smoothness_prior:
+            adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+            self.gradient = laplacian(adjacency).toarray().astype(np.float32)
+        else:
+            self.gradient = None
+
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_gamma_map_inverse_operator(evoked.data, alpha, max_iter=max_iter)
+            inverse_operator = self.make_gamma_map_inverse_operator(evoked.data, alpha, smoothness_prior=smoothness_prior, max_iter=max_iter)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -152,7 +158,7 @@ class SolverGammaMAP(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def make_gamma_map_inverse_operator(self, B, alpha, max_iter=100):
+    def make_gamma_map_inverse_operator(self, B, alpha, smoothness_prior=False, max_iter=100):
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -167,7 +173,10 @@ class SolverGammaMAP(BaseSolver):
         # Cb = B @ B.T
         gammas = np.ones(ds)
         sigma_e = alpha * np.identity(db)  
-        sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
+        if smoothness_prior:
+            sigma_s = np.identity(ds) @ abs(self.gradient)
+        else:
+            sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
         sigma_b = sigma_e + L @ sigma_s @ L.T
         sigma_b_inv = np.linalg.inv(sigma_b)
         
@@ -179,7 +188,7 @@ class SolverGammaMAP(BaseSolver):
             # term_2 = np.linalg.inv(sigma_e + L@sigma_s@L.T) @ L @ sigma_s
             # Cov = sigma_s - term_1 @ term_2
             
-
+            # according to equation (30)
             term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L.T @ sigma_b_inv @ B )**2, axis=1))
             term_2 = 1 / np.sqrt(np.diagonal((L.T @ sigma_b_inv @ L )))
 
@@ -218,7 +227,7 @@ class SolverSourceMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", smoothness_prior=False,
                               max_iter=100, p=0.5, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -240,10 +249,16 @@ class SolverSourceMAP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
         n_chans, _ = leadfield.shape
-        
+
+        if smoothness_prior:
+            adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+            self.gradient = laplacian(adjacency).toarray().astype(np.float32)
+        else:
+            self.gradient = None
+
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, smoothness_prior=smoothness_prior, max_iter=max_iter, p=p)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -252,7 +267,7 @@ class SolverSourceMAP(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
+    def make_source_map_inverse_operator(self, B, alpha, smoothness_prior=False, max_iter=100, p=0.5):
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -265,8 +280,11 @@ class SolverSourceMAP(BaseSolver):
         # Data Covariance Matrix
         # Cb = B @ B.T
         gammas = np.ones(ds)
-        sigma_e = alpha * np.identity(db)  
-        sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
+        sigma_e = alpha * np.identity(db)
+        if smoothness_prior:
+            sigma_s = np.identity(ds) @ abs(self.gradient)
+        else:
+            sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
         sigma_b = sigma_e + L @ sigma_s @ L.T
         sigma_b_inv = np.linalg.inv(sigma_b)
         

@@ -57,6 +57,7 @@ class BaseSolver:
         Can be either 
             "GCV"       -> generalized cross validation
             "L"         -> L-Curve method using triangle method
+            "L_new"     -> L-Curve method using triangle and scale-free params
             "Product"   -> Minimal product method
 
     n_reg_params : int
