@@ -139,7 +139,7 @@ class SolverRAPMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
         source_mat = self.apply_rapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -170,6 +170,9 @@ class SolverRAPMUSIC(BaseSolver):
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         
+        if k == "auto":
+            k = n_chans
+
         # Data Covariance
         C = y@y.T
         I = np.identity(n_chans)
@@ -266,7 +269,7 @@ class SolverTRAPMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
         source_mat = self.apply_trapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -297,6 +300,9 @@ class SolverTRAPMUSIC(BaseSolver):
         
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
+        
+        if k == "auto":
+            k = n_chans
         
         # Data Covariance
         C = y@y.T
@@ -394,7 +400,7 @@ class SolverJAZZMUSIC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", k=5, stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
         source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -429,12 +435,16 @@ class SolverJAZZMUSIC(BaseSolver):
         
         leadfields = self.leadfields
         n_orders = len(self.leadfields)
-        
+        if k == "auto":
+            k = n_chans
         # Data Covariance
+        y -= y.mean(axis=0)
         C = y@y.T
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
         U, D, _= np.linalg.svd(C, full_matrices=True)
+        # U -= U.mean(axis=0)
+
         if n == "auto":
             # L-curve method
             # D = D[:int(n_chans/2)]
@@ -443,7 +453,7 @@ class SolverJAZZMUSIC(BaseSolver):
             
             # eigenvalue magnitude-based
             n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
-
+            # print(n_comp, " components")
             # import matplotlib.pyplot as plt
             # plt.figure()
             # plt.plot(iters, D, '*k')
@@ -471,7 +481,7 @@ class SolverJAZZMUSIC(BaseSolver):
             
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
-            
+            # print("Best order: ", best_order)
             # Add dipole index or patch indices to the list of active dipoles
             dipole_idx = self.neighbors[best_order][best_dipole]
             dipole_idc.extend( dipole_idx )
@@ -489,10 +499,13 @@ class SolverJAZZMUSIC(BaseSolver):
 
             # B = B / np.linalg.norm(B, axis=0)
             Q = I - B @ np.linalg.pinv(B)
+            # Q -= Q.mean(axis=0)
             C = Q @ Us
 
             U, D, _= np.linalg.svd(C, full_matrices=False)
-
+            # U -= U.mean(axis=0)
+            
+        
             # 
             if truncate:
                 Us = U[:, :n_comp-i]
@@ -511,6 +524,7 @@ class SolverJAZZMUSIC(BaseSolver):
         n_dipoles = self.leadfield.shape[1]
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         self.gradient = abs(laplacian(self.adjacency))
+
         
         # Normalized Gradient
         # self.gradient = abs(laplacian(self.adjacency)).toarray().astype(np.float64)
@@ -526,11 +540,12 @@ class SolverJAZZMUSIC(BaseSolver):
         for i in range(n_orders):
             new_leadfield = new_leadfield @ self.gradient
             new_leadfield -= new_leadfield.mean(axis=0)
+            new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
+
             new_adjacency = new_adjacency @ self.adjacency
             neighbors = [np.where(ad!=0)[0] for ad in self.adjacency.toarray()]
-            new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
-            self.leadfields.append( new_leadfield )
+            
+            self.leadfields.append( deepcopy(new_leadfield) )
             self.neighbors.append( neighbors )
-
         # self.leadfields = [self.leadfields[1],]
         # self.neighbors = [self.neighbors[1],]

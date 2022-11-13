@@ -20,8 +20,8 @@ leadfield = fwd["sol"]["data"]
 
 # Simulation Data for testing
 n_time = 15
-source_mat = np.zeros((leadfield.shape[1], n_time))
-source_mat[0, :] = np.random.randn(n_time)
+# source_mat = np.zeros((leadfield.shape[1], n_time))
+source_mat = np.random.randn(leadfield.shape[1], n_time)
 stc = mne.SourceEstimate(source_mat, vertices, tmin=0, tstep=0.001)
 evoked_mat = leadfield @ source_mat
 evoked_mat -= evoked_mat.mean(axis=0)
