@@ -472,13 +472,17 @@ class SolverJAZZMUSIC(BaseSolver):
             Ps = Us@Us.T
 
             mu = np.zeros((n_orders, n_dipoles))
+            # for nn in range(n_orders):
+            #     for p in range(n_dipoles):
+            #         l = leadfields[nn][:, p][:, np.newaxis]
+            #         norm_1 = np.linalg.norm(Ps @ Q @ l)
+            #         norm_2 = np.linalg.norm(Q @ l) # Q @ l
+            #         mu[nn, p] = norm_1 / norm_2
             for nn in range(n_orders):
-                for p in range(n_dipoles):
-                    l = leadfields[nn][:, p][:, np.newaxis]
-                    norm_1 = np.linalg.norm(Ps @ Q @ l)
-                    norm_2 = np.linalg.norm(Q @ l) # Q @ l
-                    mu[nn, p] = norm_1 / norm_2
-            
+                norm_1 = np.linalg.norm(Ps @ Q @ leadfields[nn], axis=0)
+                norm_2 = np.linalg.norm(Q @ leadfields[nn], axis=0) 
+                mu[nn, :] = norm_1 / norm_2
+        
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
             # print("Best order: ", best_order)
