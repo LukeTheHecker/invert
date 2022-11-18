@@ -520,27 +520,35 @@ class SolverJAZZMUSIC(BaseSolver):
 
         # Simple minimum norm inversion using found dipoles
         x_hat = np.zeros((n_dipoles, n_time))
-        x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
         
+        # Time-course estimation
+        
+        # Simple MNE-based 
+        # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
+
+        # WMNE-based
+        L = self.leadfield[:, dipole_idc]
+        W = np.diag(np.linalg.norm(L, axis=0))
+        x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+
         return x_hat
 
     def make_jazz(self, n_orders):
         n_dipoles = self.leadfield.shape[1]
-        self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
-        self.gradient = abs(laplacian(self.adjacency))
-
         
-        # Normalized Gradient
-        # self.gradient = abs(laplacian(self.adjacency)).toarray().astype(np.float64)
-        # self.gradient = np.stack([g / np.mean(g[g!=0]) for g in self.gradient], axis=0)
-
-
-        new_leadfield = deepcopy(self.leadfield)
-        new_adjacency = deepcopy(self.adjacency)
 
         self.leadfields = [deepcopy(self.leadfield), ]
         self.neighbors = [[np.array([i]) for i in range(n_dipoles)], ]
 
+        if n_orders==0:
+            return
+
+        new_leadfield = deepcopy(self.leadfield)
+        self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        self.gradient = abs(laplacian(self.adjacency))
+        new_adjacency = deepcopy(self.adjacency)
+
+        
         for i in range(n_orders):
             new_leadfield = new_leadfield @ self.gradient
             new_leadfield -= new_leadfield.mean(axis=0)
