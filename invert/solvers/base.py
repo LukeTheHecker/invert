@@ -67,24 +67,20 @@ class BaseSolver:
         If True -> Apply common average referencing on the leadfield columns.
     '''
     def __init__(self, regularisation_method="GCV", n_reg_params=24, 
-        car_leadfield=True, verbose=0):
+        car_leadfield=True, use_last_alpha=False, verbose=0):
         self.verbose = verbose
         # self.r_values = np.insert(np.logspace(-10, 10, n_reg_params), 0, 0)
         self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
-        # self.r_values = np.insert(np.logspace(-20, 20, n_reg_params), 0, 0)
-        # self.r_values = np.linspace(1e-5, 1, n_reg_params)
-        # self.r_values = np.arange(13)
-        # self.r_values = np.logspace(0, 1.1, n_reg_params)
-        
+
         # self.alphas = deepcopy(self.r_values)
         self.regularisation_method = regularisation_method
         self.car_leadfield = car_leadfield
-        
+        self.use_last_alpha = use_last_alpha
+        self.last_reg_idx = None
     def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", **kwargs):
       
         self.forward = forward
         self.prepare_forward()
-        self.leadfield = self.forward['sol']['data']
         self.alpha = alpha
         self.alphas = self.get_alphas()
 
@@ -96,13 +92,19 @@ class BaseSolver:
 
         if len(self.inverse_operators) == 1:
             source_mat = self.inverse_operators[0].apply(evoked)
+        elif self.use_last_alpha and self.last_reg_idx is not None:
+            source_mat = self.inverse_operators[self.last_reg_idx].apply( evoked ) 
+            
         else:
             if self.regularisation_method.lower() == "l":
-                source_mat = self.regularise_lcurve(evoked)
+                source_mat, idx = self.regularise_lcurve(evoked)
+                self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "gcv":
-                source_mat = self.regularise_gcv(evoked)
+                source_mat, idx = self.regularise_gcv(evoked)
+                self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "product":
-                source_mat = self.regularise_product(evoked)
+                source_mat, idx = self.regularise_product(evoked)
+                self.last_reg_idx = idx
             else:
                 msg = f"{self.regularisation_method} is no valid regularisation method."
                 raise AttributeError(msg)
@@ -135,7 +137,7 @@ class BaseSolver:
     def regularise_lcurve(self, evoked):
         # print("L-CURVE")
         M = evoked.data
-        leadfield = self.forward["sol"]["data"]
+        leadfield = self.leadfield
         source_mats = [inverse_operator.apply( evoked ) for inverse_operator in self.inverse_operators]
         
         M -= M.mean(axis=0)
@@ -172,7 +174,7 @@ class BaseSolver:
         # alpha = self.alphas[optimum_idx]
         # plt.title(f"L-Curve: {alpha}")
 
-        return source_mat
+        return source_mat, optimum_idx
         
     @staticmethod
     def get_curvature(x, y):
@@ -193,7 +195,7 @@ class BaseSolver:
 
     def regularise_gcv(self, evoked):
         # print("GCV")
-        self.leadfield = self.forward["sol"]["data"]
+        # self.leadfield = self.forward["sol"]["data"]
         n_chans = self.leadfield.shape[0]
         M = evoked.data
         # M -= M.mean(axis=0)
@@ -223,12 +225,12 @@ class BaseSolver:
         # plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
-        return source_mat[0]
+        return source_mat[0], optimum_idx
     
     
     def regularise_product(self, evoked):
         # print("Product")
-        self.leadfield = self.forward["sol"]["data"]
+        # self.leadfield = self.forward["sol"]["data"]
         M = evoked.data
         product_values = []
 
@@ -249,7 +251,7 @@ class BaseSolver:
         # alpha = self.alphas[optimum_idx]
         # plt.title(f"Product: {alpha}")
         source_mat = self.inverse_operators[optimum_idx].data @ M
-        return source_mat[0]
+        return source_mat[0], optimum_idx
 
     @staticmethod
     def delete_from_list(a, idc):
@@ -312,9 +314,10 @@ class BaseSolver:
         return bad_idc
 
     def prepare_forward(self):
+        self.leadfield = deepcopy(self.forward["sol"]["data"])
         if self.car_leadfield:
-            self.forward["sol"]["data"] -= self.forward["sol"]["data"].mean(axis=0)
-            self.forward["sol"]["data"] /= np.linalg.norm(self.forward["sol"]["data"], axis=0)
+            self.leadfield -= self.leadfield.mean(axis=0)
+            self.leadfield /= np.linalg.norm(self.leadfield, axis=0)
             
 
     @staticmethod

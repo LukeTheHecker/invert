@@ -85,8 +85,7 @@ class SolverLCMV(BaseSolver):
         '''
         self.weight_norm = weight_norm
         self.forward = forward
-        leadfield = self.forward['sol']['data']
-        leadfield -= leadfield.mean(axis=0)
+        leadfield = deepcopy(self.forward['sol']['data'])
         n_chans, n_dipoles = leadfield.shape
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
