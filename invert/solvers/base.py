@@ -73,6 +73,7 @@ class BaseSolver:
         self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
 
         # self.alphas = deepcopy(self.r_values)
+        self.n_reg_params = n_reg_params
         self.regularisation_method = regularisation_method
         self.car_leadfield = car_leadfield
         self.use_last_alpha = use_last_alpha

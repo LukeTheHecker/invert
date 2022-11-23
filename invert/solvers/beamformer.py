@@ -95,13 +95,17 @@ class SolverLCMV(BaseSolver):
         I = np.identity(n_chans)
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
-        C = y@y.T
-        self.alphas = self.get_alphas(reference=C)
-        
-        
+
+        # self.alphas = self.get_alphas(reference=y@y.T)
+        # self.alphas = [0.001 * np.diagonal(y@y.T).mean()]
+        self.alphas = np.logspace(-4, 1, self.n_reg_params) * np.diagonal(y@y.T).mean()
+
         inverse_operators = []
         for alpha in self.alphas:
-            C_inv = np.linalg.inv(C + alpha * I)
+            C = y@y.T + alpha*I
+            # C = (1-alpha)*(y@y.T) + alpha*np.trace((y@y.T))/n_chans * I
+            C_inv = np.linalg.inv(C)
+
             W = []
             for i in range(n_dipoles):
                 l = leadfield[:, i][:, np.newaxis]
@@ -166,7 +170,8 @@ class SolverSMV(BaseSolver):
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
-        self.alphas = self.get_alphas(reference=C)
+        # self.alphas = self.get_alphas(reference=C)
+        # self.alphas = np.logspace(-4, 1, self.n_reg_params) #* np.diagonal(y@y.T).mean()
         
         inverse_operators = []
         for alpha in self.alphas:
@@ -658,7 +663,7 @@ class SolverReciPSIICOS(BaseSolver):
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
-        self.alphas = self.get_alphas(reference=C)
+        # self.alphas = self.get_alphas(reference=C)
         
         inverse_operators = []
         for alpha in self.alphas:
