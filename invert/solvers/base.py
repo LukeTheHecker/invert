@@ -213,7 +213,11 @@ class BaseSolver:
             gcv_values.append(gcv_value)
         
         # Filter gcv_values that first increase
-        keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
+        try:
+            keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
+        except:
+            keep_idx = 0
+
         optimum_idx = np.argmin(gcv_values[keep_idx:])+keep_idx
 
         # optimum_idx = np.argmin(gcv_values[1:])+1
