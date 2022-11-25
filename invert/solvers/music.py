@@ -452,32 +452,31 @@ class SolverJAZZMUSIC(BaseSolver):
 
         if n == "auto":
             # L-curve method
-            # D = D[:int(n_chans/2)]
+            # D = D[:int(n_chans)]
             # iters = np.arange(len(D))
-            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            # n_comp_L = find_corner(deepcopy(iters), deepcopy(D)) + 1
             
             # eigenvalue magnitude-based
-            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # n_comp_spm = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
 
-            # print(n_comp, " components")
+            
+            
+            # Based on eigenvalue drop-off
+            D_ = D/D.max()
+            n_comp = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
+            # plt.plot(iters[n_comp], D_[n_comp], 'ob')
+            # print("Spatial Components: ", n_comp)
+
+
             # import matplotlib.pyplot as plt
             # iters = np.arange(len(D))
             # D_ = D/D.max()
             # plt.figure()
             # plt.plot(iters, D_, '*k')
-            # plt.plot(iters[n_comp], D_[n_comp], 'or')
-            # plt.hlines(y=D_.max()*0.05, xmin=0, xmax=iters.max())
-
-            # iters = np.arange(len(D))
-            # n_comp_new = find_corner(deepcopy(iters), deepcopy(D))
-            # plt.plot(iters[n_comp_new], D_[n_comp_new], 'og')
+            # plt.plot(iters[n_comp], D_[n_comp], 'og', label="Eig drop-off")
+            # # plt.plot(iters[n_comp_spm], D_[n_comp_spm], 'or', label="SPM Method")
+            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label="L Curve Method")
             
-            # Based on eigenvalue drop-off
-            D_ = D/D.max()
-            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
-            # plt.plot(iters[n_comp], D_[n_comp], 'ob')
-            
-
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]
