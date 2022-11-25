@@ -186,14 +186,15 @@ class SolverRAPMUSIC(BaseSolver):
             # n_comp = find_corner(deepcopy(iters), deepcopy(D))
             
             # eigenvalue magnitude-based
-            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
 
             # import matplotlib.pyplot as plt
             # plt.figure()
             # plt.plot(iters, D, '*k')
             # plt.plot(iters[n_comp], D[n_comp], 'or')
             # plt.plot(iters[n_comp], D[n_comp], 'og')
-            
+            D_ = D/D.max()
+            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
 
         else:
             n_comp = deepcopy(n)
@@ -316,14 +317,15 @@ class SolverTRAPMUSIC(BaseSolver):
             # n_comp = find_corner(deepcopy(iters), deepcopy(D))
             
             # eigenvalue magnitude-based
-            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
 
             # import matplotlib.pyplot as plt
             # plt.figure()
             # plt.plot(iters, D, '*k')
             # plt.plot(iters[n_comp], D[n_comp], 'or')
             # plt.plot(iters[n_comp], D[n_comp], 'og')
-            
+            D_ = D/D.max()
+            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
 
         else:
             n_comp = deepcopy(n)
@@ -439,7 +441,10 @@ class SolverJAZZMUSIC(BaseSolver):
             k = n_chans
         # Data Covariance
         y -= y.mean(axis=0)
+
         C = y@y.T
+
+
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
         U, D, _= np.linalg.svd(C, full_matrices=True)
@@ -452,13 +457,25 @@ class SolverJAZZMUSIC(BaseSolver):
             # n_comp = find_corner(deepcopy(iters), deepcopy(D))
             
             # eigenvalue magnitude-based
-            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+
             # print(n_comp, " components")
             # import matplotlib.pyplot as plt
+            # iters = np.arange(len(D))
+            # D_ = D/D.max()
             # plt.figure()
-            # plt.plot(iters, D, '*k')
-            # plt.plot(iters[n_comp], D[n_comp], 'or')
-            # plt.plot(iters[n_comp], D[n_comp], 'og')
+            # plt.plot(iters, D_, '*k')
+            # plt.plot(iters[n_comp], D_[n_comp], 'or')
+            # plt.hlines(y=D_.max()*0.05, xmin=0, xmax=iters.max())
+
+            # iters = np.arange(len(D))
+            # n_comp_new = find_corner(deepcopy(iters), deepcopy(D))
+            # plt.plot(iters[n_comp_new], D_[n_comp_new], 'og')
+            
+            # Based on eigenvalue drop-off
+            D_ = D/D.max()
+            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
+            # plt.plot(iters[n_comp], D_[n_comp], 'ob')
             
 
         else:
