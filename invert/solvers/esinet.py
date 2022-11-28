@@ -242,9 +242,11 @@ class SolverCovCNN(BaseSolver):
         self.snr_range = snr_range
         # Inference
         self.epsilon = epsilon
-
+        print("Create Generator:..")
         self.create_generator()
+        print("Build Model:..")
         self.build_model()
+        print("Train Model:..")
         self.train_model()
 
         self.inverse_operators = []
@@ -323,8 +325,14 @@ class SolverCovCNN(BaseSolver):
         
     def train_model(self,):
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
+        
+        # Get Validation data from generator
+        x_val, y_val = self.generator.__next__()
+        x_val = x_val[:256]
+        y_val = y_val[:256]
+        
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
-                validation_data=self.generator_val.__next__(), callbacks=callbacks)
+                validation_data=(x_val, y_val), callbacks=callbacks)
 
 
     def build_model(self,):
@@ -337,9 +345,13 @@ class SolverCovCNN(BaseSolver):
                     name='CNN1')(inputs)
 
         flat = Flatten()(cnn1)
+        
+        fc1 = Dense(300, 
+            activation=self.activation_function, 
+            name='FC1')(flat)
         out = Dense(n_dipoles, 
             activation="relu", 
-            name='Output')(flat)
+            name='Output')(fc1)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
@@ -354,9 +366,6 @@ class SolverCovCNN(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, "cov", **gen_args)
         
-        gen_args["batch_size"] = self.size_validation_set
-        self.generator_val = generator(self.forward, "cov", **gen_args)
-
 
 class SolverFullyConnected(BaseSolver):
     ''' Class for the Fully-Connected (FC) neural network's inverse solution.

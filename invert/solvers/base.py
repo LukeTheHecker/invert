@@ -78,14 +78,13 @@ class BaseSolver:
         self.car_leadfield = car_leadfield
         self.use_last_alpha = use_last_alpha
         self.last_reg_idx = None
+        
     def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", **kwargs):
       
         self.forward = forward
         self.prepare_forward()
         self.alpha = alpha
         self.alphas = self.get_alphas()
-
-        pass
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         ''' Apply the inverse operator '''
