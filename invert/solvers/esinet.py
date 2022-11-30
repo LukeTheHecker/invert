@@ -154,9 +154,10 @@ class SolverCNN(BaseSolver):
         cnn1 = Conv2D(self.n_filters, (1, n_channels),
                     activation=self.activation_function, padding="valid",
                     name='CNN1')(inputs)
-        cnn1 = Lambda(lambda x: K.abs(x))(cnn1)
-        # reshape = Reshape((self.n_timepoints, self.n_filters, 1))(cnn1)
-        maxpool = AveragePooling2D(pool_size=(self.n_timepoints, 1), strides=None, padding="valid")(cnn1)
+        # cnn1 = Lambda(lambda x: K.abs(x))(cnn1)
+        reshape = Reshape((self.n_timepoints, self.n_filters))(cnn1)
+        # maxpool = AveragePooling2D(pool_size=(self.n_timepoints, 1), strides=None, padding="valid")(cnn1)
+        maxpool = Bidirectional(LSTM(175, return_sequences=False))(reshape)
 
         flat = Flatten()(maxpool)
 
@@ -740,7 +741,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               return_mask=True, verbose=0):
     import colorednoise as cn
 
-    adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose).toarray()
+    adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
     gradient = abs(laplacian(adjacency))
     leadfield = fwd["sol"]["data"]
     leadfield -= leadfield.mean()
