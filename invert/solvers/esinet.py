@@ -164,9 +164,6 @@ class SolverCNN(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         
-        
-
-
 class SolverCovCNN(BaseSolver):
     ''' Class for the Covariance-based Convolutional Neural Network (CovCNN) for EEG inverse solutions.
     
@@ -316,7 +313,6 @@ class SolverCovCNN(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         
-
 class SolverFC(BaseSolver):
     ''' Class for the Fully-Connected Neural Network (FC) for 
         EEG inverse solutions.
@@ -458,6 +454,8 @@ class SolverFC(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
+    
+    
         
 class SolverLSTM(BaseSolver):
     ''' Class for the Long-Short Term Memory Neural Network (LSTM) for 

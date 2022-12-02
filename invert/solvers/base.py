@@ -354,3 +354,49 @@ class BaseSolver:
         
         stc = mne.SourceEstimate(source_mat, vertices, tmin=tmin, tstep=tstep, subject=subject, verbose=self.verbose)
         return stc
+    
+    def save(self, path):
+        import os
+        import pickle as pkl
+        import tensorflow as tf
+    
+        name = self.name
+
+        # get list of folders in path
+        list_of_folders = os.listdir(path)
+        model_ints = []
+        for folder in list_of_folders:
+            full_path = os.path.join(path, folder)
+            if not os.path.isdir(full_path):
+                continue
+            if folder.startswith(name):
+                new_integer = int(folder.split('_')[-1])
+                model_ints.append(new_integer)
+        if len(model_ints) == 0:
+            model_name = f'\\{name}_0'
+        else:
+            model_name = f'\\{name}_{max(model_ints)+1}'
+        new_path = path+model_name
+        os.mkdir(new_path)
+
+        if hasattr(self, "model"):
+            # Save model only
+            self.model.save(new_path)
+
+            # Save rest
+            # Delete model since it is not serializable
+            self.model = None
+
+            with open(new_path + '\\instance.pkl', 'wb') as f:
+                pkl.dump(self, f)
+            
+            # Attach model again now that everything is saved
+            try:
+                self.model = tf.keras.models.load_model(new_path, custom_objects={'loss': self.loss})
+            except:
+                print("Load model did not work using custom_objects. Now trying it without...")
+                self.model = tf.keras.models.load_model(new_path)
+        else:
+            with open(new_path + '\\instance.pkl', 'wb') as f:
+                pkl.dump(self, f)
+        return self
