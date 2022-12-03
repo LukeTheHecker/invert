@@ -6,6 +6,14 @@ import matplotlib.pyplot as plt
 class InverseOperator:
     ''' This class holds the inverse operator, which may be a simple
     numpy.ndarray matrix or some object like an esinet.net()
+
+    Parameters
+    ----------
+    inverse operator : 
+    Return
+    ------
+
+
     '''
     def __init__(self, inverse_operator, solver_name):
         self.solver_name = solver_name

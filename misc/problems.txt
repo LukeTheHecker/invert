@@ -1,5 +1,0 @@
-Problems with the Review on solving the inverse problem in EEG source analysis:
-
-* Equations  3a, 3b, 3c were references as 3, 4 and 5 in text
-* wrong brackets in the second equation on S-MAP (3 opening and 4 closing brackets)
-
