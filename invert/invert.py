@@ -91,12 +91,12 @@ def Solver(solver="mne", **kwargs):
 
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
-        solver_object = solvers.SolverFullyConnected(**kwargs)
+        solver_object = solvers.SolverFC(**kwargs)
     elif solver.lower() == "covcnn" or solver.lower() == "cov cnn" or solver.lower() == "covnet":
         solver_object = solvers.SolverCovCNN(**kwargs)
-    # elif solver.lower() == "lucas":
-    #     solver_object = solvers.SolverLUCAS(**kwargs)
-
+    elif solver.lower() == "lstm":
+        solver_object = solvers.SolverLSTM(**kwargs)
+    
     # Matching Pursuit/ Compressive Sensing
     elif solver.lower() == "omp":
         solver_object = solvers.SolverOMP(**kwargs)
