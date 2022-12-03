@@ -103,24 +103,6 @@ class SolverCNN(BaseSolver):
         gammas = self.model.predict(y, verbose=self.verbose)[0]
         gammas /= gammas.max()
 
-        
-        
-
-        # L-Curve for Epsilon Decision:
-        # iters = np.arange(len(gammas))
-        # sort_idx = np.argsort(gammas)[::-1]
-        # gammas_sorted = gammas[sort_idx]
-        # zero_idx = np.where(gammas_sorted<1e-3)[0][0]
-        # n_comp = find_corner(iters[:zero_idx], gammas_sorted[:zero_idx])
-        # self.epsilon = gammas_sorted[n_comp]
-        # print("new eps: ", self.epsilon)
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.plot(iters, gammas_sorted, '*k')
-        # plt.title("Gammas")
-        # plt.plot(iters[n_comp], gammas_sorted[n_comp], 'og')
-        
-
 
         # Select dipole indices
         gammas[gammas<self.epsilon] = 0
@@ -161,13 +143,13 @@ class SolverCNN(BaseSolver):
 
         flat = Flatten()(maxpool)
 
-        hl1 = Dense(300, 
-            activation=self.activation_function, 
-            name='HL1')(flat)
+        # hl1 = Dense(300, 
+        #     activation=self.activation_function, 
+        #     name='HL1')(flat)
 
         out = Dense(n_dipoles, 
             activation="relu", 
-            name='Output')(hl1)
+            name='Output')(flat)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CNN')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
@@ -182,9 +164,6 @@ class SolverCNN(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         
-        
-
-
 class SolverCovCNN(BaseSolver):
     ''' Class for the Covariance-based Convolutional Neural Network (CovCNN) for EEG inverse solutions.
     
@@ -334,7 +313,6 @@ class SolverCovCNN(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         
-
 class SolverFC(BaseSolver):
     ''' Class for the Fully-Connected Neural Network (FC) for 
         EEG inverse solutions.
@@ -476,6 +454,8 @@ class SolverFC(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
+    
+    
         
 class SolverLSTM(BaseSolver):
     ''' Class for the Long-Short Term Memory Neural Network (LSTM) for 
