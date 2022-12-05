@@ -11,6 +11,7 @@ pp = dict(surface='white', hemi='both', verbose=0)
 sampling = 'ico3'
 montage = "biosemi16"
 alpha = 0.1
+epochs = 1
 
 # Forward Model
 info = get_info(kind=montage)
@@ -19,7 +20,7 @@ vertices = [fwd["src"][0]['vertno'], fwd["src"][1]['vertno']]
 leadfield = fwd["sol"]["data"]
 
 # Simulation Data for testing
-n_time = 15
+n_time = 20
 # source_mat = np.zeros((leadfield.shape[1], n_time))
 source_mat = np.random.randn(leadfield.shape[1], n_time)
 stc = mne.SourceEstimate(source_mat, vertices, tmin=0, tstep=0.001)
@@ -36,6 +37,6 @@ def test_solvers():
 
         print("########################\n", solver_name, "\n########################")
         solver = Solver(solver_name)
-        solver.make_inverse_operator(fwd, evoked, alpha=alpha)
+        solver.make_inverse_operator(fwd, evoked, alpha=alpha, epochs=epochs)
         stc_hat = solver.apply_inverse_operator(evoked)
         print(type(stc_hat))

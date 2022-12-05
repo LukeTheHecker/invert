@@ -14,15 +14,16 @@ def Solver(solver="mne", **kwargs):
     """
     # Minimum Norm Algorithms
     if solver.lower() == "mne":
-        solver_object = solvers.SolverMinimumNorm(**kwargs)
+        solver_object = solvers.SolverMNE(**kwargs)
     elif solver.lower() == "wmne":
-        solver_object = solvers.SolverWeightedMinimumNorm(**kwargs)
+        solver_object = solvers.SolverWMNE(**kwargs)
     elif solver.lower() == "dspm":
-        solver_object = solvers.SolverDynamicStatisticalParametricMapping(**kwargs)
-    elif solver.lower() == "l1l2":
-        solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
+        solver_object = solvers.SolverDSPM(**kwargs)
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
+    elif solver.lower() == "l1l2":
+        solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
+    
     
     # LORETA Algorithms
     elif solver.lower() == "loreta" or solver.lower() == "lor":
@@ -41,21 +42,6 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverSMAP(**kwargs)
     
     # Bayesian Algorithms
-    elif solver.lower() == "multiple sparse priors" or solver.lower() == "msp":
-        inversion_type = "MSP"
-        solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
-    elif solver.lower() == "bayesian loreta" or solver.lower() == "bayesian lor" or solver.lower() == "bloreta" or solver.lower() == "blor":
-        inversion_type = "LORETA"
-        solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
-    elif solver.lower() == "bayesian mne" or solver.lower() == "bmne":
-        inversion_type = "MNE"
-        solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
-    elif solver.lower() == "bayesian beamformer" or solver.lower() == "bbmf":
-        inversion_type = "BMF"
-        solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
-    elif solver.lower() == "bayesian beamformer loreta" or solver.lower() == "bbmf-lor" or solver.lower() == "bmf-lor":
-        inversion_type = "BMF-LOR"
-        solver_object = solvers.SolverMultipleSparsePriors(inversion_type=inversion_type, **kwargs)
     elif solver.lower() == "champagne" or solver.lower() == "champ":
         solver_object = solvers.SolverChampagne(**kwargs)
     elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
@@ -82,8 +68,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverESMV(**kwargs)
     elif solver.lower() == "mcmv":
         solver_object = solvers.SolverMCMV(**kwargs)
-    elif solver.lower() == "esmcmv":
-        solver_object = solvers.SolverESMCMV(**kwargs)
+    # elif solver.lower() == "esmcmv":
+    #     solver_object = solvers.SolverESMCMV(**kwargs)
     elif solver.lower() == "recipsiicos":
         solver_object = solvers.SolverReciPSIICOS(**kwargs)
     elif solver.lower() == "sam":
@@ -92,13 +78,13 @@ def Solver(solver="mne", **kwargs):
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
         solver_object = solvers.SolverFC(**kwargs)
-    elif solver.lower() == "lstm":
-        solver_object = solvers.SolverLSTM(**kwargs)
     elif solver.lower() == "covcnn" or solver.lower() == "cov cnn" or solver.lower() == "covnet":
         solver_object = solvers.SolverCovCNN(**kwargs)
-    # elif solver.lower() == "lucas":
-    #     solver_object = solvers.SolverLUCAS(**kwargs)
-
+    elif solver.lower() == "lstm":
+        solver_object = solvers.SolverLSTM(**kwargs)
+    elif solver.lower() == "cnn":
+        solver_object = solvers.SolverCNN(**kwargs)
+    
     # Matching Pursuit/ Compressive Sensing
     elif solver.lower() == "omp":
         solver_object = solvers.SolverOMP(**kwargs)
