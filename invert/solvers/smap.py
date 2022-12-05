@@ -12,16 +12,14 @@ from .base import BaseSolver, InverseOperator
 
 class SolverSMAP(BaseSolver):
     ''' Class for the Quadratic regularization and spatial regularization
-    (S-MAP) inverse solution.
+        (S-MAP) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
 
     References
     ----------
-    Baillet, S., & Garnero, L. (1997). A Bayesian approach to introducing
+    [1] Baillet, S., & Garnero, L. (1997). A Bayesian approach to introducing
     anatomo-functional priors in the EEG/MEG inverse problem. IEEE transactions
     on Biomedical Engineering, 44(5), 374-385.
     
@@ -30,7 +28,7 @@ class SolverSMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -46,7 +44,7 @@ class SolverSMAP(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         LTL = self.leadfield.T @ self.leadfield 
-        n_chans, n_dipoles = self.leadfield.shape
+        # n_chans, n_dipoles = self.leadfield.shape
 
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         gradient = laplacian(adjacency)
@@ -64,5 +62,16 @@ class SolverSMAP(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        ''' Apply the S-MAP inverse operator.
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoke data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The inverse solution object.
+        '''
         return super().apply_inverse_operator(evoked)
     

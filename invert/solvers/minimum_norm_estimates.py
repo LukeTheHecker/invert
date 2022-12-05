@@ -3,13 +3,23 @@ import mne
 from copy import deepcopy
 from .base import BaseSolver, InverseOperator
 
-class SolverMinimumNorm(BaseSolver):
-    ''' Class for the Minimum Norm Estimate (MNE) inverse solution.
-    
+class SolverMNE(BaseSolver):
+    ''' Class for the Minimum Norm Estimate (MNE) inverse solution [1]. The
+        formulas provided by [2] were used for implementation.
+
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Pascual-Marqui, R. D. (1999). Review of methods for solving the EEG
+    inverse problem. International journal of bioelectromagnetism, 1(1), 75-86.
+    
+    [2] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+    Zervakis, M., ... & Vanrumste, B. (2008). Review on solving the inverse
+    problem in EEG source analysis. Journal of neuroengineering and
+    rehabilitation, 5(1), 1-33.
+
     '''
     def __init__(self, name="Minimum Norm Estimate", **kwargs):
         self.name = name
@@ -44,13 +54,19 @@ class SolverMinimumNorm(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
 
-class SolverWeightedMinimumNorm(BaseSolver):
-    ''' Class for the Weighted Minimum Norm Estimate (wMNE) inverse solution.
+class SolverWMNE(BaseSolver):
+    ''' Class for the Weighted Minimum Norm Estimate (wMNE) inverse solution
+        [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+    Zervakis, M., ... & Vanrumste, B. (2008). Review on solving the inverse
+    problem in EEG source analysis. Journal of neuroengineering and
+    rehabilitation, 5(1), 1-33.
     '''
     def __init__(self, name="Weighted Minimum Norm Estimate", **kwargs):
         self.name = name
@@ -89,13 +105,25 @@ class SolverWeightedMinimumNorm(BaseSolver):
         return super().apply_inverse_operator(evoked)
 
 
-class SolverDynamicStatisticalParametricMapping(BaseSolver):
-    ''' Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse solution.
+class SolverDSPM(BaseSolver):
+    ''' Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse
+        solution [1].  The formulas provided by [2] were used for
+        implementation.
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Dale, A. M., Liu, A. K., Fischl, B. R., Buckner, R. L., Belliveau, J.
+    W., Lewine, J. D., & Halgren, E. (2000). Dynamic statistical parametric
+    mapping: combining fMRI and MEG for high-resolution imaging of cortical
+    activity. neuron, 26(1), 55-67.
+
+    [2] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+    Zervakis, M., ... & Vanrumste, B. (2008). Review on solving the inverse
+    problem in EEG source analysis. Journal of neuroengineering and
+    rehabilitation, 5(1), 1-33.
     '''
     def __init__(self, name="Dynamic Statistical Parametric Mapping", **kwargs):
         self.name = name
@@ -147,12 +175,17 @@ class SolverDynamicStatisticalParametricMapping(BaseSolver):
     
 
 class SolverMinimumL1Norm(BaseSolver):
-    ''' Class for the Minimum Current Estimate (MCE) inverse solution using the FISTA solver.
+    ''' Class for the Minimum Current Estimate (MCE) inverse solution using the
+        FISTA solver [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Beck, A., & Teboulle, M. (2009). A fast iterative shrinkage-thresholding
+    algorithm for linear inverse problems. SIAM journal on imaging sciences,
+    2(1), 183-202.
     '''
     def __init__(self, name="Minimum Current Estimate", **kwargs):
         self.name = name
@@ -172,8 +205,7 @@ class SolverMinimumL1Norm(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        # if self.verbose>0:
-        #     print(f"No inverse operator is computed for {self.name}")
+        
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         n_chans = self.leadfield.shape[0]
         if noise_cov is None:
@@ -257,10 +289,10 @@ class SolverMinimumL1L2Norm(BaseSolver):
     ''' Class for the Minimum L1-L2 Norm solution (MCE) inverse solution. It
         imposes a L1 norm on the source and L2 on the source time courses.
     
-    Attributes
+    References
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    [!] Missing reference - please contact developers if you have it!
+
     '''
     def __init__(self, name="Minimum L1-L2 Norm", **kwargs):
         self.name = name
@@ -285,11 +317,42 @@ class SolverMinimumL1L2Norm(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, max_iter=100, min_change=0.005) -> mne.SourceEstimate:
+        ''' Apply the L1L2 inverse operator.
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The mne M/EEG data object.
+        max_iter : int
+            Maximum number of iterations (stopping criterion).
+        min_change : float
+            Convergence criterion.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The source estimate object.
+        '''
         source_mat = self.calc_l1l2_solution(evoked.data, max_iter=max_iter, min_change=min_change)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
     def calc_l1l2_solution(self, y, max_iter=100, min_change=0.005):
+        ''' Calculate the L1L2 inverse solution.
+        Parameters
+        ----------
+        y : numpy.ndarray
+            The M/EEG data matrix.
+        max_iter : int
+            Maximum number of iterations (stopping criterion).
+        min_change : float
+            Convergence criterion.
+
+        Return
+        ------
+        x_hat :numpy.ndarray
+            The inverse solution matrix.
+        '''
+
         leadfield = self.forward['sol']['data']
         _, n_dipoles = leadfield.shape
         n_chans, n_time = y.shape
@@ -318,7 +381,6 @@ class SolverMinimumL1L2Norm(BaseSolver):
                 x_hat[r, :] = norms[r] * Lr.T @ np.linalg.inv( ALLT + self.alpha * I ) @ y
             L1_norms.append( np.abs(x_hat).sum() )
             current_change = 1 - L1_norms[-1] / (L1_norms[-2]+eps)
-            # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - ({L1_norms[-2]} -> {L1_norms[-1]})not stopping")
             if current_change < min_change:
                 # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - stopping")
                 break

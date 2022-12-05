@@ -5,17 +5,19 @@ from .base import BaseSolver, InverseOperator
 from ..util import calc_residual_variance, thresholding, find_corner, best_index_residual
 
 class SolverOMP(BaseSolver):
-    ''' Class for the Orthogonal Matching Pursuit (OMP) inverse
-        solution.
+    ''' Class for the Orthogonal Matching Pursuit (OMP) inverse solution [1].
+        The algorithm as described by [2] was implemented.
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
     
     References
     ----------
-    [1] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
+    [1] Tropp, J. A., & Gilbert, A. C. (2007). Signal recovery from random
+    measurements via orthogonal matching pursuit. IEEE Transactions on
+    information theory, 53(12), 4655-4666. 
+    
+    [2] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
     From theory to applications. IEEE Transactions on signal processing, 59(9),
     4053-4085.
 
@@ -58,6 +60,8 @@ class SolverOMP(BaseSolver):
         ----------
         y : numpy.ndarray
             The data matrix (channels,).
+        K : int
+            The number of atoms to select per iteration.
         
         Return
         ------
@@ -102,8 +106,10 @@ class SolverOMP(BaseSolver):
             
         # iters = np.arange(len(residuals)).astype(float)
         # corner_idx = find_corner(iters, residuals)
-        x_hat = best_index_residual(residuals, x_hats, plot=False)
         # x_hat = x_hats[corner_idx]
+
+        x_hat = best_index_residual(residuals, x_hats, plot=False)
+        
         return x_hat
 
 class SolverSOMP(BaseSolver):
@@ -112,21 +118,23 @@ class SolverSOMP(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     
     References
     ----------
     [1] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
     From theory to applications. IEEE Transactions on signal processing, 59(9),
     4053-4085.
+    
+    [2] Donoho, D. L. (2006). Compressed sensing. IEEE Transactions on
+    information theory, 52(4), 1289-1306.
 
     '''
     def __init__(self, name="Simultaneous Orthogonal Matching Pursuit", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -159,11 +167,14 @@ class SolverSOMP(BaseSolver):
         ----------
         y : numpy.ndarray
             The data matrix (channels, time).
+        K : int
+            The number of atoms to select per iteration.
         
         Return
         ------
         x_hat : numpy.ndarray
             The inverse solution (dipoles, time)
+
         """
         n_chans, n_time = y.shape
         max_iter = int(n_chans/2)
@@ -207,29 +218,28 @@ class SolverSOMP(BaseSolver):
         # unexplained_variance[0] = unexplained_variance[1]
         # iters = np.arange(len(residuals))
         # corner_idx = find_corner(residuals, iters)
-        x_hat = best_index_residual(residuals, x_hats, plot=False)
         # x_hat = x_hats[corner_idx]
-        
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.plot(iters, unexplained_variance, '*k')
-        # plt.plot(iters[corner_idx], unexplained_variance[corner_idx], 'or')
-        # plt.xlabel("Iteration")
-        # plt.ylabel("Residual")
 
+        x_hat = best_index_residual(residuals, x_hats, plot=False)
+        
         return x_hat
 
 class SolverCOSAMP(BaseSolver):
-    ''' Class for the Compressed Sampling Matching Pursuit (CoSaMP) inverse solution.
+    ''' Class for the Compressed Sampling Matching Pursuit (CoSaMP) inverse
+        solution [1]. The algorithm as described in [2] was used for this
+        imlementation.
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     
     References
     ----------
-    [1] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
+    [1] Needell, D., & Tropp, J. A. (2009). CoSaMP: Iterative signal recovery
+    from incomplete and inaccurate samples. Applied and computational harmonic
+    analysis, 26(3), 301-321. 
+    
+    [2] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
     From theory to applications. IEEE Transactions on signal processing, 59(9),
     4053-4085.
     '''
@@ -254,8 +264,6 @@ class SolverCOSAMP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.leadfield_normed = self.leadfield / np.linalg.norm(self.leadfield,axis=0)
   
-        
-        
         self.inverse_operators = []
         return self
 
@@ -273,7 +281,13 @@ class SolverCOSAMP(BaseSolver):
         y : numpy.ndarray
             The data matrix (channels, time).
         K : int
-            Positive integer determining the sparsity of the reconstructed signal.
+            Positive integer determining the sparsity of the reconstructed
+            signal.
+        rv_thresh : float
+            The residual variance threshold as a stopping criterion. The
+            smaller, the sooner the atom search is considered complete, i.e.,
+            the less of the data is fitted. It can therefore be used for
+            regularization.
 
         Return
         ------
@@ -326,21 +340,19 @@ class SolverCOSAMP(BaseSolver):
         
         
         # iters = np.arange(len(residuals))
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.plot(iters, unexplained_variance)
-        # plt.xlabel("Iteration")
-        # plt.ylabel("Residual")
         # corner_idx = find_corner(residuals, iters)
         # x_hat = x_hats[corner_idx]
+        
         x_hat = best_index_residual(residuals, x_hats)
+        
         return x_hat
-        # return x_hats[-1]
+        
 
 
 class SolverREMBO(BaseSolver):
     ''' Class for the Reduce Multi-Measurement-Vector and Boost (ReMBo) inverse
-        solution.
+        solution [1]. The algorithm as describe in [2] was used for the
+        imlpementation.
     
     Attributes
     ----------
@@ -349,14 +361,12 @@ class SolverREMBO(BaseSolver):
     
     References
     ----------
-    [1] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
-    From theory to applications. IEEE Transactions on signal processing, 59(9),
-    4053-4085.  
-
-    [2] Mishali, M., & Eldar, Y. C. (2008). Reduce and boost:
-    Recovering arbitrary sets of jointly sparse vectors. IEEE Transactions on
-    Signal Processing, 56(10), 4692-4702.
-
+    [1] Mishali, M., & Eldar, Y. C. (2008). Reduce and boost: Recovering
+    arbitrary sets of jointly sparse vectors. IEEE Transactions on Signal
+    Processing, 56(10), 4692-4702. 
+    [2] Duarte, M. F., & Eldar, Y. C. (2011).
+    Structured compressed sensing: From theory to applications. IEEE
+    Transactions on signal processing, 59(9), 4053-4085.  
     '''
     def __init__(self, name="Reduce Multi-Measurement-Vector and Boost", **kwargs):
         self.name = name
@@ -382,18 +392,34 @@ class SolverREMBO(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+        """ Apply the REMBO inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked object holding the M/EEG data.
+        K : int
+            The number of atoms to select per iteration.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The source estimate containing the inverse solution.
+        """
         source_mat = self.calc_rembo_solution(evoked.data, K=K)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
     def calc_rembo_solution(self, y, K=1):
-        """ Calculate the REMBO inverse solution based on the measurement vector y.
+        """ Calculate the REMBO inverse solution based on the measurement vector
+            y.
+
         Parameters
         ----------
         y : numpy.ndarray
             The EEG matrix (channels, time)
         K : int
-            The sparsity parameter
+            The number of atoms to select per iteration.
 
         Return
         ------
@@ -466,6 +492,8 @@ class SolverREMBO(BaseSolver):
         ----------
         y : numpy.ndarray
             The data matrix (channels,).
+        K : int
+            The number of atoms to select per iteration.
         
         Return
         ------
@@ -510,7 +538,8 @@ class SolverREMBO(BaseSolver):
 
 
 class SolverSP(BaseSolver):
-    ''' Class for the Subspace Pursuit (SP) inverse solution.
+    ''' Class for the Subspace Pursuit (SP) inverse solution [1]. The algorithm
+        as described by [2] was implemented.
     
     Attributes
     ----------
@@ -519,9 +548,9 @@ class SolverSP(BaseSolver):
     
     References
     ----------
-    [1] Dai, W., & Milenkovic, O. (2009). Subspace pursuit for
-    compressive sensing signal reconstruction. IEEE transactions on Information
-    Theory, 55(5), 2230-2249.
+    [1] Dai, W., & Milenkovic, O. (2009). Subspace pursuit for compressive
+    sensing signal reconstruction. IEEE transactions on Information Theory,
+    55(5), 2230-2249.
 
     [2] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
     From theory to applications. IEEE Transactions on signal processing, 59(9),
@@ -552,6 +581,21 @@ class SolverSP(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+        """ Apply the SP inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked object holding the M/EEG data.
+        K : int
+            The number of atoms to select per iteration.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The source estimate containing the inverse solution.
+        """
+
         source_mat = np.stack([self.calc_sp_solution(y, K=K) for y in evoked.data.T], axis=1)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -564,7 +608,9 @@ class SolverSP(BaseSolver):
         ----------
         y : numpy.ndarray
             The data matrix (channels,).
-        
+        K : ["auto", int]
+            The number of atoms to select per iteration.
+
         Return
         ------
         x_hat : numpy.ndarray
@@ -618,8 +664,7 @@ class SolverSSP(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     
     References
     ----------
@@ -656,8 +701,22 @@ class SolverSSP(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+        """ Apply the SSP inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked object holding the M/EEG data.
+        K : int
+            The number of atoms to select per iteration.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The source estimate containing the inverse solution.
+        """
+
         source_mat = self.calc_ssp_solution(evoked.data, K=K)
-        # print("werks")
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
@@ -669,7 +728,9 @@ class SolverSSP(BaseSolver):
         ----------
         y : numpy.ndarray
             The data matrix (channels,).
-        
+        K : ["auto", int]
+            The number of atoms to select per iteration.
+            
         Return
         ------
         x_hat : numpy.ndarray

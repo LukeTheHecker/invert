@@ -1,6 +1,7 @@
 from copy import deepcopy
 from esinet import Simulation, Net
 from .base import BaseSolver, InverseOperator
+import colorednoise as cn
 from scipy.sparse.csgraph import laplacian
 from scipy.stats import pearsonr
 import mne
@@ -33,13 +34,48 @@ class SolverCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=10,
-                            alpha="auto", verbose=0, **kwargs):
+                            alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        n_filters : int
+            Number of filters in the convolution layer.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        epsilon : float
+            The threshold at which to select sources as "active". 0.25 -> select
+            all sources that are active at least 25 % of the maximum dipoles.
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data. (1,
+            10) -> Samples have varying SNR from 1 to 10.
+        patience : int
+            Stopping criterion for the training.
         alpha : float
             The regularization parameter.
         
@@ -89,6 +125,19 @@ class SolverCNN(BaseSolver):
         return stc
 
     def apply_model(self, evoked) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked M/EEG data object.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
         n_channels, n_times = y.shape
@@ -122,12 +171,16 @@ class SolverCNN(BaseSolver):
         return x_hat        
             
     def train_model(self,):
+        ''' Train the neural network model.
+        '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=self.generator.__next__(), callbacks=callbacks)
 
 
     def build_model(self,):
+        ''' Build the neural network model.
+        '''
         n_channels, n_dipoles = self.leadfield.shape
         
         inputs = tf.keras.Input(shape=(self.n_timepoints, n_channels, 1), name='Input')
@@ -159,6 +212,8 @@ class SolverCNN(BaseSolver):
         self.model = model
 
     def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
         gen_args = dict(use_cov=False, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range)
@@ -182,7 +237,7 @@ class SolverCovCNN(BaseSolver):
                             n_timepoints=20, batch_repetitions=10, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            epsilon=0.5, snr_range=(1,100), patience=100,
+                            epsilon=0.25, snr_range=(1,100), patience=100,
                             alpha="auto", verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -190,6 +245,42 @@ class SolverCovCNN(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        n_filters : int
+            Number of filters in the convolution layer.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        epsilon : float
+            The threshold at which to select sources as "active". 
+            0.25 -> select all sources that are active at least 25 % of the
+            maximum dipoles.
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data.
+            (1, 10) -> Samples have varying SNR from 1 to 10.
+        patience : int
+            Stopping criterion for the training.
         alpha : float
             The regularization parameter.
         
@@ -241,6 +332,20 @@ class SolverCovCNN(BaseSolver):
         return stc
 
     def apply_model(self, evoked) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked M/EEG data object.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
+
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
         # y_norm = y / np.linalg.norm(y, axis=0)
@@ -272,6 +377,8 @@ class SolverCovCNN(BaseSolver):
         
         
     def train_model(self,):
+        ''' Train the neural network model.
+        '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         
         # Get Validation data from generator
@@ -283,6 +390,8 @@ class SolverCovCNN(BaseSolver):
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model(self,):
+        ''' Build the neural network model.
+        '''
         n_channels, n_dipoles = self.leadfield.shape
 
         inputs = tf.keras.Input(shape=(n_channels, n_channels, 1), name='Input')
@@ -308,6 +417,8 @@ class SolverCovCNN(BaseSolver):
         self.model = model
 
     def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
         gen_args = dict(use_cov=True, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range)
@@ -319,8 +430,7 @@ class SolverFC(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     '''
 
     def __init__(self, name="Fully-Connected", **kwargs):
@@ -341,6 +451,36 @@ class SolverFC(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data.
+            (1, 10) -> Samples have varying SNR from 1 to 10.
+        patience : int
+            Stopping criterion for the training.
         alpha : float
             The regularization parameter.
         
@@ -392,6 +532,20 @@ class SolverFC(BaseSolver):
         return stc
 
     def apply_model(self, evoked) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked M/EEG data object.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
+
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
@@ -416,6 +570,8 @@ class SolverFC(BaseSolver):
         
         
     def train_model(self,):
+        ''' Train the neural network model.
+        '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         
         # Get Validation data from generator
@@ -427,6 +583,8 @@ class SolverFC(BaseSolver):
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model(self,):
+        ''' Build the neural network model.
+        '''
         n_channels, n_dipoles = self.leadfield.shape
 
         inputs = tf.keras.Input(shape=(None, n_channels), name='Input')
@@ -449,6 +607,8 @@ class SolverFC(BaseSolver):
         self.model = model
 
     def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range)
@@ -486,6 +646,40 @@ class SolverLSTM(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        n_dense_units : int
+            The number of neurons in the fully-connected hidden layers.
+        n_lstm_units : int
+            The number of neurons in the LSTM hidden layers.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data. (1,
+            10) -> Samples have varying SNR from 1 to 10.
+        patience : int
+            Stopping criterion for the training.
         alpha : float
             The regularization parameter.
         
@@ -498,7 +692,6 @@ class SolverLSTM(BaseSolver):
         
         if batch_size == "auto":
             batch_size = n_dipoles
-
             
         # Store Parameters
         # Architecture
@@ -538,6 +731,19 @@ class SolverLSTM(BaseSolver):
         return stc
 
     def apply_model(self, evoked) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked M/EEG data object.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
@@ -562,6 +768,8 @@ class SolverLSTM(BaseSolver):
         
         
     def train_model(self,):
+        ''' Train the neural network model.
+        '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         
         # Get Validation data from generator
@@ -573,6 +781,8 @@ class SolverLSTM(BaseSolver):
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model(self,):
+        ''' Build the neural network model.
+        '''
         n_channels, n_dipoles = self.leadfield.shape
 
         inputs = tf.keras.Input(shape=(None, n_channels), name='Input')
@@ -600,54 +810,56 @@ class SolverLSTM(BaseSolver):
         self.model = model
 
     def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
-class SolverFullyConnected(BaseSolver):
-    ''' Class for the Fully-Connected (FC) neural network's inverse solution.
+# class SolverFullyConnected(BaseSolver):
+#     ''' Class for the Fully-Connected (FC) neural network's inverse solution.
     
-    Attributes
-    ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
-    '''
-    def __init__(self, name="Fully-Connected", **kwargs):
-        self.name = name
-        return super().__init__(**kwargs)
+#     Attributes
+#     ----------
+#     forward : mne.Forward
+#         The mne-python Forward model instance.
+#     '''
+#     def __init__(self, name="Fully-Connected", **kwargs):
+#         self.name = name
+#         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', 
-                            n_simulations=5000, settings=None, activation_function="tanh", 
-                            verbose=0, **kwargs):
-        ''' Calculate inverse operator.
+#     def make_inverse_operator(self, forward, evoked, *args, alpha='auto', 
+#                             n_simulations=5000, settings=None, activation_function="tanh", 
+#                             verbose=0, **kwargs):
+#         ''' Calculate inverse operator.
 
-        Parameters
-        ----------
-        forward : mne.Forward
-            The mne-python Forward model instance.
-        alpha : float
-            The regularization parameter.
+#         Parameters
+#         ----------
+#         forward : mne.Forward
+#             The mne-python Forward model instance.
+#         alpha : float
+#             The regularization parameter.
         
-        Return
-        ------
-        self : object returns itself for convenience
-        '''
-        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        info = evoked.info
-        if settings is None:
-            settings = dict(duration_of_trial=0., )
-        sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)
+#         Return
+#         ------
+#         self : object returns itself for convenience
+#         '''
+#         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+#         info = evoked.info
+#         if settings is None:
+#             settings = dict(duration_of_trial=0., )
+#         sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)
 
-        model_args = dict(model_type="FC", activation_function=activation_function, )
-        inverse_operator = InverseOperator(Net(forward, **model_args, verbose=verbose).fit(sim), self.name)
-        self.inverse_operators = [inverse_operator,]
+#         model_args = dict(model_type="FC", activation_function=activation_function, )
+#         inverse_operator = InverseOperator(Net(forward, **model_args, verbose=verbose).fit(sim), self.name)
+#         self.inverse_operators = [inverse_operator,]
         
-        return self
+#         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
+#     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+#         return super().apply_inverse_operator(evoked)
 
 def make_fullyconnected_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
     """ Calculate the inverse operator using the Fully-Connected artificial neural network model.
@@ -719,7 +931,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
               return_mask=True, verbose=0):
-    import colorednoise as cn
+    
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
     gradient = abs(laplacian(adjacency))

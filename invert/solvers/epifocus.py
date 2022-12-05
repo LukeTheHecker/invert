@@ -4,25 +4,24 @@ from copy import deepcopy
 from .base import BaseSolver, InverseOperator
 
 class SolverEPIFOCUS(BaseSolver):
-    ''' Class for the EPIFOCUS inverse solution.
+    ''' Class for the EPIFOCUS inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
     
     References
     ----------
-    Menendez, R. G. D. P., Andino, S. G., Lantz, G., Michel, C. M., & Landis, T.
-    (2001). Noninvasive localization of electromagnetic epileptic activity. I.
-    Method descriptions and simulations. Brain topography, 14(2), 131-137.
+    [1] Menendez, R. G. D. P., Andino, S. G., Lantz, G., Michel, C. M., &
+    Landis, T. (2001). Noninvasive localization of electromagnetic epileptic
+    activity. I. Method descriptions and simulations. Brain topography, 14(2),
+    131-137.
     
     '''
     def __init__(self, name="EPIFOCUS", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
