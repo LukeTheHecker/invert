@@ -1,7 +1,7 @@
 invert
 ======
 
-Welcome to the documentation of the invert python package!
+Welcome to the documentation of the invert python package! |:thumbs_up:|
 
 .. toctree::
    :maxdepth: 2

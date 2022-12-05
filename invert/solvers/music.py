@@ -6,12 +6,17 @@ from ..util import find_corner
 from .base import BaseSolver, InverseOperator
 
 class SolverMUSIC(BaseSolver):
-    ''' Class for the Multiple Signal Classification (MUSIC) inverse solution.
+    ''' Class for the Multiple Signal Classification (MUSIC) inverse solution
+        [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Baillet, S., Mosher, J. C., & Leahy, R. M. (2001). Electromagnetic brain
+    mapping. IEEE Signal processing magazine, 18(6), 14-30.
+    
     '''
     def __init__(self, name="MUSIC", **kwargs):
         self.name = name
@@ -32,13 +37,25 @@ class SolverMUSIC(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.leadfield
-        n_chans, _ = leadfield.shape
-        
         self.inverse_operators = []
         return self
 
     def apply_inverse_operator(self, evoked, n="auto", stop_crit=0.95) -> mne.SourceEstimate:
+        ''' Apply MUSIC inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked data object.
+        stop_crit : float
+            Controls the percentage of top active dipoles that are selected
+            (i.e., sparsity).
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The inverse solution source estimate object.
+        '''
         source_mat = self.apply_music(evoked.data, n, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -80,12 +97,6 @@ class SolverMUSIC(BaseSolver):
             
             # eigenvalue magnitude-based
             n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
-
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # plt.plot(iters, D, '*k')
-            # plt.plot(iters[n_comp], D[n_comp], 'or')
-            # plt.plot(iters[n_comp], D[n_comp], 'og')
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]
@@ -107,18 +118,22 @@ class SolverMUSIC(BaseSolver):
 
 class SolverRAPMUSIC(BaseSolver):
     ''' Class for the Recursively Applied Multiple Signal Classification
-    (RAP-MUSIC) inverse solution.
+    (RAP-MUSIC) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Mosher, J. C., & Leahy, R. M. (1999). Source localization using
+    recursively applied and projected (RAP) MUSIC. IEEE Transactions on signal
+    processing, 47(2), 332-340.
     '''
     def __init__(self, name="RAP-MUSIC", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -133,13 +148,30 @@ class SolverRAPMUSIC(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.leadfield
-        n_chans, _ = leadfield.shape
-        
+        leadfield = self.leadfield        
         self.inverse_operators = []
         return self
 
     def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
+        ''' Apply RAP-MUSIC inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked data object.
+        n : ["auto", int]
+            Number of eigenvectors to use.
+        k : int
+            Number of recursions.
+        stop_crit : float
+            Controls the percentage of top active dipoles that are selected
+            (i.e., sparsity).
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The inverse solution source estimate object.
+        '''
         source_mat = self.apply_rapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -237,19 +269,23 @@ class SolverRAPMUSIC(BaseSolver):
         return x_hat
 
 class SolverTRAPMUSIC(BaseSolver):
-    ''' Class for the Truncated Recursively Applied Multiple Signal Classification
-    (TRAP-MUSIC) inverse solution.
+    ''' Class for the Truncated Recursively Applied Multiple Signal
+        Classification (TRAP-MUSIC) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Mäkelä, N., Stenroos, M., Sarvas, J., & Ilmoniemi, R. J. (2018).
+    Truncated rap-music (trap-music) for MEG and EEG source localization.
+    NeuroImage, 167, 73-83.
     '''
     def __init__(self, name="TRAP-MUSIC", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -265,12 +301,30 @@ class SolverTRAPMUSIC(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
-        n_chans, _ = leadfield.shape
-        
         self.inverse_operators = []
+
         return self
 
     def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
+        ''' Apply TRAP-MUSIC inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked data object.
+        n : ["auto", int]
+            Number of eigenvectors to use.
+        k : int
+            Number of recursions.
+        stop_crit : float
+            Controls the percentage of top active dipoles that are selected
+            (i.e., sparsity).
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The inverse solution source estimate object.
+        '''
         source_mat = self.apply_trapmusic(evoked.data, n, k, stop_crit)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -365,13 +419,16 @@ class SolverTRAPMUSIC(BaseSolver):
         return x_hat
 
 class SolverJAZZMUSIC(BaseSolver):
-    ''' Class for the Smooth RAP Multiple Signal Classification (JAZZ-MUSIC) inverse
-    solution.
+    ''' Class for the Smooth RAP Multiple Signal Classification (JAZZ-MUSIC)
+        inverse solution.
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ---------
+    This method is of my own making (Lukas Hecker, 2022) and unpublished.
+
     '''
     def __init__(self, name="JAZZ-MUSIC", **kwargs):
         self.name = name
@@ -386,7 +443,9 @@ class SolverJAZZMUSIC(BaseSolver):
             The mne-python Forward model instance.
         alpha : float
             The regularization parameter.
-        
+        n_orders : int
+            Controls the maximum smoothness to pursue.
+
         Return
         ------
         self : object returns itself for convenience
@@ -403,6 +462,28 @@ class SolverJAZZMUSIC(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
+        ''' Apply JAZZ-MUSIC inverse solution.
+        
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The evoked data object.
+        n : ["auto", int]
+            Number of eigenvectors to use.
+        k : int
+            Number of recursions.
+        stop_crit : float
+            Controls the percentage of top active dipoles that are selected
+            (i.e., sparsity).
+        truncate : bool
+            If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
+            don't (like RAP-MUSIC).
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The inverse solution source estimate object.
+        '''
         source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
         stc = self.source_to_object(source_mat, evoked)
         return stc
@@ -424,6 +505,7 @@ class SolverJAZZMUSIC(BaseSolver):
         truncate : bool
             If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
             don't (like RAP-MUSIC).
+
         Return
         ------
         x_hat : numpy.ndarray
@@ -550,6 +632,15 @@ class SolverJAZZMUSIC(BaseSolver):
         return x_hat
 
     def make_jazz(self, n_orders):
+        ''' Create the dictionary of increasingly smooth sources.
+        
+        Parameters
+        ----------
+        n_orders : int
+            Number of neighborhood orders to include to the dictionary. The
+            higher, the smoother the sources can be.
+        
+        '''
         n_dipoles = self.leadfield.shape[1]
         
 
@@ -565,7 +656,7 @@ class SolverJAZZMUSIC(BaseSolver):
         new_adjacency = deepcopy(self.adjacency)
 
         
-        for i in range(n_orders):
+        for _ in range(n_orders):
             new_leadfield = new_leadfield @ self.gradient
             new_leadfield -= new_leadfield.mean(axis=0)
             new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
@@ -575,5 +666,3 @@ class SolverJAZZMUSIC(BaseSolver):
             
             self.leadfields.append( deepcopy(new_leadfield) )
             self.neighbors.append( neighbors )
-        # self.leadfields = [self.leadfields[1],]
-        # self.neighbors = [self.neighbors[1],]

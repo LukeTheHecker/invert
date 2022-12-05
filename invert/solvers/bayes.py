@@ -6,18 +6,23 @@ from scipy.sparse import coo_matrix
 from .base import BaseSolver, InverseOperator
 
 class SolverBCS(BaseSolver):
-    ''' Class for the Bayesian Compressed Sensing (BCS) inverse solution.
+    ''' Class for the Bayesian Compressed Sensing (BCS) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    
+    References
+    ----------
+    [1] Ji, S., Xue, Y., & Carin, L. (2008). Bayesian compressive sensing. IEEE
+    Transactions on signal processing, 56(6), 2346-2356.
+
     '''
     def __init__(self, name="Bayesian Compressed Sensing", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -38,11 +43,49 @@ class SolverBCS(BaseSolver):
         return self
 
     def apply_inverse_operator(self, evoked, max_iter=100, alpha_0=0.01, eps=1e-16) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The mne Evoked data object.
+        max_iter : int
+            Maximum number of iterations
+        alpha_0 : float
+            Regularization parameter
+        eps : float
+            Epsilon, used to avoid division by zero.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The SourceEstimate data structure containing the inverse solution.
+
+        '''
+
         source_mat = self.calc_bcs_solution(evoked, max_iter=max_iter, alpha_0=alpha_0, eps=eps)
         stc = self.source_to_object(source_mat, evoked)
         return stc
     
     def calc_bcs_solution(self, evoked, max_iter=100, alpha_0=0.01, eps=1e-16):
+        ''' This function computes the BCS inverse solution.
+
+        Parameters
+        ----------
+        evoked : mne.Evoked
+            The mne Evoked data object.
+        max_iter : int
+            Maximum number of iterations
+        alpha_0 : float
+            Regularization parameter
+        eps : float
+            Epsilon, used to avoid division by zero.
+        
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source estimate.
+        '''
 
         alpha_0 = np.clip(alpha_0, a_min=1e-6, a_max=None)
         y = evoked.data
@@ -102,17 +145,16 @@ class SolverBCS(BaseSolver):
         return x_hat
 
 class SolverGammaMAP(BaseSolver):
-    ''' Class for the Gamma Maximum A Posteriori (Gamma-MAP) inverse solution.
+    ''' Class for the Gamma Maximum A Posteriori (Gamma-MAP) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
     
     References
     ----------
     Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
     source imaging. NeuroImage, 44(3), 947-966.
+
     '''
     def __init__(self, name="Gamma-MAP", **kwargs):
         self.name = name
@@ -131,25 +173,30 @@ class SolverGammaMAP(BaseSolver):
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
             max_iter = 1 corresponds to sLORETA.
+        smoothness_prior : bool
+
         
         
         Return
         ------
         self : object returns itself for convenience
+
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
-        n_chans, _ = leadfield.shape
+        n_chans, n_dipoles = leadfield.shape
 
         if smoothness_prior:
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
             self.gradient = laplacian(adjacency).toarray().astype(np.float32)
+            self.sigma_s = np.identity(n_dipoles) @ abs(self.gradient)
         else:
             self.gradient = None
+            self.sigma_s = np.identity(n_dipoles)
 
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_gamma_map_inverse_operator(evoked.data, alpha, smoothness_prior=smoothness_prior, max_iter=max_iter)
+            inverse_operator = self.make_gamma_map_inverse_operator(evoked.data, alpha, max_iter=max_iter)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -158,7 +205,25 @@ class SolverGammaMAP(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def make_gamma_map_inverse_operator(self, B, alpha, smoothness_prior=False, max_iter=100):
+    def make_gamma_map_inverse_operator(self, B, alpha, max_iter=100):
+        ''' Computes the gamma MAP inverse operator based on the M/EEG data.
+        
+        Parameters
+        ----------
+        B : numpy.ndarray
+            The M/EEG data matrix (channels, time points).
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
+        
+        Return
+        ------
+        inverse_operator : numpy.ndarray
+            The inverse operator which can be used to compute inverse solutions from new data.
+
+        '''
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -166,27 +231,16 @@ class SolverGammaMAP(BaseSolver):
         # Ensure Common average reference
         B -= B.mean(axis=0)
         L -= L.mean(axis=0)
-        # L /= np.linalg.norm(L, axis=0)
- 
- 
+        
         # Data Covariance Matrix
-        # Cb = B @ B.T
         gammas = np.ones(ds)
         sigma_e = alpha * np.identity(db)  
-        if smoothness_prior:
-            sigma_s = np.identity(ds) @ abs(self.gradient)
-        else:
-            sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
-        sigma_b = sigma_e + L @ sigma_s @ L.T
+        
+        sigma_b = sigma_e + L @ self.sigma_s @ L.T
         sigma_b_inv = np.linalg.inv(sigma_b)
         
         for k in range(max_iter):
-            # print(k)
             old_gammas = deepcopy(gammas)
-            # E = sigma_s @ L.T @ np.linalg.inv( sigma_e + L @ sigma_s @ L.T ) @ B
-            # term_1 = sigma_s @ L.T
-            # term_2 = np.linalg.inv(sigma_e + L@sigma_s@L.T) @ L @ sigma_s
-            # Cov = sigma_s - term_1 @ term_2
             
             # according to equation (30)
             term_1 = (gammas/np.sqrt(n)) * np.sqrt(np.sum((L.T @ sigma_b_inv @ B )**2, axis=1))
@@ -196,12 +250,14 @@ class SolverGammaMAP(BaseSolver):
             if np.linalg.norm(gammas) == 0:
                 gammas = old_gammas
                 break
-            # gammas /= np.linalg.norm(gammas)
 
         gammas_final = gammas / gammas.max()
-        sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
+        sigma_s_hat = np.diag(gammas_final) @ self.sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
         inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
+        
+        # This way the inverse operator would be applied to M/EEG matrix B:
         # S = inverse_operator @ B
+
         return inverse_operator
         
     @staticmethod
@@ -211,17 +267,16 @@ class SolverGammaMAP(BaseSolver):
         return np.sqrt(np.trace(x@x.T))
 
 class SolverSourceMAP(BaseSolver):
-    ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution.
+    ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
     
     References
     ----------
     Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
     source imaging. NeuroImage, 44(3), 947-966.
+
     '''
     def __init__(self, name="Source-MAP", **kwargs):
         self.name = name
@@ -238,27 +293,31 @@ class SolverSourceMAP(BaseSolver):
         alpha : float
             The regularization parameter.
         p : 0 < p < 2 
-            Hyperparameter which controls sparsity. Default: p = 0
+            Hyperparameter which controls sparsity. Default: p = 0.5
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
             max_iter = 1 corresponds to sLORETA.
+
         Return
         ------
         self : object returns itself for convenience
+
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
-        n_chans, _ = leadfield.shape
+        n_chans, n_dipoles = leadfield.shape
 
         if smoothness_prior:
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
             self.gradient = laplacian(adjacency).toarray().astype(np.float32)
+            self.sigma_s = np.identity(n_dipoles) @ abs(self.gradient)
         else:
             self.gradient = None
+            self.sigma_s = np.identity(n_dipoles)
 
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, smoothness_prior=smoothness_prior, max_iter=max_iter, p=p)
+            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -267,7 +326,29 @@ class SolverSourceMAP(BaseSolver):
     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
         return super().apply_inverse_operator(evoked)
     
-    def make_source_map_inverse_operator(self, B, alpha, smoothness_prior=False, max_iter=100, p=0.5):
+    def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
+        ''' Computes the source MAP inverse operator based on the M/EEG data.
+        
+        Parameters
+        ----------
+        B : numpy.ndarray
+            The M/EEG data matrix (channels, time points).
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0.5
+
+        
+        Return
+        ------
+        inverse_operator : numpy.ndarray
+            The inverse operator which can be used to compute inverse solutions from new data.
+
+        '''
+
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -281,11 +362,8 @@ class SolverSourceMAP(BaseSolver):
         # Cb = B @ B.T
         gammas = np.ones(ds)
         sigma_e = alpha * np.identity(db)
-        if smoothness_prior:
-            sigma_s = np.identity(ds) @ abs(self.gradient)
-        else:
-            sigma_s = np.identity(ds) # identity leads to weighted minimum L2 Norm-type solution
-        sigma_b = sigma_e + L @ sigma_s @ L.T
+
+        sigma_b = sigma_e + L @ self.sigma_s @ L.T
         sigma_b_inv = np.linalg.inv(sigma_b)
         
         for k in range(max_iter):
@@ -300,9 +378,12 @@ class SolverSourceMAP(BaseSolver):
             # gammas /= np.linalg.norm(gammas)
 
         gammas_final = gammas / gammas.max()
-        sigma_s_hat = np.diag(gammas_final) @ sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
+        sigma_s_hat = np.diag(gammas_final) @ self.sigma_s  #  np.array([gammas_final[i] * C[i] for i in range(ds)])
         inverse_operator = sigma_s_hat @ L.T @ np.linalg.inv(sigma_e + L @ sigma_s_hat @ L.T)
+
+        # This way the inverse operator would be applied to M/EEG matrix B:
         # S = inverse_operator @ B
+
         return inverse_operator
         
     @staticmethod
@@ -347,6 +428,10 @@ class SolverGammaMAPMSP(BaseSolver):
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
             max_iter = 1 corresponds to sLORETA-like solution.
+        smoothness_order : int
+            Controls the smoothness prior. The higher this integer, the higher
+            the pursued smoothness of the inverse solution.
+
         Return
         ------
         self : object returns itself for convenience
@@ -369,6 +454,29 @@ class SolverGammaMAPMSP(BaseSolver):
         return super().apply_inverse_operator(evoked)
     
     def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
+        ''' Computes the source MAP inverse operator based on the M/EEG data.
+        
+        Parameters
+        ----------
+        B : numpy.ndarray
+            The M/EEG data matrix (channels, time points).
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0.5
+        smoothness_order : int
+            Controls the smoothness prior. The higher this integer, the higher
+            the pursued smoothness of the inverse solution.
+        
+        Return
+        ------
+        inverse_operator : numpy.ndarray
+            The inverse operator which can be used to compute inverse solutions from new data.
+
+        '''
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]
@@ -419,10 +527,27 @@ class SolverGammaMAPMSP(BaseSolver):
         return np.sqrt(np.trace(x@x.T))
     
     def get_smooth_prior_cov(self, L, smoothness_order):
+        ''' Create a smooth prior on the covariance matrix.
+        
+        Parameters
+        ----------
+        L : numpy.ndarray
+            Leadfield matrix (channels, dipoles)
+        smoothness_order : int
+            The higher the order, the smoother the prior.
+
+        Return
+        ------
+        L : numpy.ndarray
+            The smoothed Leadfield matrix (channels, dipoles)
+        gradient : numpy.ndarray
+            The smoothness gradient (laplacian matrix)
+
+        '''
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         gradient = laplacian(adjacency).toarray().astype(np.float32)
         
-        for i in range(smoothness_order):
+        for _ in range(smoothness_order):
             gradient = gradient @ gradient
         L = L @ abs(gradient)
         L -= L.mean(axis=0)
@@ -431,17 +556,21 @@ class SolverGammaMAPMSP(BaseSolver):
 
 class SolverSourceMAPMSP(BaseSolver):
     ''' Class for the Source Maximum A Posteriori (Source-MAP) inverse solution
-    using multiple sparse priors.
+    using multiple sparse priors [1]. The method is conceptually similar to [2],
+    but formally not equal.
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     
     References
     ----------
-    Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
-    source imaging. NeuroImage, 44(3), 947-966.
+    [1] Wipf, D., & Nagarajan, S. (2009). A unified Bayesian framework for
+    MEG/EEG source imaging. NeuroImage, 44(3), 947-966. 
+    
+    [2] Friston, K., Harrison, L., Daunizeau, J., Kiebel, S., Phillips, C.,
+    Trujillo-Barreto, N., ... & Mattout, J. (2008). Multiple sparse priors for
+    the M/EEG inverse problem. NeuroImage, 39(3), 1104-1120.
     
     '''
     def __init__(self, name="Source-MAP-MSP", **kwargs):
@@ -460,13 +589,18 @@ class SolverSourceMAPMSP(BaseSolver):
         alpha : float
             The regularization parameter.
         p : 0 < p < 2 
-            Hyperparameter which controls sparsity. Default: p = 0
+            Hyperparameter which controls sparsity. Default: p = 0.5
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
-            max_iter = 1 corresponds to sLORETA-like solution.
+            max_iter = 1 corresponds to sLORETA.
+        smoothness_order : int
+            Controls the smoothness prior. The higher this integer, the higher
+            the pursued smoothness of the inverse solution.
+
         Return
         ------
         self : object returns itself for convenience
+
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
@@ -486,6 +620,30 @@ class SolverSourceMAPMSP(BaseSolver):
         return super().apply_inverse_operator(evoked)
     
     def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
+        ''' Computes the source MAP inverse operator based on the M/EEG data.
+        
+        Parameters
+        ----------
+        B : numpy.ndarray
+            The M/EEG data matrix (channels, time points).
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum numbers of iterations to find the optimal hyperparameters.
+            max_iter = 1 corresponds to sLORETA.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0.5
+        smoothness_order : int
+            Controls the smoothness prior. The higher this integer, the higher
+            the pursued smoothness of the inverse solution.
+        
+        Return
+        ------
+        inverse_operator : numpy.ndarray
+            The inverse operator which can be used to compute inverse solutions from new data.
+
+        '''
+
         L = deepcopy(self.leadfield)
         db, n = B.shape
         ds = L.shape[1]

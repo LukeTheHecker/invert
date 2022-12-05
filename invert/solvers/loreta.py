@@ -13,14 +13,18 @@ class SolverLORETA(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
+    References
+    ----------
+    [1] Pascual-Marqui, R. D. (1999). Review of methods for solving the EEG
+    inverse problem. International journal of bioelectromagnetism, 1(1), 75-86.
+
     '''
     def __init__(self, name="Low Resolution Tomography", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -38,7 +42,7 @@ class SolverLORETA(BaseSolver):
         leadfield = self.forward['sol']['data']
         LTL = leadfield.T @ leadfield
         B = np.diag(np.linalg.norm(leadfield, axis=0))
-        adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
+        adjacency = mne.spatial_src_adjacency(forward['src'], verbose=self.verbose).toarray()
         laplace_operator = laplacian(adjacency)
         BLapTLapB = B @ laplace_operator.T @ laplace_operator @ B
 
@@ -55,12 +59,17 @@ class SolverLORETA(BaseSolver):
         return super().apply_inverse_operator(evoked)
 
 class SolverSLORETA(BaseSolver):
-    ''' Class for the standardized Low Resolution Tomography (sLORETA) inverse solution.
+    ''' Class for the standardized Low Resolution Tomography (sLORETA) inverse
+        solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Pascual-Marqui, R. D. (2002). Standardized low-resolution brain
+    electromagnetic tomography (sLORETA): technical details. Methods Find Exp
+    Clin Pharmacol, 24(Suppl D), 5-12.
     '''
     def __init__(self, name="Standardized Low Resolution Tomography", **kwargs):
         self.name = name
@@ -90,7 +99,6 @@ class SolverSLORETA(BaseSolver):
         H = I - (one @ one.T) / (one.T @ one)
         
 
-        
         inverse_operators = []
         for alpha in self.alphas:
             # according to Grech et al 2008
@@ -102,7 +110,6 @@ class SolverSLORETA(BaseSolver):
             # according to pascual-marqui 2002
             T = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
             
-
             inverse_operator = T
             inverse_operators.append(inverse_operator)
 
@@ -114,12 +121,18 @@ class SolverSLORETA(BaseSolver):
 
 
 class SolverELORETA(BaseSolver):
-    ''' Class for the exact Low Resolution Tomography (eLORETA) inverse solution.
+    ''' Class for the exact Low Resolution Tomography (eLORETA) inverse
+        solution [1].
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Pascual-Marqui, R. D. (2007). Discrete, 3D distributed, linear imaging
+    methods of electric neuronal activity. Part 1: exact, zero error
+    localization. arXiv preprint arXiv:0710.3341.
+
     '''
     def __init__(self, name="Exact Low Resolution Tomography", **kwargs):
         self.name = name
@@ -134,6 +147,10 @@ class SolverELORETA(BaseSolver):
             The mne-python Forward model instance.
         alpha : float
             The regularization parameter.
+        stop_crit : float
+            The convergence criterion to optimize the weight matrix. 
+        max_iter : int
+            The stopping criterion to optimize the weight matrix.
         
         Return
         ------
