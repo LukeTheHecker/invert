@@ -1,6 +1,22 @@
 import mne
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
+import dill as pkl
+import os
+
+def read_solver(path, name='instance', custom_objects={}):
+    instance_path = os.path.join(path, name+".pkl")
+    with open(instance_path, "rb") as f:
+        solver = pkl.load(f)
+    
+    # Check if neural network model is in folder:
+    folder_ls = os.listdir(path)
+    if "keras_metadata.pb" in folder_ls:
+        model = tf.keras.models.load_model(path, custom_objects={})
+        solver.model = model
+    return solver
+    
 
 def pos_from_forward(forward, verbose=0):
     ''' Get vertex/dipole positions from mne.Forward model

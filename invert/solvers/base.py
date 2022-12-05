@@ -2,7 +2,11 @@ from copy import deepcopy
 import numpy as np
 import mne
 import matplotlib.pyplot as plt
+import os
+import dill as pkl
+import tensorflow as tf
 
+    
 class InverseOperator:
     ''' This class holds the inverse operator, which may be a simple
     numpy.ndarray matrix or some object like an esinet.net()
@@ -356,10 +360,7 @@ class BaseSolver:
         return stc
     
     def save(self, path):
-        import os
-        import pickle as pkl
-        import tensorflow as tf
-    
+        
         name = self.name
 
         # get list of folders in path
@@ -386,7 +387,7 @@ class BaseSolver:
             # Save rest
             # Delete model since it is not serializable
             self.model = None
-
+            self.generator = None
             with open(new_path + '\\instance.pkl', 'wb') as f:
                 pkl.dump(self, f)
             

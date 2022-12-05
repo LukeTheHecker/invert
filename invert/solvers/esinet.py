@@ -1,6 +1,7 @@
 from copy import deepcopy
 from esinet import Simulation, Net
 from .base import BaseSolver, InverseOperator
+import colorednoise as cn
 from scipy.sparse.csgraph import laplacian
 from scipy.stats import pearsonr
 import mne
@@ -719,7 +720,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
               return_mask=True, verbose=0):
-    import colorednoise as cn
+    
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
     gradient = abs(laplacian(adjacency))
