@@ -3,6 +3,34 @@ from scipy.stats import pearsonr
 from scipy.spatial.distance import cdist
 from copy import deepcopy
 from sklearn.metrics import auc, roc_curve
+import pandas as pd
+
+def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix):
+    
+    mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true, y_pred)]
+    nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true, y_pred)]
+    mle = [eval_mean_localization_error(yy_true[:,0], yy_pred[:, 0], pos_1, ghost_thresh=40, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true, y_pred)]
+    auc = [np.mean(eval_auc(yy_true[:, 0], yy_pred[:, 0], pos_1, epsilon=0.05, n_redraw=25)) for yy_true, yy_pred in zip(y_true, y_pred)]
+    d = dict(
+        Mean_Squared_Error=np.nanmedian(mse) ,
+        Normalized_Mean_Squared_Error=np.nanmedian(nmse),
+        Mean_Localization_Error=np.nanmedian(mle),
+        AUC=np.nanmedian(auc),
+    )
+    
+    return d
+
+def eval_mse(y_true, y_est):
+    '''Returns the mean squared error between predicted and true source. '''
+    return np.mean((y_true-y_est)**2)
+
+def eval_nmse(y_true, y_est):
+    '''Returns the normalized mean squared error between predicted and true 
+    source.'''
+    
+    y_true_normed = y_true / np.max(np.abs(y_true))
+    y_est_normed = y_est / np.max(np.abs(y_est))
+    return np.mean((y_true_normed-y_est_normed)**2)
 
 
 def nmse(y_true, y_pred):
