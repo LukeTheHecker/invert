@@ -2,7 +2,6 @@ from time import monotonic
 import numpy as np
 import mne
 from .util import pos_from_forward
-import esinet
 import matplotlib.pyplot as plt
 
 from invert import solvers

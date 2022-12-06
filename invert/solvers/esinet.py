@@ -1,5 +1,5 @@
 from copy import deepcopy
-from esinet import Simulation, Net
+# from esinet import Simulation, Net
 from .base import BaseSolver, InverseOperator
 import colorednoise as cn
 from scipy.sparse.csgraph import laplacian
@@ -861,57 +861,57 @@ class SolverLSTM(BaseSolver):
 #     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
 #         return super().apply_inverse_operator(evoked)
 
-def make_fullyconnected_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-    """ Calculate the inverse operator using the Fully-Connected artificial neural network model.
+# def make_fullyconnected_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
+#     """ Calculate the inverse operator using the Fully-Connected artificial neural network model.
 
-    Parameters
-    ----------
-    leadfield : mne.Foward
-        The forward model object.
-    info : mne.Info
-        The mne info object.
+#     Parameters
+#     ----------
+#     leadfield : mne.Foward
+#         The forward model object.
+#     info : mne.Info
+#         The mne info object.
 
-    Return
-    ------
-    inverse_operator : esinet.Net
-        The neural network model object from the esinet package.
+#     Return
+#     ------
+#     inverse_operator : esinet.Net
+#         The neural network model object from the esinet package.
 
-    """
-    if settings is None:
-        settings = dict(duration_of_trial=0.)
-    sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
+#     """
+#     if settings is None:
+#         settings = dict(duration_of_trial=0.)
+#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
 
-    model_args = dict(model_type="FC", activation_function="tanh")
-    inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
+#     model_args = dict(model_type="FC", activation_function="tanh")
+#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
 
-    return inverse_operator
+#     return inverse_operator
 
 
-def make_lstm_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-    """ Calculate the inverse operator using the Long-Short Term Memory
-    artificial neural network model.
+# def make_lstm_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
+#     """ Calculate the inverse operator using the Long-Short Term Memory
+#     artificial neural network model.
 
-    Parameters
-    ----------
-    leadfield : mne.Foward
-        The forward model object.
-    info : mne.Info
-        The mne info object.
+#     Parameters
+#     ----------
+#     leadfield : mne.Foward
+#         The forward model object.
+#     info : mne.Info
+#         The mne info object.
 
-    Return
-    ------
-    inverse_operator : esinet.Net
-        The neural network model object from the esinet package.
+#     Return
+#     ------
+#     inverse_operator : esinet.Net
+#         The neural network model object from the esinet package.
 
-    """
-    if settings is None:
-        settings = dict(duration_of_trial=0.)
-    sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
+#     """
+#     if settings is None:
+#         settings = dict(duration_of_trial=0.)
+#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
 
-    model_args = dict(model_type="LSTM")
-    inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
+#     model_args = dict(model_type="LSTM")
+#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
 
-    return inverse_operator
+#     return inverse_operator
 
 def rms(x):
         return np.sqrt(np.mean(x**2))
