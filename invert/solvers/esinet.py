@@ -1072,7 +1072,7 @@ def solve_p(leadfield, y_est, x_true):
 
     
     opt = minimize_scalar(correlation_criterion, args=(leadfield, y_est* base_scaler, x_true), \
-        bounds=(0, 1), method='bounded', options=options, tol=tol)
+        bounds=(0, 1), options=options, tol=tol)
 
 
     scaler = opt.x
