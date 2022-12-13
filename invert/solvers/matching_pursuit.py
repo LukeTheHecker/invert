@@ -26,7 +26,7 @@ class SolverOMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters

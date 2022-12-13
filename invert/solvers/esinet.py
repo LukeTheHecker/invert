@@ -6,9 +6,10 @@ from scipy.sparse.csgraph import laplacian
 from scipy.stats import pearsonr
 import mne
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from scipy.optimize import minimize_scalar
-from tensorflow.keras.layers import (Conv2D, Dense, Flatten, Lambda, multiply,
+from tensorflow.keras.layers import (Conv1D, Conv2D, Dense, Flatten, Lambda, multiply,
                                     Reshape, AveragePooling2D, TimeDistributed,
                                     Bidirectional, LSTM)
 import tensorflow.keras.backend as K
@@ -33,7 +34,7 @@ class SolverCNN(BaseSolver):
                             n_timepoints=20, batch_repetitions=5, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            epsilon=0.25, snr_range=(1,100), patience=10,
+                            epsilon=0.25, snr_range=(1,100), patience=300,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
@@ -183,16 +184,18 @@ class SolverCNN(BaseSolver):
         '''
         n_channels, n_dipoles = self.leadfield.shape
         
-        inputs = tf.keras.Input(shape=(self.n_timepoints, n_channels, 1), name='Input')
+        inputs = tf.keras.Input(shape=(None, n_channels, 1), name='Input')
 
 
-        cnn1 = Conv2D(self.n_filters, (1, n_channels),
+        cnn1 = TimeDistributed(Conv1D(self.n_filters, n_channels,
                     activation=self.activation_function, padding="valid",
-                    name='CNN1')(inputs)
-        # cnn1 = Lambda(lambda x: K.abs(x))(cnn1)
+                    name='CNN1'))(inputs)
+        
+        # cnn1 = Conv2D(self.n_filters, (1, n_channels),
+        #             activation=self.activation_function, padding="valid",
+        #             name='CNN1')(inputs)
         reshape = Reshape((self.n_timepoints, self.n_filters))(cnn1)
-        # maxpool = AveragePooling2D(pool_size=(self.n_timepoints, 1), strides=None, padding="valid")(cnn1)
-        maxpool = Bidirectional(LSTM(175, return_sequences=False))(reshape)
+        maxpool = Bidirectional(LSTM(128, return_sequences=False))(reshape)
 
         flat = Flatten()(maxpool)
 
@@ -206,8 +209,8 @@ class SolverCNN(BaseSolver):
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CNN')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
-        if self.verbose > 0:
-            model.summary()
+        # if self.verbose > 0:
+        model.summary()
         
         self.model = model
 
@@ -348,7 +351,7 @@ class SolverCovCNN(BaseSolver):
 
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
-        # y_norm = y / np.linalg.norm(y, axis=0)
+        y_norm = y / np.linalg.norm(y, axis=0)
         n_channels, n_times = y.shape
 
         # Compute Data Covariance Matrix
@@ -718,6 +721,7 @@ class SolverLSTM(BaseSolver):
         self.create_generator()
         print("Build Model:..")
         self.build_model()
+        # self.build_model2()
         print("Train Model:..")
         self.train_model()
 
@@ -765,8 +769,7 @@ class SolverLSTM(BaseSolver):
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
         return source_pred_scaled[0]
-        
-        
+               
     def train_model(self,):
         ''' Train the neural network model.
         '''
@@ -779,6 +782,35 @@ class SolverLSTM(BaseSolver):
 
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
+
+
+    def build_model2(self,):
+        ''' Build the neural network model.
+        '''
+        n_channels, n_dipoles = self.leadfield.shape
+
+        inputs = tf.keras.Input(shape=(None, n_channels), name='Input')
+
+        lstm1 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+            input_shape=(None, self.n_dense_units)), 
+            name='LSTM1')(inputs)
+
+        lstm2 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+            input_shape=(None, self.n_dense_units)), 
+            name='LSTM2')(lstm1)
+
+        # lstm3 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+        #     input_shape=(None, self.n_dense_units)), 
+        #     name='LSTM3')(lstm2)
+        
+        out = TimeDistributed(Dense(n_dipoles, activation="relu"))(lstm2)
+        
+        model = tf.keras.Model(inputs=inputs, outputs=out, name='LSTM2')
+        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        if self.verbose > 0:
+            model.summary()
+        
+        self.model = model
 
     def build_model(self,):
         ''' Build the neural network model.
@@ -930,7 +962,7 @@ def add_white_noise(X_clean, snr):
 def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
-              return_mask=True, verbose=0):
+              return_mask=True, scale_data=True, return_info=False, verbose=0):
     
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
@@ -966,7 +998,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         selection = [np.random.randint(0, n_candidates, n) for n in n_sources_batch]
 
         # Assign each source (or source patch) a time course
-        amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
+        amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
+        amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
         y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
         
         # Project simulated sources through leadfield
@@ -980,7 +1013,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Apply common average reference
         x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
         # Scale eeg
-        x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+        if scale_data:
+            x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
         
         if use_cov:
             # Calculate Covariance
@@ -991,13 +1025,13 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
             x = np.expand_dims(x, axis=-1)
         
         else:
-            # normalize all time points to unit length
-            x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
-            # normalize each sample to max(abs()) == 1
-            x = np.stack([xx / np.max(abs(xx)) for xx in x], axis=0)
+            if scale_data:
+                # normalize all time points to unit length
+                x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+                # normalize each sample to max(abs()) == 1
+                x = np.stack([xx / np.max(abs(xx)) for xx in x], axis=0)
             # Reshape
             x = np.swapaxes(x, 1,2)
-            # x = x[:, :, :, np.newaxis]
 
         if return_mask:    
             # Calculate mean source activity
@@ -1005,11 +1039,20 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
             # Masking the source vector (1-> active, 0-> inactive)
             y = (y>0).astype(float)
         else:
-            y = np.stack([ (yy.T / np.max(abs(yy), axis=1)).T for yy in y], axis=0)
+            if scale_data:
+                y = np.stack([ (yy.T / np.max(abs(yy), axis=1)).T for yy in y], axis=0)
+            
+
         
         # Return same batch multiple times:
+        if return_info:
+            info = pd.DataFrame(dict(n_sources=n_sources_batch, amplitudes=amplitude_values, snr=snr_levels))
+            output = (x, y, info)
+        else:
+            output = (x, y)
+
         for _ in range(batch_repetitions):
-            yield (x, y)
+            yield output
 
 def solve_p_wrap(leadfield, y_est, x_true):
     ''' Wrapper for parallel (or, alternatively, serial) scaling of 
@@ -1060,7 +1103,7 @@ def solve_p(leadfield, y_est, x_true):
 
     
     opt = minimize_scalar(correlation_criterion, args=(leadfield, y_est* base_scaler, x_true), \
-        bounds=(0, 1), method='bounded', options=options, tol=tol)
+        bounds=(0, 1), options=options, tol=tol)
 
 
     scaler = opt.x

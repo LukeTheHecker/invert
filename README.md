@@ -29,10 +29,8 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
 * Bayesian Compressed Sensing (BCS)
 * Champagne
-* Multiple Sparse Priors (MSP)
-* Bayesian LORETA
-* Bayesian MNE
-* Bayesian Beamformer
+* Low SNR Champagne
+
 
 ### Greedy Algorithms / Matching Pursuit
 * Orthogonal Matching Pursuit (OMP)
@@ -53,7 +51,10 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Smooth Truncated RAP-Music (JAZZ-MUSIC)
 
 ### Artificial Neural Networks
-* Convolutional Neural Network for Distributed Dipole Solutions (ConvDip)
+* Convolutional Neural Network for Spatio-Temporal Inverse Solution
+* Long-Short Term Memory Network for Spatio-Temporal Inverse Solution
+* Fully-Connected Neural Network for Inverse Solution at single time instances
+* Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution
 
 ### Beamforming
 * Minimum Variance Adaptive (MVAB) Beamformer

@@ -96,7 +96,12 @@ class SolverMUSIC(BaseSolver):
             # n_comp = find_corner(deepcopy(iters), deepcopy(D))
             
             # eigenvalue magnitude-based
-            n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(((D**2)*len((D**2)) / (D**2).sum()))
+            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            D_ = D/D.max()
+            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]

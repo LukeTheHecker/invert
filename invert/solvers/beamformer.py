@@ -189,7 +189,8 @@ class SolverSMV(BaseSolver):
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
-        
+        self.alphas = self.get_alphas(reference=C)
+
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
@@ -395,7 +396,7 @@ class SolverESMV(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
@@ -475,7 +476,7 @@ class SolverMCMV(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
@@ -552,7 +553,7 @@ class SolverReciPSIICOS(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
@@ -643,12 +644,12 @@ class SolverSAM(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.weight_norm = weight_norm
-        self.forward = forward
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         n_chans, n_dipoles = leadfield.shape
-        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        
 
         y = evoked.data
         y -= y.mean(axis=0)

@@ -8,7 +8,7 @@ from ..util import best_index_residual, thresholding, calc_residual_variance, fi
 class SolverSMP(BaseSolver):
     ''' Class for the Smooth Matching Pursuit (SMP) inverse solution. Developed
         by Lukas Hecker as a smooth extension of the orthogonal matching pursuit
-        algorithm [1], 19.10.2022.
+        algorithm [1,2], 19.10.2022.
     
     
     Attributes
@@ -18,16 +18,20 @@ class SolverSMP(BaseSolver):
     
     References
     ----------
-    [1] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
+    [1] Tropp, J. A., & Gilbert, A. C. (2007). Signal recovery from random
+    measurements via orthogonal matching pursuit. IEEE Transactions on
+    information theory, 53(12), 4655-4666.
+    [2] Duarte, M. F., & Eldar, Y. C. (2011). Structured compressed sensing:
     From theory to applications. IEEE Transactions on signal processing, 59(9),
     4053-4085.
+     
 
     '''
     def __init__(self, name="Smooth Matching Pursuit", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -63,7 +67,7 @@ class SolverSMP(BaseSolver):
         return stc
     
 
-    def calc_smp_solution(self, y, include_singletons=True, residual_thresh=0.01):
+    def calc_smp_solution(self, y, include_singletons=True):
         """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
         
         Parameters
@@ -72,6 +76,7 @@ class SolverSMP(BaseSolver):
             The data matrix (channels,).
         include_singletons : bool
             If True -> Include not only smooth patches but also single dipoles.
+        
 
         Return
         ------
@@ -119,18 +124,6 @@ class SolverSMP(BaseSolver):
             if residuals[-1] > residuals[-2]:
                 break
 
-
-
-        
-        # Remove where residual is below threshold:
-        # keep_idc = np.where(unexplained_variance>=residual_thresh*100)[0]
-        # if len(keep_idc) == 1:
-        #     keep_idc = np.append(keep_idc, 1)
-        
-        # print(keep_idc)
-        # unexplained_variance = unexplained_variance[keep_idc]
-        # x_hats = [x_hats[idx] for idx in keep_idc]
-        
         x_hat = best_index_residual(unexplained_variance, x_hats, plot=False)
         
         # x_hat = x_hats[corner_idx]
@@ -139,7 +132,7 @@ class SolverSMP(BaseSolver):
 class SolverSSMP(BaseSolver):
     ''' Class for the Smooth Simultaneous Matching Pursuit (SSMP) inverse
         solution. Developed by Lukas Hecker as a smooth extension of the
-        orthogonal matching pursuit algorithm [1], 19.10.2022.
+        orthogonal matching pursuit algorithm [1,2], 19.10.2022.
     
     
     Attributes
@@ -153,12 +146,15 @@ class SolverSSMP(BaseSolver):
     From theory to applications. IEEE Transactions on signal processing, 59(9),
     4053-4085.
 
+    [2] Donoho, D. L. (2006). Compressed sensing. IEEE Transactions on
+    information theory, 52(4), 1289-1306.
+
     '''
     def __init__(self, name="Smooth Simultaneous Matching Pursuit", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -175,9 +171,12 @@ class SolverSSMP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         self.inverse_operators = []
         
+        # Prepare spatial laplacian operator
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0).toarray()
         laplace_operator = laplacian(adjacency)
         self.laplace_operator = laplace_operator
+        
+        # Create a leadfield of  smooth sources
         leadfield_smooth = self.leadfield @ abs(laplace_operator)
 
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
@@ -195,7 +194,7 @@ class SolverSSMP(BaseSolver):
     
 
     def calc_ssmp_solution(self, y, include_singletons=True):
-        """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
+        """ Calculates the Smooth Simultaneous Orthogonal Matching Pursuit (SSMP) inverse solution.
         
         Parameters
         ----------
@@ -209,24 +208,28 @@ class SolverSSMP(BaseSolver):
         x_hat : numpy.ndarray
             The inverse solution (dipoles,)
         """
+
         n_chans, n_time = y.shape
+        max_iter = int(n_chans/2)
         _, n_dipoles = self.leadfield.shape
         
         y -= y.mean(axis=0)
-        x_hat = np.zeros(n_dipoles)
-        x_hats = [deepcopy(x_hat)]
-        source_norms = np.array([0,])
 
         x_hat = np.zeros((n_dipoles, n_time))
-        omega = np.array([])
+        x_hats = [deepcopy(x_hat)]
+        residuals = np.array([np.linalg.norm(y - self.leadfield@x_hat), ])
+        source_norms = np.array([0,])
+
         R = deepcopy(y)
-        y_hat = self.leadfield@x_hat
+        omega = np.array([])
+
+        y_hat = self.leadfield @ x_hat
         y_hat -= y_hat.mean(axis=0)
         residuals = np.array([np.linalg.norm(y - y_hat), ])
-        source_norms = np.array([0,])
         x_hats = [deepcopy(x_hat), ]
-        q = 2
-        for _ in range(n_chans):
+        q = 1
+        
+        for _ in range(max_iter):
             b_n_smooth = np.linalg.norm(self.leadfield_smooth_normed.T @ R, axis=1, ord=q)
             b_n_sparse = np.linalg.norm(self.leadfield_normed.T @ R, axis=1, ord=q)
 
@@ -250,27 +253,14 @@ class SolverSSMP(BaseSolver):
             residuals = np.append(residuals, np.linalg.norm(y - y_hat))
             source_norms = np.append(source_norms, np.sum(x_hat**2))
             x_hats.append(deepcopy(x_hat))
-            # print(residuals[-1])
+
             if residuals[-1] > residuals[-2]:
                 break
 
 
 
         # Model selection (Regularisation)
-        # x_hat = best_index_residual(residuals, x_hats)
-        # L-Curve
-        
-        if len(residuals) == 2: # Only one succesful iteration
-            return x_hats[-1]
-        elif len(residuals) == 3: # Only two succesful iterations
-            return x_hats[-2]
-        until = np.where(np.diff(residuals)>0)[0][0]
-        residuals = residuals[1:until]
-        x_hats = x_hats[1:until]
-        
-        corner_idx = find_corner(np.arange(len(residuals)), residuals)
-        # print(len(residuals), len(x_hats), corner_idx)
-        x_hat = x_hats[corner_idx]
+        x_hat = best_index_residual(residuals, x_hats, plot=False)
 
         return x_hat
     
@@ -296,7 +286,7 @@ class SolverSubSMP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -314,10 +304,13 @@ class SolverSubSMP(BaseSolver):
         self.inverse_operators = []
         
         adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0).toarray()
+        
+        # Create spatial laplacian operator
         laplace_operator = laplacian(adjacency)
         self.laplace_operator = laplace_operator
+        
+        # Create leadfield of smooth sources
         leadfield_smooth = self.leadfield @ abs(laplace_operator)
-
         leadfield_smooth -= leadfield_smooth.mean(axis=0)
         self.leadfield -= self.leadfield.mean(axis=0)
         self.leadfield_smooth = leadfield_smooth
@@ -333,6 +326,17 @@ class SolverSubSMP(BaseSolver):
 
     def calc_subsmp_solution(self, y, include_singletons=True, var_thresh=1):
         ''' Calculate the Subspace Smooth Matching Pursuit (SubSMP) solution.
+
+        Parameters
+        ----------
+        y : numpy.ndarray
+            The M/EEG data Matrix
+        include_singletons : bool
+            If True -> include single dipoles as candidates, 
+            else include only smooth patches
+        var_thresh : float
+            Threshold how much variance will be explained in the data
+
         '''
         _, n_time = y.shape
         n_dipoles = self.leadfield.shape[1]
@@ -378,7 +382,9 @@ class SolverSubSMP(BaseSolver):
             The data matrix (channels,).
         include_singletons : bool
             If True -> Include not only smooth patches but also single dipoles.
-
+        var_thresh : float
+            Threshold how much variance will be explained in the data
+            
         Return
         ------
         x_hat : numpy.ndarray
@@ -425,17 +431,6 @@ class SolverSubSMP(BaseSolver):
             if residuals[-1] > residuals[-2]:
                 break
 
-
-
-        
-        # Remove where residual is below threshold:
-        # keep_idc = np.where(unexplained_variance>=residual_thresh*100)[0]
-        # if len(keep_idc) == 1:
-        #     keep_idc = np.append(keep_idc, 1)
-        
-        # print(keep_idc)
-        # unexplained_variance = unexplained_variance[keep_idc]
-        # x_hats = [x_hats[idx] for idx in keep_idc]
         if unexplained_variance[1] > var_thresh:
             x_hat = best_index_residual(unexplained_variance, x_hats, plot=False)
         else:

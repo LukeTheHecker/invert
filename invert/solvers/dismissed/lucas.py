@@ -39,7 +39,7 @@ class SolverLUCAS(BaseSolver):
         '''
         from invert import Solver
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         n_chans, _ = leadfield.shape
 
         if solvers == "all":
