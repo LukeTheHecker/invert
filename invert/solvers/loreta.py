@@ -39,7 +39,7 @@ class SolverLORETA(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         LTL = leadfield.T @ leadfield
         B = np.diag(np.linalg.norm(leadfield, axis=0))
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=self.verbose).toarray()
@@ -49,7 +49,7 @@ class SolverLORETA(BaseSolver):
    
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = np.linalg.inv(LTL + alpha * BLapTLapB) @ leadfield.T
+            inverse_operator = np.linalg.inv(LTL + (alpha) * BLapTLapB) @ leadfield.T
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
@@ -90,7 +90,7 @@ class SolverSLORETA(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         n_chans = leadfield.shape[0]
         
         LLT = leadfield @ leadfield.T
@@ -157,7 +157,7 @@ class SolverELORETA(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         n_chans = leadfield.shape[0]
         # noise_cov = np.identity(n_chans)
         

@@ -14,11 +14,12 @@ release = '01.01.2023'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinxemoji.sphinxemoji']
+extensions = ['sphinxemoji.sphinxemoji', 'm2r2']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+source_suffix = ['.rst', '.md']
 
 
 # -- Options for HTML output -------------------------------------------------

@@ -10,14 +10,13 @@ class SolverBackusGilbert(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+    
     '''
     def __init__(self, name="Backus-Gilbert", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -33,10 +32,8 @@ class SolverBackusGilbert(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         _, n_dipoles = self.leadfield.shape
-        pos = pos_from_forward(forward, verbose=verbose)
+        pos = pos_from_forward(forward, verbose=self.verbose)
         dist = cdist(pos, pos)
-        if verbose>0:
-            print(f"No regularization possible with {self.name} - alpha value is not used")
         
 
         W_BG = []
@@ -77,8 +74,7 @@ class SolverLAURA(BaseSolver):
     
     Attributes
     ----------
-    forward : mne.Forward
-        The mne-python Forward model instance.
+
     '''
     def __init__(self, name="Local Auto-Regressive Average", **kwargs):
         self.name = name
@@ -93,7 +89,12 @@ class SolverLAURA(BaseSolver):
             The mne-python Forward model instance.
         alpha : float
             The regularization parameter.
-        
+        noise_cov : numpy.ndarray
+            The noise covariance matrix
+        drop_off : float
+            Controls the steepness of the patches distribution. It is not
+            adviced to change this parameter in most cases.
+
         Return
         ------
         self : object returns itself for convenience

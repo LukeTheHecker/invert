@@ -81,7 +81,9 @@ class BaseSolver:
     def __init__(self, regularisation_method="GCV", n_reg_params=24, 
         prep_leadfield=True, use_last_alpha=False, verbose=0):
         self.verbose = verbose
+        # self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
         self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
+
 
         # self.alphas = deepcopy(self.r_values)
         self.n_reg_params = n_reg_params
@@ -180,12 +182,13 @@ class BaseSolver:
             _, eigs, _ = np.linalg.svd(self.leadfield) 
         else:
             _, eigs, _ = np.linalg.svd(reference)
-        max_eig = eigs.max()
+        self.max_eig = eigs.max()
+
         if self.alpha == "auto":
             
-            alphas = list(max_eig * self.r_values)
+            alphas = list(self.max_eig * self.r_values)
         else:
-            alphas = [self.alpha*max_eig, ]
+            alphas = [self.alpha*self.max_eig, ]
         return alphas
 
     def regularise_lcurve(self, evoked):
@@ -306,23 +309,27 @@ class BaseSolver:
     
             gcv_value = residual_norm / denom
             gcv_values.append(gcv_value)
-        
+            # print(np.linalg.norm(x), gcv_value)
         # Filter gcv_values that first increase
-        try:
+        if len(np.where((np.diff(gcv_values)<0))[0]) == 0:
+            if not np.isnan(gcv_values[0]):
+                keep_idx = 0
+            else:
+                print("can you read this")
+                keep_idx = 1
+        else:
             keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
-        except:
-            keep_idx = 0
-
+            
         optimum_idx = np.argmin(gcv_values[keep_idx:])+keep_idx
 
         # optimum_idx = np.argmin(gcv_values[1:])+1
 
-        # plt.figure()
-        # plt.loglog(self.alphas, gcv_values, 'ok')
-        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # print("alpha: ", alpha)
-        # plt.title(f"GCV: {alpha}")
+        plt.figure()
+        plt.loglog(self.alphas, gcv_values, 'ok')
+        plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+        alpha = self.alphas[optimum_idx]
+        print("alpha: ", alpha)
+        plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0], optimum_idx

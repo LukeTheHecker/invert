@@ -43,6 +43,8 @@ def Solver(solver="mne", **kwargs):
     # Bayesian Algorithms
     elif solver.lower() == "champagne" or solver.lower() == "champ":
         solver_object = solvers.SolverChampagne(**kwargs)
+    elif solver.lower() == "lowsnrchampagne" or solver.lower() == "low snr champagne" or solver.lower() == "lsc":
+        solver_object = solvers.SolverLowSNRChampagne(**kwargs)
     elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
         solver_object = solvers.SolverGammaMAP(**kwargs)
     elif solver.lower() == "source-map" or solver.lower() == "source map":

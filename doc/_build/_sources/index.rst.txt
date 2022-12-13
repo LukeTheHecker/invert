@@ -1,10 +1,13 @@
-invert
-======
-
-Welcome to the documentation of the invert python package! |:thumbs_up:|
-
 .. toctree::
    :maxdepth: 2
 
-   content/installation
    content/api
+   content/installation
+
+.. mdinclude:: ../README.md
+
+w2v
+^^^
+
+.. automodule:: package.ml.w2v
+:members:
