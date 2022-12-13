@@ -766,8 +766,7 @@ class SolverLSTM(BaseSolver):
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
         return source_pred_scaled[0]
-        
-        
+               
     def train_model(self,):
         ''' Train the neural network model.
         '''
@@ -1099,3 +1098,4 @@ def correlation_criterion(scaler, leadfield, y_est, x_true):
     x_est = np.matmul(leadfield, y_est) 
     error = np.abs(pearsonr(x_true-x_est, x_true)[0])
     return error
+
