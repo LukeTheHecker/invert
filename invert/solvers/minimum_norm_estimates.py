@@ -353,7 +353,7 @@ class SolverMinimumL1L2Norm(BaseSolver):
             The inverse solution matrix.
         '''
 
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         _, n_dipoles = leadfield.shape
         n_chans, n_time = y.shape
 

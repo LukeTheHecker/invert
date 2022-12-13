@@ -37,7 +37,7 @@ class SolverMultipleSparsePriors(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.forward['sol']['data']
+        leadfield = self.leadfield
         pos = pos_from_forward(forward, verbose=verbose)
         adjacency = mne.spatial_src_adjacency(forward['src'], verbose=verbose).toarray()
         Y = evoked.data

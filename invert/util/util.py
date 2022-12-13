@@ -168,9 +168,14 @@ def best_index_residual(residuals, x_hats, plot=False):
     else:
         bad_idx = len(residuals)
     bad_idx = len(residuals)
-    iters = iters[1:bad_idx]
-    x_hats = x_hats[1:bad_idx]
-    residuals = residuals[1:bad_idx]
+
+    iters = iters[:bad_idx]
+    x_hats = x_hats[:bad_idx]
+    residuals = residuals[:bad_idx]
+
+    # iters = iters[1:bad_idx]
+    # x_hats = x_hats[1:bad_idx]
+    # residuals = residuals[1:bad_idx]
 
     # L-Curve Corner
     # corner_idx = find_corner(iters, residuals)

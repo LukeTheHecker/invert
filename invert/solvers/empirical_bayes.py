@@ -62,8 +62,6 @@ class SolverChampagne(BaseSolver):
         self : object returns itself for convenience
 
         '''
-        self.forward = forward
-        self.leadfield = self.forward['sol']['data']
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         n_chans = self.leadfield.shape[0]
         if noise_cov is None:
@@ -167,6 +165,138 @@ class SolverChampagne(BaseSolver):
 
         return inverse_operator
 
+class SolverLowSNRChampagne(BaseSolver):
+    ''' Class for the LOW SNR Champagne inverse solution. 
+
+    References
+    ----------
+    [1] Hashemi, A., & Haufe, S. (2018, September). Improving EEG source
+    localization through spatio-temporal sparse Bayesian learning. In 2018 26th
+    European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.
+    '''
+
+    def __init__(self, name="LowSNR-Champagne", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', max_iter=500, noise_cov=None, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        evoked : mne.Evoked
+            The evoked data object.
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        self.get_alphas(reference=self.leadfield@self.leadfield.T)
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.low_snr_champagne(evoked.data, alpha, max_iter=max_iter)
+            inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+
+        return super().apply_inverse_operator(evoked)
+    
+    
+    def low_snr_champagne(self, Y, alpha, max_iter=1000):
+        ''' Low SNR Champagne method.
+
+        Parameters
+        ----------
+        y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        alpha : float
+            The regularization parameter.
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+
+        Returns
+        -------
+        x : array, shape (dipoles, time)
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        leadfield = deepcopy(self.leadfield)
+        
+        # re-reference data
+        Y -= Y.mean(axis=0)
+        L = deepcopy(leadfield)
+
+        C = Y@Y.T
+        I = np.identity(n_chans)
+        
+        # It = np.identity(n_times)
+        # D = kron(L, It)
+        gammas = np.ones(n_dipoles)
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+        mu_x = Gamma @ L.T @ Sigma_y_inv @ Y
+
+        for i in range(max_iter):
+            old_gammas = deepcopy(gammas)
+
+            for i in range(len(gammas)):
+                ll = L[:, i][:, np.newaxis]
+                LTL = np.diagonal(ll.T@ll)
+                gammas[i] = np.sqrt((((mu_x[i]**2).sum()) / n_times) / LTL)
+
+            gammas[np.isnan(gammas)] = 0
+            # print("max gamma: ", gammas.max())
+            # gammas[gammas<pruning_thresh] = 0
+            # print((gammas==0).sum())
+            
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+            # update rest
+            Gamma = np.diag(gammas)
+            Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            mu_x = Gamma @ L.T @ Sigma_y_inv @ Y
+            
+        # update rest
+        gammas /= gammas.max()
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+
+
+        return inverse_operator
+
+
+
 # class SolverChampagne(BaseSolver):
 #     ''' Class for the Champagne inverse solution. Code is based on the
 #     implementation from the BSI-Zoo: https://github.com/braindatalab/BSI-Zoo/
@@ -206,8 +336,6 @@ class SolverChampagne(BaseSolver):
 #         ------
 #         self : object returns itself for convenience
 #         '''
-#         self.forward = forward
-#         self.leadfield = self.forward['sol']['data']
 #         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 #         n_chans = self.leadfield.shape[0]
 #         if noise_cov is None:

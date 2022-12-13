@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from scipy.optimize import minimize_scalar
-from tensorflow.keras.layers import (Conv2D, Dense, Flatten, Lambda, multiply,
+from tensorflow.keras.layers import (Conv1D, Conv2D, Dense, Flatten, Lambda, multiply,
                                     Reshape, AveragePooling2D, TimeDistributed,
                                     Bidirectional, LSTM)
 import tensorflow.keras.backend as K
@@ -34,7 +34,7 @@ class SolverCNN(BaseSolver):
                             n_timepoints=20, batch_repetitions=5, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            epsilon=0.25, snr_range=(1,100), patience=10,
+                            epsilon=0.25, snr_range=(1,100), patience=300,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
@@ -184,16 +184,18 @@ class SolverCNN(BaseSolver):
         '''
         n_channels, n_dipoles = self.leadfield.shape
         
-        inputs = tf.keras.Input(shape=(self.n_timepoints, n_channels, 1), name='Input')
+        inputs = tf.keras.Input(shape=(None, n_channels, 1), name='Input')
 
 
-        cnn1 = Conv2D(self.n_filters, (1, n_channels),
+        cnn1 = TimeDistributed(Conv1D(self.n_filters, n_channels,
                     activation=self.activation_function, padding="valid",
-                    name='CNN1')(inputs)
-        # cnn1 = Lambda(lambda x: K.abs(x))(cnn1)
+                    name='CNN1'))(inputs)
+        
+        # cnn1 = Conv2D(self.n_filters, (1, n_channels),
+        #             activation=self.activation_function, padding="valid",
+        #             name='CNN1')(inputs)
         reshape = Reshape((self.n_timepoints, self.n_filters))(cnn1)
-        # maxpool = AveragePooling2D(pool_size=(self.n_timepoints, 1), strides=None, padding="valid")(cnn1)
-        maxpool = Bidirectional(LSTM(175, return_sequences=False))(reshape)
+        maxpool = Bidirectional(LSTM(128, return_sequences=False))(reshape)
 
         flat = Flatten()(maxpool)
 
@@ -207,8 +209,8 @@ class SolverCNN(BaseSolver):
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CNN')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
-        if self.verbose > 0:
-            model.summary()
+        # if self.verbose > 0:
+        model.summary()
         
         self.model = model
 
@@ -349,7 +351,7 @@ class SolverCovCNN(BaseSolver):
 
         y = deepcopy(evoked.data)
         y -= y.mean(axis=0)
-        # y_norm = y / np.linalg.norm(y, axis=0)
+        y_norm = y / np.linalg.norm(y, axis=0)
         n_channels, n_times = y.shape
 
         # Compute Data Covariance Matrix
@@ -719,6 +721,7 @@ class SolverLSTM(BaseSolver):
         self.create_generator()
         print("Build Model:..")
         self.build_model()
+        # self.build_model2()
         print("Train Model:..")
         self.train_model()
 
@@ -779,6 +782,35 @@ class SolverLSTM(BaseSolver):
 
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
+
+
+    def build_model2(self,):
+        ''' Build the neural network model.
+        '''
+        n_channels, n_dipoles = self.leadfield.shape
+
+        inputs = tf.keras.Input(shape=(None, n_channels), name='Input')
+
+        lstm1 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+            input_shape=(None, self.n_dense_units)), 
+            name='LSTM1')(inputs)
+
+        lstm2 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+            input_shape=(None, self.n_dense_units)), 
+            name='LSTM2')(lstm1)
+
+        # lstm3 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=True, 
+        #     input_shape=(None, self.n_dense_units)), 
+        #     name='LSTM3')(lstm2)
+        
+        out = TimeDistributed(Dense(n_dipoles, activation="relu"))(lstm2)
+        
+        model = tf.keras.Model(inputs=inputs, outputs=out, name='LSTM2')
+        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        if self.verbose > 0:
+            model.summary()
+        
+        self.model = model
 
     def build_model(self,):
         ''' Build the neural network model.
