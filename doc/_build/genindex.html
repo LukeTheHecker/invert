@@ -20,6 +20,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -28,6 +29,8 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -65,14 +68,14 @@
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
     <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="content/api.html">
-  API References
+ <a class="reference internal nav-link" href="content/solvers.html">
+  Solvers
  </a>
 </li>
 
 <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="content/installation.html">
-  Installation
+ <a class="reference internal nav-link" href="content/adapters.html">
+  Adapters
  </a>
 </li>
 
@@ -86,6 +89,14 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/esinet" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
       </ul>
       </div>
       
@@ -134,14 +145,710 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#B"><strong>B</strong></a>
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
  
 </div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.apply_inverse_operator">apply_inverse_operator() (invert.solvers.base.BaseSolver method)</a>
+
+      <ul>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverBCS.apply_inverse_operator">(invert.solvers.bayes.SolverBCS method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAP.apply_inverse_operator">(invert.solvers.bayes.SolverGammaMAP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.apply_inverse_operator">(invert.solvers.bayes.SolverGammaMAPMSP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAP.apply_inverse_operator">(invert.solvers.bayes.SolverSourceMAP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAPMSP.apply_inverse_operator">(invert.solvers.bayes.SolverSourceMAPMSP method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverESMV.apply_inverse_operator">(invert.solvers.beamformer.SolverESMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverHOCMV.apply_inverse_operator">(invert.solvers.beamformer.SolverHOCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverLCMV.apply_inverse_operator">(invert.solvers.beamformer.SolverLCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMCMV.apply_inverse_operator">(invert.solvers.beamformer.SolverMCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMVAB.apply_inverse_operator">(invert.solvers.beamformer.SolverMVAB method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverReciPSIICOS.apply_inverse_operator">(invert.solvers.beamformer.SolverReciPSIICOS method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSAM.apply_inverse_operator">(invert.solvers.beamformer.SolverSAM method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSMV.apply_inverse_operator">(invert.solvers.beamformer.SolverSMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverWNMV.apply_inverse_operator">(invert.solvers.beamformer.SolverWNMV method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverChampagne.apply_inverse_operator">(invert.solvers.empirical_bayes.SolverChampagne method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverLowSNRChampagne.apply_inverse_operator">(invert.solvers.empirical_bayes.SolverLowSNRChampagne method)</a>
+</li>
+        <li><a href="content/epifocus.html#invert.solvers.epifocus.SolverEPIFOCUS.apply_inverse_operator">(invert.solvers.epifocus.SolverEPIFOCUS method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.apply_inverse_operator">(invert.solvers.esinet.SolverCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.apply_inverse_operator">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.apply_inverse_operator">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.apply_inverse_operator">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverELORETA.apply_inverse_operator">(invert.solvers.loreta.SolverELORETA method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverLORETA.apply_inverse_operator">(invert.solvers.loreta.SolverLORETA method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverSLORETA.apply_inverse_operator">(invert.solvers.loreta.SolverSLORETA method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverCOSAMP.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverCOSAMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverOMP.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverOMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverREMBO method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSOMP.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverSOMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSP.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverSP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSSP.apply_inverse_operator">(invert.solvers.matching_pursuit.SolverSSP method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverDSPM.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverDSPM method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMNE.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMNE method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverWMNE.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverWMNE method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverJAZZMUSIC.apply_inverse_operator">(invert.solvers.music.SolverJAZZMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverMUSIC.apply_inverse_operator">(invert.solvers.music.SolverMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverRAPMUSIC.apply_inverse_operator">(invert.solvers.music.SolverRAPMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverTRAPMUSIC.apply_inverse_operator">(invert.solvers.music.SolverTRAPMUSIC method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.smap.SolverSMAP.apply_inverse_operator">(invert.solvers.smap.SolverSMAP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP.apply_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverISubSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSMP.apply_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSSMP.apply_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP.apply_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSubSMP method)</a>
+</li>
+        <li><a href="content/wrop.html#invert.solvers.wrop.SolverBackusGilbert.apply_inverse_operator">(invert.solvers.wrop.SolverBackusGilbert method)</a>
+</li>
+        <li><a href="content/wrop.html#invert.solvers.wrop.SolverLAURA.apply_inverse_operator">(invert.solvers.wrop.SolverLAURA method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/music.html#invert.solvers.music.SolverJAZZMUSIC.apply_jazzmusic">apply_jazzmusic() (invert.solvers.music.SolverJAZZMUSIC method)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.apply_model">apply_model() (invert.solvers.esinet.SolverCNN method)</a>
+
+      <ul>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.apply_model">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.apply_model">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.apply_model">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+      </ul></li>
+      <li><a href="content/music.html#invert.solvers.music.SolverMUSIC.apply_music">apply_music() (invert.solvers.music.SolverMUSIC method)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverRAPMUSIC.apply_rapmusic">apply_rapmusic() (invert.solvers.music.SolverRAPMUSIC method)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverTRAPMUSIC.apply_trapmusic">apply_trapmusic() (invert.solvers.music.SolverTRAPMUSIC method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="content/api.html#Base">Base (built-in class)</a>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver">BaseSolver (class in invert.solvers.base)</a>
 </li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.build_model">build_model() (invert.solvers.esinet.SolverCNN method)</a>
+
+      <ul>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.build_model">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.build_model">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.build_model">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.build_model2">build_model2() (invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.calc_area_tri">calc_area_tri() (invert.solvers.base.BaseSolver static method)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverBCS.calc_bcs_solution">calc_bcs_solution() (invert.solvers.bayes.SolverBCS method)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverCOSAMP.calc_cosamp_solution">calc_cosamp_solution() (invert.solvers.matching_pursuit.SolverCOSAMP method)</a>
+</li>
+      <li><a href="content/loreta.html#invert.solvers.loreta.calc_eloreta_D2">calc_eloreta_D2() (in module invert.solvers.loreta)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP.calc_isubsmp_solution">calc_isubsmp_solution() (invert.solvers.smooth_matching_pursuit.SolverISubSMP method)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.calc_l1l2_solution">calc_l1l2_solution() (invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm method)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverOMP.calc_omp_solution">calc_omp_solution() (invert.solvers.matching_pursuit.SolverOMP method)</a>
+
+      <ul>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO.calc_omp_solution">(invert.solvers.matching_pursuit.SolverREMBO method)</a>
+</li>
+      </ul></li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO.calc_rembo_solution">calc_rembo_solution() (invert.solvers.matching_pursuit.SolverREMBO method)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSMP.calc_smp_solution">calc_smp_solution() (invert.solvers.smooth_matching_pursuit.SolverSMP method)</a>
+
+      <ul>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP.calc_smp_solution">(invert.solvers.smooth_matching_pursuit.SolverSubSMP method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSOMP.calc_somp_solution">calc_somp_solution() (invert.solvers.matching_pursuit.SolverSOMP method)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSP.calc_sp_solution">calc_sp_solution() (invert.solvers.matching_pursuit.SolverSP method)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSSMP.calc_ssmp_solution">calc_ssmp_solution() (invert.solvers.smooth_matching_pursuit.SolverSSMP method)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSSP.calc_ssp_solution">calc_ssp_solution() (invert.solvers.matching_pursuit.SolverSSP method)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP.calc_subsmp_solution">calc_subsmp_solution() (invert.solvers.smooth_matching_pursuit.SolverISubSMP method)</a>
+
+      <ul>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP.calc_subsmp_solution">(invert.solvers.smooth_matching_pursuit.SolverSubSMP method)</a>
+</li>
+      </ul></li>
+      <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverChampagne.champagne">champagne() (invert.solvers.empirical_bayes.SolverChampagne method)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.correlation_criterion">correlation_criterion() (in module invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.create_generator">create_generator() (invert.solvers.esinet.SolverCNN method)</a>
+
+      <ul>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.create_generator">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.create_generator">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.create_generator">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.delete_from_list">delete_from_list() (invert.solvers.base.BaseSolver static method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.euclidean_distance">euclidean_distance() (invert.solvers.base.BaseSolver static method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.filter_norms">filter_norms() (invert.solvers.base.BaseSolver static method)</a>
+</li>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.find_corner">find_corner() (invert.solvers.base.BaseSolver method)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.fista">fista() (invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm method)</a>
+</li>
+      <li><a href="content/focuss.html#invert.adapters.focuss.focuss">focuss() (in module invert.adapters.focuss)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.forward">forward (invert.solvers.bayes.SolverGammaMAPMSP attribute)</a>
+
+      <ul>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverESMV.forward">(invert.solvers.beamformer.SolverESMV attribute)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverHOCMV.forward">(invert.solvers.beamformer.SolverHOCMV attribute)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverWNMV.forward">(invert.solvers.beamformer.SolverWNMV attribute)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.forward">(invert.solvers.esinet.SolverCNN attribute)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.forward">(invert.solvers.esinet.SolverCovCNN attribute)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.forward">(invert.solvers.esinet.SolverLSTM attribute)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO.forward">(invert.solvers.matching_pursuit.SolverREMBO attribute)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSP.forward">(invert.solvers.matching_pursuit.SolverSP attribute)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP.forward">(invert.solvers.smooth_matching_pursuit.SolverISubSMP attribute)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSMP.forward">(invert.solvers.smooth_matching_pursuit.SolverSMP attribute)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSSMP.forward">(invert.solvers.smooth_matching_pursuit.SolverSSMP attribute)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP.forward">(invert.solvers.smooth_matching_pursuit.SolverSubSMP attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.get_alphas">get_alphas() (invert.solvers.base.BaseSolver method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.get_smooth_prior_cov">get_smooth_prior_cov() (invert.solvers.bayes.SolverGammaMAPMSP method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.InverseOperator.has_multiple_operators">has_multiple_operators() (invert.solvers.base.InverseOperator method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.InverseOperator">InverseOperator (class in invert.solvers.base)</a>
+</li>
+      <li>
+    invert.solvers.base
+
+      <ul>
+        <li><a href="content/base.html#module-invert.solvers.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.bayes
+
+      <ul>
+        <li><a href="content/bayes.html#module-invert.solvers.bayes">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.beamformer
+
+      <ul>
+        <li><a href="content/beamformer.html#module-invert.solvers.beamformer">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.empirical_bayes
+
+      <ul>
+        <li><a href="content/bayes.html#module-invert.solvers.empirical_bayes">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.epifocus
+
+      <ul>
+        <li><a href="content/epifocus.html#module-invert.solvers.epifocus">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.esinet
+
+      <ul>
+        <li><a href="content/artificial_neural_networks.html#module-invert.solvers.esinet">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    invert.solvers.loreta
+
+      <ul>
+        <li><a href="content/loreta.html#module-invert.solvers.loreta">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.matching_pursuit
+
+      <ul>
+        <li><a href="content/matching_pursuit.html#module-invert.solvers.matching_pursuit">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.minimum_norm_estimates
+
+      <ul>
+        <li><a href="content/minimum_norm.html#module-invert.solvers.minimum_norm_estimates">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.music
+
+      <ul>
+        <li><a href="content/music.html#module-invert.solvers.music">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.smap
+
+      <ul>
+        <li><a href="content/loreta.html#module-invert.solvers.smap">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.smooth_matching_pursuit
+
+      <ul>
+        <li><a href="content/smooth_matching_pursuit.html#module-invert.solvers.smooth_matching_pursuit">module</a>
+</li>
+      </ul></li>
+      <li>
+    invert.solvers.wrop
+
+      <ul>
+        <li><a href="content/wrop.html#module-invert.solvers.wrop">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverLowSNRChampagne.low_snr_champagne">low_snr_champagne() (invert.solvers.empirical_bayes.SolverLowSNRChampagne method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAP.make_gamma_map_inverse_operator">make_gamma_map_inverse_operator() (invert.solvers.bayes.SolverGammaMAP method)</a>
+</li>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.make_inverse_operator">make_inverse_operator() (invert.solvers.base.BaseSolver method)</a>
+
+      <ul>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverBCS.make_inverse_operator">(invert.solvers.bayes.SolverBCS method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAP.make_inverse_operator">(invert.solvers.bayes.SolverGammaMAP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.make_inverse_operator">(invert.solvers.bayes.SolverGammaMAPMSP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAP.make_inverse_operator">(invert.solvers.bayes.SolverSourceMAP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAPMSP.make_inverse_operator">(invert.solvers.bayes.SolverSourceMAPMSP method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverESMV.make_inverse_operator">(invert.solvers.beamformer.SolverESMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverHOCMV.make_inverse_operator">(invert.solvers.beamformer.SolverHOCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverLCMV.make_inverse_operator">(invert.solvers.beamformer.SolverLCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMCMV.make_inverse_operator">(invert.solvers.beamformer.SolverMCMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMVAB.make_inverse_operator">(invert.solvers.beamformer.SolverMVAB method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverReciPSIICOS.make_inverse_operator">(invert.solvers.beamformer.SolverReciPSIICOS method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSAM.make_inverse_operator">(invert.solvers.beamformer.SolverSAM method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSMV.make_inverse_operator">(invert.solvers.beamformer.SolverSMV method)</a>
+</li>
+        <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverWNMV.make_inverse_operator">(invert.solvers.beamformer.SolverWNMV method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverChampagne.make_inverse_operator">(invert.solvers.empirical_bayes.SolverChampagne method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverLowSNRChampagne.make_inverse_operator">(invert.solvers.empirical_bayes.SolverLowSNRChampagne method)</a>
+</li>
+        <li><a href="content/epifocus.html#invert.solvers.epifocus.SolverEPIFOCUS.make_inverse_operator">(invert.solvers.epifocus.SolverEPIFOCUS method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.make_inverse_operator">(invert.solvers.esinet.SolverCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.make_inverse_operator">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.make_inverse_operator">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.make_inverse_operator">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverELORETA.make_inverse_operator">(invert.solvers.loreta.SolverELORETA method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverLORETA.make_inverse_operator">(invert.solvers.loreta.SolverLORETA method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.loreta.SolverSLORETA.make_inverse_operator">(invert.solvers.loreta.SolverSLORETA method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverCOSAMP.make_inverse_operator">(invert.solvers.matching_pursuit.SolverCOSAMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverOMP.make_inverse_operator">(invert.solvers.matching_pursuit.SolverOMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO.make_inverse_operator">(invert.solvers.matching_pursuit.SolverREMBO method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSOMP.make_inverse_operator">(invert.solvers.matching_pursuit.SolverSOMP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSP.make_inverse_operator">(invert.solvers.matching_pursuit.SolverSP method)</a>
+</li>
+        <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSSP.make_inverse_operator">(invert.solvers.matching_pursuit.SolverSSP method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverDSPM.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverDSPM method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMNE.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMNE method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverWMNE.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverWMNE method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverJAZZMUSIC.make_inverse_operator">(invert.solvers.music.SolverJAZZMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverMUSIC.make_inverse_operator">(invert.solvers.music.SolverMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverRAPMUSIC.make_inverse_operator">(invert.solvers.music.SolverRAPMUSIC method)</a>
+</li>
+        <li><a href="content/music.html#invert.solvers.music.SolverTRAPMUSIC.make_inverse_operator">(invert.solvers.music.SolverTRAPMUSIC method)</a>
+</li>
+        <li><a href="content/loreta.html#invert.solvers.smap.SolverSMAP.make_inverse_operator">(invert.solvers.smap.SolverSMAP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP.make_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverISubSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSMP.make_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSSMP.make_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSSMP method)</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP.make_inverse_operator">(invert.solvers.smooth_matching_pursuit.SolverSubSMP method)</a>
+</li>
+        <li><a href="content/wrop.html#invert.solvers.wrop.SolverBackusGilbert.make_inverse_operator">(invert.solvers.wrop.SolverBackusGilbert method)</a>
+</li>
+        <li><a href="content/wrop.html#invert.solvers.wrop.SolverLAURA.make_inverse_operator">(invert.solvers.wrop.SolverLAURA method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/music.html#invert.solvers.music.SolverJAZZMUSIC.make_jazz">make_jazz() (invert.solvers.music.SolverJAZZMUSIC method)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.make_source_map_inverse_operator">make_source_map_inverse_operator() (invert.solvers.bayes.SolverGammaMAPMSP method)</a>
+
+      <ul>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAP.make_source_map_inverse_operator">(invert.solvers.bayes.SolverSourceMAP method)</a>
+</li>
+        <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAPMSP.make_source_map_inverse_operator">(invert.solvers.bayes.SolverSourceMAPMSP method)</a>
+</li>
+      </ul></li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="content/base.html#module-invert.solvers.base">invert.solvers.base</a>
+</li>
+        <li><a href="content/bayes.html#module-invert.solvers.bayes">invert.solvers.bayes</a>
+</li>
+        <li><a href="content/beamformer.html#module-invert.solvers.beamformer">invert.solvers.beamformer</a>
+</li>
+        <li><a href="content/bayes.html#module-invert.solvers.empirical_bayes">invert.solvers.empirical_bayes</a>
+</li>
+        <li><a href="content/epifocus.html#module-invert.solvers.epifocus">invert.solvers.epifocus</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#module-invert.solvers.esinet">invert.solvers.esinet</a>
+</li>
+        <li><a href="content/loreta.html#module-invert.solvers.loreta">invert.solvers.loreta</a>
+</li>
+        <li><a href="content/matching_pursuit.html#module-invert.solvers.matching_pursuit">invert.solvers.matching_pursuit</a>
+</li>
+        <li><a href="content/minimum_norm.html#module-invert.solvers.minimum_norm_estimates">invert.solvers.minimum_norm_estimates</a>
+</li>
+        <li><a href="content/music.html#module-invert.solvers.music">invert.solvers.music</a>
+</li>
+        <li><a href="content/loreta.html#module-invert.solvers.smap">invert.solvers.smap</a>
+</li>
+        <li><a href="content/smooth_matching_pursuit.html#module-invert.solvers.smooth_matching_pursuit">invert.solvers.smooth_matching_pursuit</a>
+</li>
+        <li><a href="content/wrop.html#module-invert.solvers.wrop">invert.solvers.wrop</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.prepare_forward">prepare_forward() (invert.solvers.base.BaseSolver method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.regularise_gcv">regularise_gcv() (invert.solvers.base.BaseSolver method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.regularise_lcurve">regularise_lcurve() (invert.solvers.base.BaseSolver method)</a>
+</li>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.regularise_product">regularise_product() (invert.solvers.base.BaseSolver method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/sfocuss.html#invert.adapters.focuss.s_focuss">s_focuss() (in module invert.adapters.focuss)</a>
+</li>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.save">save() (invert.solvers.base.BaseSolver method)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.solve_p">solve_p() (in module invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.solve_p_wrap">solve_p_wrap() (in module invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/wrop.html#invert.solvers.wrop.SolverBackusGilbert">SolverBackusGilbert (class in invert.solvers.wrop)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverBCS">SolverBCS (class in invert.solvers.bayes)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverChampagne">SolverChampagne (class in invert.solvers.empirical_bayes)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN">SolverCNN (class in invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverCOSAMP">SolverCOSAMP (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN">SolverCovCNN (class in invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverDSPM">SolverDSPM (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/loreta.html#invert.solvers.loreta.SolverELORETA">SolverELORETA (class in invert.solvers.loreta)</a>
+</li>
+      <li><a href="content/epifocus.html#invert.solvers.epifocus.SolverEPIFOCUS">SolverEPIFOCUS (class in invert.solvers.epifocus)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverESMV">SolverESMV (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC">SolverFC (class in invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAP">SolverGammaMAP (class in invert.solvers.bayes)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP">SolverGammaMAPMSP (class in invert.solvers.bayes)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverHOCMV">SolverHOCMV (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverISubSMP">SolverISubSMP (class in invert.solvers.smooth_matching_pursuit)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverJAZZMUSIC">SolverJAZZMUSIC (class in invert.solvers.music)</a>
+</li>
+      <li><a href="content/wrop.html#invert.solvers.wrop.SolverLAURA">SolverLAURA (class in invert.solvers.wrop)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverLCMV">SolverLCMV (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/loreta.html#invert.solvers.loreta.SolverLORETA">SolverLORETA (class in invert.solvers.loreta)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverLowSNRChampagne">SolverLowSNRChampagne (class in invert.solvers.empirical_bayes)</a>
+</li>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM">SolverLSTM (class in invert.solvers.esinet)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMCMV">SolverMCMV (class in invert.solvers.beamformer)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm">SolverMinimumL1L2Norm (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm">SolverMinimumL1Norm (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMNE">SolverMNE (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverMUSIC">SolverMUSIC (class in invert.solvers.music)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMVAB">SolverMVAB (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverOMP">SolverOMP (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverRAPMUSIC">SolverRAPMUSIC (class in invert.solvers.music)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverReciPSIICOS">SolverReciPSIICOS (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverREMBO">SolverREMBO (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSAM">SolverSAM (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/loreta.html#invert.solvers.loreta.SolverSLORETA">SolverSLORETA (class in invert.solvers.loreta)</a>
+</li>
+      <li><a href="content/loreta.html#invert.solvers.smap.SolverSMAP">SolverSMAP (class in invert.solvers.smap)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSMP">SolverSMP (class in invert.solvers.smooth_matching_pursuit)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverSMV">SolverSMV (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSOMP">SolverSOMP (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAP">SolverSourceMAP (class in invert.solvers.bayes)</a>
+</li>
+      <li><a href="content/bayes.html#invert.solvers.bayes.SolverSourceMAPMSP">SolverSourceMAPMSP (class in invert.solvers.bayes)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSP">SolverSP (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSSMP">SolverSSMP (class in invert.solvers.smooth_matching_pursuit)</a>
+</li>
+      <li><a href="content/matching_pursuit.html#invert.solvers.matching_pursuit.SolverSSP">SolverSSP (class in invert.solvers.matching_pursuit)</a>
+</li>
+      <li><a href="content/smooth_matching_pursuit.html#invert.solvers.smooth_matching_pursuit.SolverSubSMP">SolverSubSMP (class in invert.solvers.smooth_matching_pursuit)</a>
+</li>
+      <li><a href="content/music.html#invert.solvers.music.SolverTRAPMUSIC">SolverTRAPMUSIC (class in invert.solvers.music)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverWMNE">SolverWMNE (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverWNMV">SolverWNMV (class in invert.solvers.beamformer)</a>
+</li>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.source_to_object">source_to_object() (invert.solvers.base.BaseSolver method)</a>
+</li>
+      <li><a href="content/stampc.html#invert.adapters.stamp.stampc">stampc() (in module invert.adapters.stamp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCNN.train_model">train_model() (invert.solvers.esinet.SolverCNN method)</a>
+
+      <ul>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverCovCNN.train_model">(invert.solvers.esinet.SolverCovCNN method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverFC.train_model">(invert.solvers.esinet.SolverFC method)</a>
+</li>
+        <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.train_model">(invert.solvers.esinet.SolverLSTM method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

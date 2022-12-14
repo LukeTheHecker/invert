@@ -1,0 +1,47 @@
+**invert** - A high-level M/EEG Python library for EEG inverse solutions
+======
+
+Welcome to the documentation of the invert package for python! You can find the
+list of all (>40) available inverse solutions here: :doc:`content/solvers`. In the future,
+there will be some tutorials.
+
+Installation
+============
+
+You can simply install the package using pip:
+
+..  code-block::
+    
+    pip install invert
+
+Quickstart
+==========
+
+Given that you have a mne.Forward model and some mne.Evoked data, you can simply
+calculate an inverse solution as such:
+
+..  code-block:: python
+    
+    # import
+    from invert import Solver
+    
+    # create a solver instance
+    solver = Solver("MNE")
+
+    # Make an inverse operator
+    solver.make_inverse_operator(forward)
+
+    # Apply the inverse operator
+    stc = solver.apply_inverse_operator(evoked)
+
+    # Plot the result
+    stc.plot()
+
+
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   
+   content/solvers
+   content/adapters

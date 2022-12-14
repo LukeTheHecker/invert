@@ -16,7 +16,6 @@ integrates with the [mne-python](https://mne.tools) framework.
 * Low-Resolution Tomography (LORETA)
 * Standardized Low-Resolution Tomography (sLORETA)
 * Exact Low-Resolution Tomography (eLORETA)
-* S-MAP
 
 ### Weighted Resolution Optimization
 * Backus-Gilbert
@@ -71,6 +70,7 @@ integrates with the [mne-python](https://mne.tools) framework.
 
 ### Other
 * EPIFOCUS
+* S-MAP
 
 ## Adapters
 Adapters are methods that optimize an already calculated inverse solution, e.g.,

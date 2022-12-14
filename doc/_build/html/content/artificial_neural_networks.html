@@ -1,0 +1,743 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Artificial Neural Networks &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Beamformers" href="beamformer.html" />
+    <link rel="prev" title="MUSIC" href="music.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="solvers.html">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Full List of Solvers
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="minimum_norm.html">
+   Minimum Norm-Type
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="loreta.html">
+   LORETA
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="wrop.html">
+   Weighted Resolution Optimization
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="bayes.html">
+   Bayesian Inverse Solutions
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="matching_pursuit.html">
+   Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="smooth_matching_pursuit.html">
+   Smooth Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="music.html">
+   MUSIC
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Artificial Neural Networks
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="beamformer.html">
+   Beamformers
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="epifocus.html">
+   EPIFOCUS
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="artificial-neural-networks">
+<h1>Artificial Neural Networks<a class="headerlink" href="#artificial-neural-networks" title="Permalink to this headline">#</a></h1>
+<span class="target" id="module-invert.solvers.esinet"></span><dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">SolverCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CNN'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Convolutional Neural Network (CNN) for EEG inverse solutions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>The mne-python Forward model instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>mne.Forward</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.apply_model">
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the inverse solution of the M/EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.build_model">
+<span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.build_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Build the neural network model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.create_generator">
+<span class="sig-name descname"><span class="pre">create_generator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.create_generator" title="Permalink to this definition">#</a></dt>
+<dd><p>Creat the data generator used for the simulations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tanh'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_timepoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_repetitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_similarity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_validation_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>n_filters</strong> (<em>int</em>) – Number of filters in the convolution layer.</p></li>
+<li><p><strong>activation_function</strong> (<em>str</em>) – The activation function of the hidden layers.</p></li>
+<li><p><strong>batch_size</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – The batch_size used during training. If “auto”, the batch_size
+defaults to the number of dipoles in the source/ forward model.
+Choose a smaller batch_size (e.g., 1000) if you run into memory
+problems (RAM or GPU memory).</p></li>
+<li><p><strong>n_timepoints</strong> (<em>int</em>) – The number of time points to simulate and ultimately train the
+neural network on.</p></li>
+<li><p><strong>batch_repetitions</strong> (<em>int</em>) – The number of learning repetitions on the same batch of training
+data until a new batch is simulated.</p></li>
+<li><p><strong>epochs</strong> (<em>int</em>) – The number of epochs to train.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float</em>) – The learning rate of the optimizer that trains the neural network.</p></li>
+<li><p><strong>loss</strong> (<em>str</em>) – The loss function of the neural network.</p></li>
+<li><p><strong>n_sources</strong> (<em>int</em>) – The maximum number of sources to simulate for the training data.</p></li>
+<li><p><strong>n_orders</strong> (<em>int</em>) – Controls the maximum smoothness of the sources.</p></li>
+<li><p><strong>size_validation_set</strong> (<em>int</em>) – The size of validation data set.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) – The threshold at which to select sources as “active”. 0.25 -&gt; select
+all sources that are active at least 25 % of the maximum dipoles.</p></li>
+<li><p><strong>snr_range</strong> (<em>tuple</em>) – The range of signal to noise ratios (SNRs) in the training data. (1,
+10) -&gt; Samples have varying SNR from 1 to 10.</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – Stopping criterion for the training.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.train_model">
+<span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.train_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Train the neural network model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">SolverCovCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Cov-CNN'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Covariance-based Convolutional Neural Network (CovCNN) for EEG inverse solutions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>The mne-python Forward model instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>mne.Forward</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.apply_model">
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the inverse solution of the M/EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.build_model">
+<span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.build_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Build the neural network model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.create_generator">
+<span class="sig-name descname"><span class="pre">create_generator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.create_generator" title="Permalink to this definition">#</a></dt>
+<dd><p>Creat the data generator used for the simulations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tanh'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_timepoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_repetitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_similarity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_validation_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>n_filters</strong> (<em>int</em>) – Number of filters in the convolution layer.</p></li>
+<li><p><strong>activation_function</strong> (<em>str</em>) – The activation function of the hidden layers.</p></li>
+<li><p><strong>batch_size</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – The batch_size used during training. If “auto”, the batch_size
+defaults to the number of dipoles in the source/ forward model.
+Choose a smaller batch_size (e.g., 1000) if you run into memory
+problems (RAM or GPU memory).</p></li>
+<li><p><strong>n_timepoints</strong> (<em>int</em>) – The number of time points to simulate and ultimately train the
+neural network on.</p></li>
+<li><p><strong>batch_repetitions</strong> (<em>int</em>) – The number of learning repetitions on the same batch of training
+data until a new batch is simulated.</p></li>
+<li><p><strong>epochs</strong> (<em>int</em>) – The number of epochs to train.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float</em>) – The learning rate of the optimizer that trains the neural network.</p></li>
+<li><p><strong>loss</strong> (<em>str</em>) – The loss function of the neural network.</p></li>
+<li><p><strong>n_sources</strong> (<em>int</em>) – The maximum number of sources to simulate for the training data.</p></li>
+<li><p><strong>n_orders</strong> (<em>int</em>) – Controls the maximum smoothness of the sources.</p></li>
+<li><p><strong>size_validation_set</strong> (<em>int</em>) – The size of validation data set.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) – The threshold at which to select sources as “active”.
+0.25 -&gt; select all sources that are active at least 25 % of the
+maximum dipoles.</p></li>
+<li><p><strong>snr_range</strong> (<em>tuple</em>) – The range of signal to noise ratios (SNRs) in the training data.
+(1, 10) -&gt; Samples have varying SNR from 1 to 10.</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – Stopping criterion for the training.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.train_model">
+<span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.train_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Train the neural network model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">SolverFC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Fully-Connected'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverFC" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Fully-Connected Neural Network (FC) for</dt><dd><p>EEG inverse solutions.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.apply_model">
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the inverse solution of the M/EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.build_model">
+<span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.build_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Build the neural network model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.create_generator">
+<span class="sig-name descname"><span class="pre">create_generator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.create_generator" title="Permalink to this definition">#</a></dt>
+<dd><p>Creat the data generator used for the simulations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dense_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tanh'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_timepoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_repetitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_similarity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_validation_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>activation_function</strong> (<em>str</em>) – The activation function of the hidden layers.</p></li>
+<li><p><strong>batch_size</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – The batch_size used during training. If “auto”, the batch_size
+defaults to the number of dipoles in the source/ forward model.
+Choose a smaller batch_size (e.g., 1000) if you run into memory
+problems (RAM or GPU memory).</p></li>
+<li><p><strong>n_timepoints</strong> (<em>int</em>) – The number of time points to simulate and ultimately train the
+neural network on.</p></li>
+<li><p><strong>batch_repetitions</strong> (<em>int</em>) – The number of learning repetitions on the same batch of training
+data until a new batch is simulated.</p></li>
+<li><p><strong>epochs</strong> (<em>int</em>) – The number of epochs to train.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float</em>) – The learning rate of the optimizer that trains the neural network.</p></li>
+<li><p><strong>loss</strong> (<em>str</em>) – The loss function of the neural network.</p></li>
+<li><p><strong>n_sources</strong> (<em>int</em>) – The maximum number of sources to simulate for the training data.</p></li>
+<li><p><strong>n_orders</strong> (<em>int</em>) – Controls the maximum smoothness of the sources.</p></li>
+<li><p><strong>size_validation_set</strong> (<em>int</em>) – The size of validation data set.</p></li>
+<li><p><strong>snr_range</strong> (<em>tuple</em>) – The range of signal to noise ratios (SNRs) in the training data.
+(1, 10) -&gt; Samples have varying SNR from 1 to 10.</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – Stopping criterion for the training.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.train_model">
+<span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.train_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Train the neural network model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">SolverLSTM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LSTM'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Long-Short Term Memory Neural Network (LSTM) for</dt><dd><p>EEG inverse solutions.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>The mne-python Forward model instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>mne.Forward</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.apply_model">
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the inverse solution of the M/EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.build_model">
+<span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.build_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Build the neural network model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.build_model2">
+<span class="sig-name descname"><span class="pre">build_model2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.build_model2" title="Permalink to this definition">#</a></dt>
+<dd><p>Build the neural network model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.create_generator">
+<span class="sig-name descname"><span class="pre">create_generator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.create_generator" title="Permalink to this definition">#</a></dt>
+<dd><p>Creat the data generator used for the simulations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dense_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_lstm_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tanh'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_timepoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_repetitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_similarity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_validation_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>n_dense_units</strong> (<em>int</em>) – The number of neurons in the fully-connected hidden layers.</p></li>
+<li><p><strong>n_lstm_units</strong> (<em>int</em>) – The number of neurons in the LSTM hidden layers.</p></li>
+<li><p><strong>activation_function</strong> (<em>str</em>) – The activation function of the hidden layers.</p></li>
+<li><p><strong>batch_size</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – The batch_size used during training. If “auto”, the batch_size
+defaults to the number of dipoles in the source/ forward model.
+Choose a smaller batch_size (e.g., 1000) if you run into memory
+problems (RAM or GPU memory).</p></li>
+<li><p><strong>n_timepoints</strong> (<em>int</em>) – The number of time points to simulate and ultimately train the
+neural network on.</p></li>
+<li><p><strong>batch_repetitions</strong> (<em>int</em>) – The number of learning repetitions on the same batch of training
+data until a new batch is simulated.</p></li>
+<li><p><strong>epochs</strong> (<em>int</em>) – The number of epochs to train.</p></li>
+<li><p><strong>learning_rate</strong> (<em>float</em>) – The learning rate of the optimizer that trains the neural network.</p></li>
+<li><p><strong>loss</strong> (<em>str</em>) – The loss function of the neural network.</p></li>
+<li><p><strong>n_sources</strong> (<em>int</em>) – The maximum number of sources to simulate for the training data.</p></li>
+<li><p><strong>n_orders</strong> (<em>int</em>) – Controls the maximum smoothness of the sources.</p></li>
+<li><p><strong>size_validation_set</strong> (<em>int</em>) – The size of validation data set.</p></li>
+<li><p><strong>snr_range</strong> (<em>tuple</em>) – The range of signal to noise ratios (SNRs) in the training data. (1,
+10) -&gt; Samples have varying SNR from 1 to 10.</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – Stopping criterion for the training.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.train_model">
+<span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.train_model" title="Permalink to this definition">#</a></dt>
+<dd><p>Train the neural network model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="invert.solvers.esinet.correlation_criterion">
+<span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">correlation_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leadfield</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_est</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.correlation_criterion" title="Permalink to this definition">#</a></dt>
+<dd><p>Perform forward projections of a source using the leadfield.
+This is the objective function which is minimized in Net::solve_p().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scaler</strong> (<em>float</em>) – scales the source y_est</p></li>
+<li><p><strong>leadfield</strong> (<em>numpy.ndarray</em>) – The leadfield (or sometimes called gain matrix).</p></li>
+<li><p><strong>y_est</strong> (<em>numpy.ndarray</em>) – Estimated/predicted source.</p></li>
+<li><p><strong>x_true</strong> (<em>numpy.ndarray</em>) – True, unscaled EEG.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="invert.solvers.esinet.solve_p">
+<span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">solve_p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leadfield</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_est</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.solve_p" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_est</strong> (<em>numpy.ndarray</em>) – The estimated source vector.</p></li>
+<li><p><strong>x_true</strong> (<em>numpy.ndarray</em>) – The original input EEG vector.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y_scaled</strong> – The scaled estimated source vector.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="invert.solvers.esinet.solve_p_wrap">
+<span class="sig-prename descclassname"><span class="pre">invert.solvers.esinet.</span></span><span class="sig-name descname"><span class="pre">solve_p_wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leadfield</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_est</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.esinet.solve_p_wrap" title="Permalink to this definition">#</a></dt>
+<dd><p>Wrapper for parallel (or, alternatively, serial) scaling of
+predicted sources.</p>
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="music.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">MUSIC</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="beamformer.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Beamformers</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+
+.. mdinclude:: ../README.md
+
+w2v
+^^^
+
+.. automodule:: package.ml.w2v
+   :members:
+
+.. toctree::
+   :maxdepth: 2
+
+   content/api
+   content/installation
+   content/base

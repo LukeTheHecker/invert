@@ -1,0 +1,595 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>MUSIC &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Artificial Neural Networks" href="artificial_neural_networks.html" />
+    <link rel="prev" title="Smooth Matching Pursuit" href="smooth_matching_pursuit.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="solvers.html">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/esinet" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Full List of Solvers
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="minimum_norm.html">
+   Minimum Norm-Type
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="loreta.html">
+   LORETA
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="wrop.html">
+   Weighted Resolution Optimization
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="bayes.html">
+   Bayesian Inverse Solutions
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="matching_pursuit.html">
+   Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="smooth_matching_pursuit.html">
+   Smooth Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   MUSIC
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="artificial_neural_networks.html">
+   Artificial Neural Networks
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="beamformer.html">
+   Beamformers
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="epifocus.html">
+   EPIFOCUS
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="module-invert.solvers.music">
+<span id="music"></span><h1>MUSIC<a class="headerlink" href="#module-invert.solvers.music" title="Permalink to this headline">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverJAZZMUSIC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.music.</span></span><span class="sig-name descname"><span class="pre">SolverJAZZMUSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'JAZZ-MUSIC'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverJAZZMUSIC" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Smooth RAP Multiple Signal Classification (JAZZ-MUSIC)</dt><dd><p>inverse solution.</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>This method is of my own making (Lukas Hecker, 2022) and unpublished.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverJAZZMUSIC.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.music.SolverJAZZMUSIC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply JAZZ-MUSIC inverse solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>n</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Controls the percentage of top active dipoles that are selected
+(i.e., sparsity).</p></li>
+<li><p><strong>truncate</strong> (<em>bool</em>) – If True: Truncate SVD’s eigenvectors (like TRAP-MUSIC), otherwise
+don’t (like RAP-MUSIC).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The inverse solution source estimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverJAZZMUSIC.apply_jazzmusic">
+<span class="sig-name descname"><span class="pre">apply_jazzmusic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverJAZZMUSIC.apply_jazzmusic" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the RAP-MUSIC inverse solution to the EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – EEG data matrix (channels, time)</p></li>
+<li><p><strong>n</strong> (<em>int/ str</em>) – Number of eigenvectors to use or “auto” for l-curve method.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Criterion to stop recursions. The lower, the more dipoles will be
+incorporated.</p></li>
+<li><p><strong>truncate</strong> (<em>bool</em>) – If True: Truncate SVD’s eigenvectors (like TRAP-MUSIC), otherwise
+don’t (like RAP-MUSIC).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – Source data matrix (sources, time)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverJAZZMUSIC.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverJAZZMUSIC.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>n_orders</strong> (<em>int</em>) – Controls the maximum smoothness to pursue.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverJAZZMUSIC.make_jazz">
+<span class="sig-name descname"><span class="pre">make_jazz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_orders</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverJAZZMUSIC.make_jazz" title="Permalink to this definition">#</a></dt>
+<dd><p>Create the dictionary of increasingly smooth sources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_orders</strong> (<em>int</em>) – Number of neighborhood orders to include to the dictionary. The
+higher, the smoother the sources can be.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverMUSIC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.music.</span></span><span class="sig-name descname"><span class="pre">SolverMUSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MUSIC'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverMUSIC" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Multiple Signal Classification (MUSIC) inverse solution</dt><dd><p>[1].</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Baillet, S., Mosher, J. C., &amp; Leahy, R. M. (2001). Electromagnetic brain
+mapping. IEEE Signal processing magazine, 18(6), 14-30.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverMUSIC.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.music.SolverMUSIC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply MUSIC inverse solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Controls the percentage of top active dipoles that are selected
+(i.e., sparsity).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The inverse solution source estimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverMUSIC.apply_music">
+<span class="sig-name descname"><span class="pre">apply_music</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverMUSIC.apply_music" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the MUSIC inverse solution to the EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – EEG data matrix (channels, time)</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Criterion at which to select candidate dipoles. The lower, the more
+dipoles will be incorporated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – Source data matrix (sources, time)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverMUSIC.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverMUSIC.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverRAPMUSIC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.music.</span></span><span class="sig-name descname"><span class="pre">SolverRAPMUSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RAP-MUSIC'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverRAPMUSIC" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Recursively Applied Multiple Signal Classification
+(RAP-MUSIC) inverse solution [1].</p>
+<p class="rubric">References</p>
+<p>[1] Mosher, J. C., &amp; Leahy, R. M. (1999). Source localization using
+recursively applied and projected (RAP) MUSIC. IEEE Transactions on signal
+processing, 47(2), 332-340.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverRAPMUSIC.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.music.SolverRAPMUSIC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply RAP-MUSIC inverse solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>n</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Controls the percentage of top active dipoles that are selected
+(i.e., sparsity).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The inverse solution source estimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverRAPMUSIC.apply_rapmusic">
+<span class="sig-name descname"><span class="pre">apply_rapmusic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverRAPMUSIC.apply_rapmusic" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the RAP-MUSIC inverse solution to the EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – EEG data matrix (channels, time)</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Criterion to stop recursions. The lower, the more
+dipoles will be incorporated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – Source data matrix (sources, time)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverRAPMUSIC.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverRAPMUSIC.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverTRAPMUSIC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.music.</span></span><span class="sig-name descname"><span class="pre">SolverTRAPMUSIC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TRAP-MUSIC'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverTRAPMUSIC" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Truncated Recursively Applied Multiple Signal</dt><dd><p>Classification (TRAP-MUSIC) inverse solution [1].</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Mäkelä, N., Stenroos, M., Sarvas, J., &amp; Ilmoniemi, R. J. (2018).
+Truncated rap-music (trap-music) for MEG and EEG source localization.
+NeuroImage, 167, 73-83.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverTRAPMUSIC.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.music.SolverTRAPMUSIC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply TRAP-MUSIC inverse solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>n</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>int</em><em>]</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Controls the percentage of top active dipoles that are selected
+(i.e., sparsity).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The inverse solution source estimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverTRAPMUSIC.apply_trapmusic">
+<span class="sig-name descname"><span class="pre">apply_trapmusic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_crit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverTRAPMUSIC.apply_trapmusic" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the TRAP-MUSIC inverse solution to the EEG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – EEG data matrix (channels, time)</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of eigenvectors to use.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of recursions.</p></li>
+<li><p><strong>stop_crit</strong> (<em>float</em>) – Criterion to stop recursions. The lower, the more
+dipoles will be incorporated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x_hat</strong> – Source data matrix (sources, time)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.music.SolverTRAPMUSIC.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.music.SolverTRAPMUSIC.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="smooth_matching_pursuit.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Smooth Matching Pursuit</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="artificial_neural_networks.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Artificial Neural Networks</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

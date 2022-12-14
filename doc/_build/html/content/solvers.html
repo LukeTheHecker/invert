@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Solvers &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Minimum Norm-Type" href="minimum_norm.html" />
+    <link rel="prev" title="invert - A high-level M/EEG Python library for EEG inverse solutions" href="../index.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Full List of Solvers
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="minimum_norm.html">
+   Minimum Norm-Type
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="loreta.html">
+   LORETA
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="wrop.html">
+   Weighted Resolution Optimization
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="bayes.html">
+   Bayesian Inverse Solutions
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="matching_pursuit.html">
+   Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="smooth_matching_pursuit.html">
+   Smooth Matching Pursuit
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="music.html">
+   MUSIC
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="artificial_neural_networks.html">
+   Artificial Neural Networks
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="beamformer.html">
+   Beamformers
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="epifocus.html">
+   EPIFOCUS
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Solvers
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#minimum-norm">
+   <span class="xref std std-doc">
+    minimum_norm
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#loreta">
+   <span class="xref std std-doc">
+    loreta
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#wrop">
+   <span class="xref std std-doc">
+    wrop
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bayes">
+   <span class="xref std std-doc">
+    bayes
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#matching-pursuit">
+   <span class="xref std std-doc">
+    matching_pursuit
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#smooth-matching-pursuit">
+   <span class="xref std std-doc">
+    smooth_matching_pursuit
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#music">
+   <span class="xref std std-doc">
+    music
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#artificial-neural-networks">
+   <span class="xref std std-doc">
+    artificial_neural_networks
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beamformer">
+   <span class="xref std std-doc">
+    beamformer
+   </span>
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#other">
+   Other
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="solvers">
+<h1>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">#</a></h1>
+<p>This is the comprehensive list of all available solvers. Each solver has its own
+class</p>
+</section>
+<section id="minimum-norm">
+<h1><a class="reference internal" href="minimum_norm.html"><span class="doc">Minimum Norm-Type</span></a><a class="headerlink" href="#minimum-norm" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Minimum Norm Estimates (MNE)</p></li>
+<li><p>Weighted Minimum Norm Estimates</p></li>
+<li><p>Dynamic Statistical Parametric Mapping (dSPM)</p></li>
+<li><p>Minimum Current Estimates (FISTA solver)</p></li>
+<li><p>L1-L2 Optimization</p></li>
+</ul>
+</section>
+<section id="loreta">
+<h1><a class="reference internal" href="loreta.html"><span class="doc">LORETA</span></a><a class="headerlink" href="#loreta" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Low-Resolution Tomography (LORETA)</p></li>
+<li><p>Standardized Low-Resolution Tomography (sLORETA)</p></li>
+<li><p>Exact Low-Resolution Tomography (eLORETA)</p></li>
+<li><p>S-MAP</p></li>
+</ul>
+</section>
+<section id="wrop">
+<h1><a class="reference internal" href="wrop.html"><span class="doc">Weighted Resolution Optimization</span></a><a class="headerlink" href="#wrop" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Backus-Gilbert</p></li>
+<li><p>Local Autoregressive Average (LAURA)</p></li>
+</ul>
+</section>
+<section id="bayes">
+<h1><a class="reference internal" href="bayes.html"><span class="doc">Bayesian Inverse Solutions</span></a><a class="headerlink" href="#bayes" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Gamma - Maximum A Posteriori (Gamma-MAP)</p></li>
+<li><p>Gamma - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)</p></li>
+<li><p>Source - Maximum A Posteriori (Source-MAP)</p></li>
+<li><p>Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)</p></li>
+<li><p>Bayesian Compressed Sensing (BCS)</p></li>
+<li><p>Champagne</p></li>
+<li><p>Low SNR Champagne</p></li>
+</ul>
+</section>
+<section id="matching-pursuit">
+<h1><a class="reference internal" href="matching_pursuit.html"><span class="doc">Matching Pursuit</span></a><a class="headerlink" href="#matching-pursuit" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Orthogonal Matching Pursuit (OMP)</p></li>
+<li><p>Simultaneous Orthogonal Matching Pursuit (SOMP)</p></li>
+<li><p>Compressed Sampling Matching Pursuit (CoSaMP)</p></li>
+<li><p>Reduce Multi-Measurement-Vector and Boost (ReMBo)</p></li>
+<li><p>Subspace Pursuit (SP)</p></li>
+</ul>
+</section>
+<section id="smooth-matching-pursuit">
+<h1><a class="reference internal" href="smooth_matching_pursuit.html"><span class="doc">Smooth Matching Pursuit</span></a><a class="headerlink" href="#smooth-matching-pursuit" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Smooth Orthogonal Matching Pursuit (SMP)</p></li>
+<li><p>Smooth Simultaneous Orthogonal Matching Pursuit (SSMP)</p></li>
+<li><p>Smooth Subspace Simultaneous Orthogonal Matching Pursuit (SubSMP)</p></li>
+</ul>
+</section>
+<section id="music">
+<h1><a class="reference internal" href="music.html"><span class="doc">MUSIC</span></a><a class="headerlink" href="#music" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Multiple Signal Classification (MUSIC)</p></li>
+<li><p>Recursively Applied MUSIC (RAP-MUSIC)</p></li>
+<li><p>Truncated RAP-Music (TRAP-MUSIC)</p></li>
+<li><p>Smooth Truncated RAP-Music (JAZZ-MUSIC)</p></li>
+</ul>
+</section>
+<section id="artificial-neural-networks">
+<h1><a class="reference internal" href="artificial_neural_networks.html"><span class="doc">Artificial Neural Networks</span></a><a class="headerlink" href="#artificial-neural-networks" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Convolutional Neural Network for Spatio-Temporal Inverse Solution</p></li>
+<li><p>Long-Short Term Memory Network for Spatio-Temporal Inverse Solution</p></li>
+<li><p>Fully-Connected Neural Network for Inverse Solution at single time instances</p></li>
+<li><p>Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution</p></li>
+</ul>
+</section>
+<section id="beamformer">
+<h1><a class="reference internal" href="beamformer.html"><span class="doc">Beamformers</span></a><a class="headerlink" href="#beamformer" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p>Minimum Variance Adaptive (MVAB) Beamformer</p></li>
+<li><p>Linearly Constrained Minimum Variance (LCMV) Beamformer</p></li>
+<li><p>Standardized Minimum Variance (SMV) Beamformer</p></li>
+<li><p>Weight-normalized Minimum Variance (WNMV) Beamformer</p></li>
+<li><p>Higher-Order Minimum Variance (HOCMV) Beamformer</p></li>
+<li><p>Eigenspace-Based Minimum Variance (ESMV) Beamformer</p></li>
+<li><p>Multiple Constrained Minimum Variance (MCMV) Beamformer</p></li>
+<li><p>Eigenspace-Based Multiple Constrained Minimum Variance (ESMCMV) Beamformer</p></li>
+<li><p>Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
+Beamformer</p></li>
+<li><p>Synthetic Aperture Magnetometry (SAM)</p></li>
+</ul>
+</section>
+<section id="other">
+<h1>Other<a class="headerlink" href="#other" title="Permalink to this headline">#</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="epifocus.html"><span class="doc">EPIFOCUS</span></a></p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Full List of Solvers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="minimum_norm.html">Minimum Norm-Type</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loreta.html">LORETA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wrop.html">Weighted Resolution Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayes.html">Bayesian Inverse Solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matching_pursuit.html">Matching Pursuit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="smooth_matching_pursuit.html">Smooth Matching Pursuit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">MUSIC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="artificial_neural_networks.html">Artificial Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamformer.html">Beamformers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="epifocus.html">EPIFOCUS</a></li>
+</ul>
+</div>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title"><strong>invert</strong> - A high-level M/EEG Python library for EEG inverse solutions</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="minimum_norm.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Minimum Norm-Type</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

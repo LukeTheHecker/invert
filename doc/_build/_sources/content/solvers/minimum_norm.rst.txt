@@ -1,0 +1,11 @@
+.. _MNE
+Minimum Norm Estimates
+======================
+
+
+.. autoclass:: invert.solvers.SolverMNE
+    :members:
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:

@@ -1,0 +1,460 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Base Class &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="solvers.html">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="module-invert.solvers.base">
+<span id="base-class"></span><h1>Base Class<a class="headerlink" href="#module-invert.solvers.base" title="Permalink to this headline">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.base.</span></span><span class="sig-name descname"><span class="pre">BaseSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regularisation_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GCV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reg_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prep_leadfield</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_last_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>regularisation_method</strong> (<em>str</em>) – <dl class="simple">
+<dt>Can be either</dt><dd><p>”GCV”       -&gt; generalized cross validation
+“L”         -&gt; L-Curve method using triangle method
+“L_new”     -&gt; L-Curve method using triangle and scale-free params
+“Product”   -&gt; Minimal product method</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>n_reg_params</strong> (<em>int</em>) – The number of regularisation parameters to try. The higher, the
+more accurate the regularisation and the slower the computations.</p></li>
+<li><p><strong>prep_leadfield</strong> (<em>bool</em>) – If True -&gt; Apply common average referencing on the leadfield columns.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.base.BaseSolver.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.calc_area_tri">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calc_area_tri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CB</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.calc_area_tri" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates area of a triangle given the length of each side.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.delete_from_list">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.delete_from_list" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete elements of list at idc.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.euclidean_distance">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">euclidean_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.euclidean_distance" title="Permalink to this definition">#</a></dt>
+<dd><p>Euclidean Distance between two points (A -&gt; B).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.filter_norms">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filter_norms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_norms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.filter_norms" title="Permalink to this definition">#</a></dt>
+<dd><p>Filter l2_norms where they are not monotonically decreasing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_vals</strong> (<em>[</em><em>list</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – List or array of r-values</p></li>
+<li><p><strong>l2_norms</strong> (<em>[</em><em>list</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – List or array of l2_norms</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>bad_idc</strong> – List where indices are increasing</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.find_corner">
+<span class="sig-name descname"><span class="pre">find_corner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_norms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.find_corner" title="Permalink to this definition">#</a></dt>
+<dd><p>Find the corner of the l-curve given by plotting regularization
+levels (r_vals) against norms of the inverse solutions (l2_norms).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_vals</strong> (<em>list</em>) – Levels of regularization</p></li>
+<li><p><strong>l2_norms</strong> (<em>list</em>) – L2 norms of the inverse solutions per level of regularization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>idx</strong> – Index at which the L-Curve has its corner.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.get_alphas">
+<span class="sig-name descname"><span class="pre">get_alphas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.get_alphas" title="Permalink to this definition">#</a></dt>
+<dd><p>Create list of regularization parameters (alphas) based on the
+largest eigenvalue of the leadfield or some reference matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>reference</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – If None: use leadfield to calculate regularization parameters, else
+use reference matrix (e.g., M/EEG covariance matrix).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>alphas</strong> – List of regularization parameters (alphas)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">mne.forward.forward.Forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Base function to create the inverse operator based on the forward</dt><dd><p>model.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne Forward model object.</p></li>
+<li><p><strong>alpha</strong> (<em>[</em><em>&quot;auto&quot;</em><em>, </em><em>float</em><em>]</em>) – If “auto”: Try out multiple regularization parameters and choose the
+optimal one, otherwise use the float.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.prepare_forward">
+<span class="sig-name descname"><span class="pre">prepare_forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.prepare_forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Prepare leadfield for calculating inverse solutions by applying
+common average referencing and unit norm scaling.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_gcv">
+<span class="sig-name descname"><span class="pre">regularise_gcv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_gcv" title="Permalink to this definition">#</a></dt>
+<dd><p>Find optimally regularized inverse solution using the generalized
+cross-validation method [1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – The inverse solution  (dipoles x time points)</p></li>
+<li><p><strong>optimum_idx</strong> (<em>int</em>) – The index of the selected (optimal) regularization parameter</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
+problem in EEG source analysis. Journal of neuroengineering and
+rehabilitation, 5(1), 1-33.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_lcurve">
+<span class="sig-name descname"><span class="pre">regularise_lcurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_lcurve" title="Permalink to this definition">#</a></dt>
+<dd><p>Find optimally regularized inverse solution using the L-Curve method [1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – The inverse solution  (dipoles x time points)</p></li>
+<li><p><strong>optimum_idx</strong> (<em>int</em>) – The index of the selected (optimal) regularization parameter</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
+problem in EEG source analysis. Journal of neuroengineering and
+rehabilitation, 5(1), 1-33.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_product">
+<span class="sig-name descname"><span class="pre">regularise_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_product" title="Permalink to this definition">#</a></dt>
+<dd><p>Find optimally regularized inverse solution using the product method [1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – The inverse solution  (dipoles x time points)</p></li>
+<li><p><strong>optimum_idx</strong> (<em>int</em>) – The index of the selected (optimal) regularization parameter</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
+problem in EEG source analysis. Journal of neuroengineering and
+rehabilitation, 5(1), 1-33.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.save" title="Permalink to this definition">#</a></dt>
+<dd><p>Saves the solver object.</p>
+<dl class="simple">
+<dt>path<span class="classifier">str</span></dt><dd><p>The path to save the solver.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>self</strong> – Function returns itself.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#invert.solvers.base.BaseSolver" title="invert.solvers.base.BaseSolver">BaseSolver</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.source_to_object">
+<span class="sig-name descname"><span class="pre">source_to_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.source_to_object" title="Permalink to this definition">#</a></dt>
+<dd><p>Converts the source_mat matrix to the mne.SourceEstimate object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – Source matrix (dipoles, time points)-</p></li>
+<li><p><strong>evoekd</strong> (<em>mne.Evoked</em>) – Evoked data object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.base.InverseOperator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.base.</span></span><span class="sig-name descname"><span class="pre">InverseOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverse_operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.InverseOperator" title="Permalink to this definition">#</a></dt>
+<dd><p>This class holds the inverse operator, which may be a simple
+numpy.ndarray matrix or some object like an esinet.net()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operator</strong> (<em>inverse</em>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.InverseOperator.has_multiple_operators">
+<span class="sig-name descname"><span class="pre">has_multiple_operators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.InverseOperator.has_multiple_operators" title="Permalink to this definition">#</a></dt>
+<dd><p>Check if there are multiple inverse_operators.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
