@@ -45,6 +45,12 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverChampagne(**kwargs)
     elif solver.lower() == "lowsnrchampagne" or solver.lower() == "low snr champagne" or solver.lower() == "lsc":
         solver_object = solvers.SolverLowSNRChampagne(**kwargs)
+    elif solver.lower() == "emchampagne" or solver.lower() == "em champagne" or solver.lower() == "emc":
+        solver_object = solvers.SolverEMChampagne(**kwargs)
+    elif solver.lower() == "mmchampagne" or solver.lower() == "mm champagne" or solver.lower() == "mmc":
+        solver_object = solvers.SolverMMChampagne(**kwargs)
+    # elif solver.lower() == "temchampagne" or solver.lower() == "tem champagne" or solver.lower() == "temc":
+    #     solver_object = solvers.SolverTEMChampagne(**kwargs)
     elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
         solver_object = solvers.SolverGammaMAP(**kwargs)
     elif solver.lower() == "source-map" or solver.lower() == "source map":
