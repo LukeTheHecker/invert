@@ -107,7 +107,7 @@ class SolverWMNE(BaseSolver):
 
 class SolverDSPM(BaseSolver):
     ''' Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse
-        solution [1].  The formulas provided by [2] were used for
+        solution [1,2].  The formulas provided by [3] were used for
         implementation.
     
     Attributes
@@ -120,7 +120,11 @@ class SolverDSPM(BaseSolver):
     mapping: combining fMRI and MEG for high-resolution imaging of cortical
     activity. neuron, 26(1), 55-67.
 
-    [2] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+    [2] Dale, A. M., Fischl, B., & Sereno, M. I. (1999). Cortical surface-based
+    analysis: I. Segmentation and surface reconstruction. Neuroimage, 9(2),
+    179-194.
+
+    [3] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
     Zervakis, M., ... & Vanrumste, B. (2008). Review on solving the inverse
     problem in EEG source analysis. Journal of neuroengineering and
     rehabilitation, 5(1), 1-33.
