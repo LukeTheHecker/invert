@@ -20,6 +20,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverDSPM(**kwargs)
     elif solver.lower() == "l1" or solver.lower() == "fista":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
+    elif solver.lower() == "gpt" or solver.lower() == "l1 gpt" or solver.lower() == "l1gpt":
+        solver_object = solvers.SolverMinimumL1NormGPT(**kwargs)
     elif solver.lower() == "l1l2":
         solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
     

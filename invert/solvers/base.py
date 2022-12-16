@@ -162,6 +162,73 @@ class BaseSolver:
         
         return evoked
 
+    def unpack_data_obj(self, mne_obj, pick_types=None):
+        ''' Unpacks the mne data object and returns the data.
+
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.Raw]
+
+        Return
+        ------
+        data : numpy.ndarray
+            The M/EEG data matrix.
+
+        '''
+
+        type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray]
+        if pick_types is None:
+            pick_types = dict(meg=True, eeg=True, fnirs=True)
+
+        channels_in_fwd = self.forward.ch_names
+        channels_in_mne_obj = mne_obj.ch_names
+        picks = self.select_list_intersection(channels_in_fwd, channels_in_mne_obj)
+        
+        # Select only data channels in mne_obj
+        mne_obj_meeg = mne_obj.copy().pick_channels(picks).pick_types(**pick_types)
+        
+        # Store original forward model for later
+        self.forward_original = deepcopy(self.forward)
+
+        # Select only available data channels in forward
+        self.forward = self.forward.pick_channels(picks)
+        
+        # Prepare the potentially new forward model
+        self.prepare_forward()
+
+        # Test if ch_names in forward model and mne_obj_meeg are equal
+        assert self.forward.ch_names == mne_obj_meeg.ch_names, "channels available in mne object are not equal to those present in the forward model."
+        assert len(self.forward.ch_names) > 1, "forward model contains only a single channel"
+
+        # check if the object is an evoked object
+        if isinstance(mne_obj, [mne.Evoked, mne.EvokedArray]):
+            # handle evoked object
+            data = mne_obj_meeg.data
+        
+        # check if the object is a raw object
+        elif isinstance(mne_obj, [mne.Epochs, mne.EpochsArray]):
+            data = mne_obj_meeg.get_data()
+        
+        # check if the object is a raw object
+        elif isinstance(mne_obj, mne.io.Raw):
+            # handle raw object
+            data = mne_obj_meeg._data
+
+        # handle other cases
+        else:
+            msg = f"mne_obj is of type {type(mne_obj)} but needs to be one of the following types: {type_list}"
+            raise AttributeError(msg)
+        
+        return data
+    
+    @staticmethod
+    def select_list_intersection(list1, list2):
+        new_list = []
+        for element in list1:
+            if element in list2:
+                new_list.append(element)
+        return new_list
+
     def get_alphas(self, reference=None):
         ''' Create list of regularization parameters (alphas) based on the
         largest eigenvalue of the leadfield or some reference matrix.

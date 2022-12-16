@@ -1,4 +1,4 @@
-all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2",
+all_solvers = [ "MNE", "wMNE", "dSPM", "FISTA", "L1L2", "GPT",
                 "LORETA", "sLORETA", "eLORETA", 
                 "LAURA", "Backus-Gilbert", 
                 "S-MAP",
