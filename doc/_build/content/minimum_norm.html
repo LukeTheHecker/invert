@@ -221,7 +221,7 @@
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverDSPM">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.minimum_norm_estimates.</span></span><span class="sig-name descname"><span class="pre">SolverDSPM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Dynamic</span> <span class="pre">Statistical</span> <span class="pre">Parametric</span> <span class="pre">Mapping'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverDSPM" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
-<dt>Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse</dt><dd><p>solution [1].  The formulas provided by [2] were used for
+<dt>Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse</dt><dd><p>solution [1,2].  The formulas provided by [3] were used for
 implementation.</p>
 </dd>
 </dl>
@@ -230,7 +230,10 @@ implementation.</p>
 W., Lewine, J. D., &amp; Halgren, E. (2000). Dynamic statistical parametric
 mapping: combining fMRI and MEG for high-resolution imaging of cortical
 activity. neuron, 26(1), 55-67.</p>
-<p>[2] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
+<p>[2] Dale, A. M., Fischl, B., &amp; Sereno, M. I. (1999). Cortical surface-based
+analysis: I. Segmentation and surface reconstruction. Neuroimage, 9(2),
+179-194.</p>
+<p>[3] Grech, R., Cassar, T., Muscat, J., Camilleri, K. P., Fabri, S. G.,
 Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
 problem in EEG source analysis. Journal of neuroengineering and
 rehabilitation, 5(1), 1-33.</p>
@@ -380,7 +383,7 @@ rehabilitation, 5(1), 1-33.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -413,7 +416,7 @@ algorithm for linear inverse problems. SIAM journal on imaging sciences,
 2(1), 183-202.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the inverse operator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -430,20 +433,31 @@ algorithm for linear inverse problems. SIAM journal on imaging sciences,
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.fista">
-<span class="sig-name descname"><span class="pre">fista</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.fista" title="Permalink to this definition">#</a></dt>
-<dd><p>The FISTA algorithm based on [1].</p>
+<span class="sig-name descname"><span class="pre">fista</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.fista" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Solves the EEG inverse problem:</dt><dd><p>min_x ||y - Ax||_2^2 + l1_reg * ||x||_1 + l2_reg * ||x||_2^2</p>
+</dd>
+</dl>
+<p>using the FISTA algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – The observations (i.e., eeg/meg data at single time point)</p></li>
-<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations for the FISTA algorithm.</p></li>
+<li><p><strong>y</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>m</em><em>,</em><em>)</em>) – EEG measurements.</p></li>
+<li><p><strong>A</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>m</em><em>, </em><em>n</em><em>)</em>) – Forward model.</p></li>
+<li><p><strong>x0</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>n</em><em>,</em><em>)</em>) – Initial guess for the CSDs.</p></li>
+<li><p><strong>l1_reg</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1e-3</em><em>)</em>) – L1 regularization strength.</p></li>
+<li><p><strong>l2_reg</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 0</em><em>)</em>) – L2 regularization strength.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) – Maximum number of iterations to run.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1e-6</em><em>)</em>) – Tolerance for the stopping criteria.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Estimated CSDs.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, shape (n,)</p>
+</dd>
 </dl>
-<p class="rubric">References</p>
-<p>[1] Beck, A., &amp; Teboulle, M. (2009). A fast iterative shrinkage-thresholding
-algorithm for linear inverse problems. SIAM journal on imaging sciences,
-2(1), 183-202.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -462,6 +476,129 @@ algorithm for linear inverse problems. SIAM journal on imaging sciences,
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.soft_threshold">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">soft_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.soft_threshold" title="Permalink to this definition">#</a></dt>
+<dd><p>Applies the soft thresholding operator to x with threshold alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>n</em><em>,</em><em>)</em>) – Input array.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> – Output array.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, shape (n,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.minimum_norm_estimates.</span></span><span class="sig-name descname"><span class="pre">SolverMinimumL1NormGPT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GPT</span> <span class="pre">Solver'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT" title="Permalink to this definition">#</a></dt>
+<dd><dl>
+<dt>Class for the Minimum Current Estimate inverse solution using</dt><dd><p>interesting code from the Chat GPT AI by openai.com (GPT-solver).</p>
+<p>I (Lukas Hecker) prompted the task to write a sparsified eLORETA-type
+inverse solution and this came up with little adjustments required.</p>
+<p>I can’t express how weird it is for me, too.</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Open AI chat GPT (openai.com)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator">
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.grad_f">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_scaled</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.grad_f" title="Permalink to this definition">#</a></dt>
+<dd><p>Gradient of the objective function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.soft_threshold">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">soft_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.soft_threshold" title="Permalink to this definition">#</a></dt>
+<dd><p>Applies the soft thresholding operator to x with threshold alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>n</em><em>,</em><em>)</em>) – Input array.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Threshold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> – Output array.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, shape (n,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.solve" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Solves the EEG inverse problem:</dt><dd><p>min_x ||y - Ax||_2^2 + l1_reg * ||x||_1 + l2_reg * ||x||_2^2</p>
+</dd>
+</dl>
+<p>using the FISTA algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>m</em><em>,</em><em>)</em>) – EEG measurements.</p></li>
+<li><p><strong>l1_reg</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1e-3</em><em>)</em>) – L1 regularization strength.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default: 1000</em><em>)</em>) – Maximum number of iterations to run.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default: 1e-6</em><em>)</em>) – Tolerance for the stopping criteria.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Estimated CSDs.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, shape (n,)</p>
 </dd>
 </dl>
 </dd></dl>

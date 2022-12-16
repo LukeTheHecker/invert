@@ -340,7 +340,7 @@ class SolverMinimumL1NormGPT(BaseSolver):
         I (Lukas Hecker) prompted the task to write a sparsified eLORETA-type
         inverse solution and this came up with little adjustments required.
 
-        I can't express how weird it is for me, too.A
+        I can't express how weird it is for me, too.
     
     Attributes
     ----------

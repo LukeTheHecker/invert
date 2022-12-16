@@ -160,6 +160,7 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -239,6 +240,8 @@
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm method)</a>
 </li>
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm method)</a>
+</li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT method)</a>
 </li>
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMNE.apply_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMNE method)</a>
 </li>
@@ -445,6 +448,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="content/bayes.html#invert.solvers.bayes.SolverGammaMAPMSP.get_smooth_prior_cov">get_smooth_prior_cov() (invert.solvers.bayes.SolverGammaMAPMSP method)</a>
 </li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.grad_f">grad_f() (invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT static method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -645,6 +650,8 @@
 </li>
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm method)</a>
 </li>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT method)</a>
+</li>
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMNE.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverMNE method)</a>
 </li>
         <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverWMNE.make_inverse_operator">(invert.solvers.minimum_norm_estimates.SolverWMNE method)</a>
@@ -749,6 +756,14 @@
 </li>
       <li><a href="content/base.html#invert.solvers.base.BaseSolver.save">save() (invert.solvers.base.BaseSolver method)</a>
 </li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.soft_threshold">soft_threshold() (invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm static method)</a>
+
+      <ul>
+        <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.soft_threshold">(invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT static method)</a>
+</li>
+      </ul></li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.solve">solve() (invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT method)</a>
+</li>
       <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.solve_p">solve_p() (in module invert.solvers.esinet)</a>
 </li>
       <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.solve_p_wrap">solve_p_wrap() (in module invert.solvers.esinet)</a>
@@ -797,13 +812,15 @@
 </li>
       <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM">SolverLSTM (class in invert.solvers.esinet)</a>
 </li>
-      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMCMV">SolverMCMV (class in invert.solvers.beamformer)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/beamformer.html#invert.solvers.beamformer.SolverMCMV">SolverMCMV (class in invert.solvers.beamformer)</a>
+</li>
       <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm">SolverMinimumL1L2Norm (class in invert.solvers.minimum_norm_estimates)</a>
 </li>
       <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm">SolverMinimumL1Norm (class in invert.solvers.minimum_norm_estimates)</a>
+</li>
+      <li><a href="content/minimum_norm.html#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT">SolverMinimumL1NormGPT (class in invert.solvers.minimum_norm_estimates)</a>
 </li>
       <li><a href="content/bayes.html#invert.solvers.empirical_bayes.SolverMMChampagne">SolverMMChampagne (class in invert.solvers.empirical_bayes)</a>
 </li>
@@ -875,6 +892,14 @@
         <li><a href="content/artificial_neural_networks.html#invert.solvers.esinet.SolverLSTM.train_model">(invert.solvers.esinet.SolverLSTM method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="content/base.html#invert.solvers.base.BaseSolver.unpack_data_obj">unpack_data_obj() (invert.solvers.base.BaseSolver method)</a>
+</li>
   </ul></td>
 </tr></table>
 
