@@ -377,6 +377,7 @@ class SolverMMChampagne(BaseSolver):
         self.get_alphas(reference=self.leadfield@self.leadfield.T)
         inverse_operators = []
         for alpha in self.alphas:
+            print(alpha)
             inverse_operator = self.mm_champagne(evoked.data, alpha, max_iter=max_iter, prune=prune, pruning_thresh=pruning_thresh, convergence_criterion=convergence_criterion)
             inverse_operators.append( inverse_operator )
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]

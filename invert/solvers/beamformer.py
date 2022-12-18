@@ -456,7 +456,7 @@ class SolverMCMV(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, noise_cov=None, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -481,6 +481,9 @@ class SolverMCMV(BaseSolver):
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
 
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+            
         self.weight_norm = weight_norm
 
         y = evoked.data
@@ -497,7 +500,10 @@ class SolverMCMV(BaseSolver):
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
 
-            W = C_inv @ leadfield * np.diagonal(np.linalg.inv(leadfield.T @ C_inv @ leadfield))
+            # W = C_inv @ leadfield * np.diagonal(np.linalg.inv(leadfield.T @ C_inv @ leadfield))
+            W = np.dot(leadfield.T, np.dot(C_inv, leadfield))
+            W = np.dot(np.linalg.inv(W + leadfield.T @ noise_cov @ leadfield), np.dot(leadfield.T, C_inv))
+    
 
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
