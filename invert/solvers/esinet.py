@@ -976,10 +976,17 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
 
     sources = np.identity(n_dipoles)
-    for _ in range(n_orders-1):
+    if type(n_orders) == tuple:
+        min_order, max_order = n_orders
+    else:
+        min_order = 1
+        max_order = n_orders
+
+    for i in range(max_order-1):
         new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
         new_sources /= new_sources.max(axis=0)
-        sources = np.concatenate( [sources, new_sources], axis=0 )
+        if i >= min_order-1:
+            sources = np.concatenate( [sources, new_sources], axis=0 )
 
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
