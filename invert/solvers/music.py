@@ -439,62 +439,75 @@ class SolverJAZZMUSIC(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", n_orders=3, verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", n_orders=3, n="auto", k="auto", stop_crit=0.95, truncate=True, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        evoked : mne.Evoked
+            The evoked M/EEG data matrix.
         alpha : float
             The regularization parameter.
         n_orders : int
             Controls the maximum smoothness to pursue.
-
-        Return
-        ------
-        self : object returns itself for convenience
-        '''
-        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.leadfield
-
-        self.make_jazz(n_orders)
-        
-
-        n_chans, _ = leadfield.shape
-        
-        self.inverse_operators = []
-        return self
-
-    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
-        ''' Apply JAZZ-MUSIC inverse solution.
-        
-        Parameters
-        ----------
-        evoked : mne.Evoked
-            The evoked data object.
-        n : ["auto", int]
-            Number of eigenvectors to use.
+        n : int/ str
+            Number of eigenvectors to use or "auto" for l-curve method.
         k : int
             Number of recursions.
         stop_crit : float
-            Controls the percentage of top active dipoles that are selected
-            (i.e., sparsity).
+            Criterion to stop recursions. The lower, the more dipoles will be
+            incorporated.
         truncate : bool
             If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
             don't (like RAP-MUSIC).
 
         Return
         ------
-        stc : mne.SourceEstimate
-            The inverse solution source estimate object.
+        self : object returns itself for convenience
         '''
-        source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
-        stc = self.source_to_object(source_mat, evoked)
-        return stc
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
-    def apply_jazzmusic(self, y, n, k, stop_crit, truncate):
-        ''' Apply the RAP-MUSIC inverse solution to the EEG data.
+        self.prepare_flex(n_orders)
+        inverse_operator = self.make_flex(evoked.data, n, k, stop_crit, truncate)
+        
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
+        return self
+
+    # def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
+    #     ''' Apply FLEX-MUSIC inverse solution.
+        
+    #     Parameters
+    #     ----------
+    #     evoked : mne.Evoked
+    #         The evoked data object.
+    #     n : ["auto", int]
+    #         Number of eigenvectors to use.
+    #     k : int
+    #         Number of recursions.
+    #     stop_crit : float
+    #         Controls the percentage of top active dipoles that are selected
+    #         (i.e., sparsity).
+    #     truncate : bool
+    #         If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
+    #         don't (like RAP-MUSIC).
+
+    #     Return
+    #     ------
+    #     stc : mne.SourceEstimate
+    #         The inverse solution source estimate object.
+    #     '''
+    #     source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
+    #     stc = self.source_to_object(source_mat, evoked)
+    #     return stc
+    
+    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+        return super().apply_inverse_operator(evoked)
+
+
+    def make_flex(self, y, n, k, stop_crit, truncate):
+        ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
         ----------
@@ -622,21 +635,25 @@ class SolverJAZZMUSIC(BaseSolver):
         dipole_idc = np.array(dipole_idc)
 
         # Simple minimum norm inversion using found dipoles
-        x_hat = np.zeros((n_dipoles, n_time))
-        
-        # Time-course estimation
-        
-        # Simple MNE-based 
+        # x_hat = np.zeros((n_dipoles, n_time))
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
 
         # WMNE-based
+        # x_hat = np.zeros((n_dipoles, n_time))
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+
         L = self.leadfield[:, dipole_idc]
         W = np.diag(np.linalg.norm(L, axis=0))
-        x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        print(inverse_operator.shape, L.shape, W.shape)
+        
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 
-        return x_hat
+        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
-    def make_jazz(self, n_orders):
+
+        return inverse_operator
+
+    def prepare_flex(self, n_orders):
         ''' Create the dictionary of increasingly smooth sources.
         
         Parameters
