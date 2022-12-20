@@ -3,7 +3,7 @@
 This package contains various approaches to solve the M/EEG inverse problems. It
 integrates with the [mne-python](https://mne.tools) framework.
 
-Read the [Documentation here!](https://github.io/invert)
+Read the [Documentation here!](https://lukethehecker.github.io/invert/)
 
 Install the package from [pypi](https://pypi.org/project/invertmeeg/):
 
