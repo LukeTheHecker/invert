@@ -238,23 +238,6 @@ Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
 problem in EEG source analysis. Journal of neuroengineering and
 rehabilitation, 5(1), 1-33.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverDSPM.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverDSPM.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverDSPM.make_inverse_operator">
 <span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverDSPM.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
@@ -294,23 +277,6 @@ Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
 problem in EEG source analysis. Journal of neuroengineering and
 rehabilitation, 5(1), 1-33.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMNE.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMNE.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMNE.make_inverse_operator">
 <span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMNE.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
@@ -343,42 +309,41 @@ rehabilitation, 5(1), 1-33.</p>
 <p>[!] Missing reference - please contact developers if you have it!</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the L1L2 inverse operator.
-:param evoked: The mne M/EEG data object.
-:type evoked: mne.Evoked
-:param max_iter: Maximum number of iterations (stopping criterion).
-:type max_iter: int
-:param min_change: Convergence criterion.
-:type min_change: float</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_spatial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_temporal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>stc</strong> – The source estimate object.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations</p></li>
+<li><p><strong>l1_spatial</strong> (<em>float</em>) – Controls the spatial L1 regularization</p></li>
+<li><p><strong>l2_temporal</strong> (<em>float</em>) – Controls the temporal L2 regularization</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance at which convergence is met.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>mne.SourceEstimate</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>mne.SourceEstimate</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.calc_l1l2_solution">
-<span class="sig-name descname"><span class="pre">calc_l1l2_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.calc_l1l2_solution" title="Permalink to this definition">#</a></dt>
-<dd><p>Calculate the L1L2 inverse solution.
-:param y: The M/EEG data matrix.
-:type y: numpy.ndarray
-:param max_iter: Maximum number of iterations (stopping criterion).
-:type max_iter: int
-:param min_change: Convergence criterion.
-:type min_change: float</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>x_hat</strong> – The inverse solution matrix.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.fista_eeg">
+<span class="sig-name descname"><span class="pre">fista_eeg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_spatial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_temporal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1L2Norm.fista_eeg" title="Permalink to this definition">#</a></dt>
+<dd><p>Solves the EEG inverse problem using FISTA with L1 regularization on the spatial
+dimension and L2 regularization on the temporal dimension.</p>
+<p>Parameters:
+- A: array of shape (n_sensors, n_sources)
+- y: array of shape (n_sensors, n_timepoints)
+- l1_spatial: float, strength of L1 regularization on the spatial dimension
+- l2_temporal: float, strength of L2 regularization on the temporal dimension
+- max_iter: int, maximum number of iterations
+- tol: float, tolerance for convergence</p>
+<p>Returns:
+- x: array of shape (n_sources, n_timepoints), the solution to the EEG inverse problem</p>
 </dd></dl>
 
 <dl class="py method">
@@ -416,14 +381,20 @@ algorithm for linear inverse problems. SIAM journal on imaging sciences,
 2(1), 183-202.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1Norm.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations</p></li>
+<li><p><strong>l1_reg</strong> (<em>float</em>) – Controls the spatial L1 regularization</p></li>
+<li><p><strong>l2_reg</strong> (<em>float</em>) – Controls the spatial L2 regularization</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance at which convergence is met.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -516,14 +487,19 @@ inverse solution and this came up with little adjustments required.</p>
 <p>Open AI chat GPT (openai.com)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverMinimumL1NormGPT.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations</p></li>
+<li><p><strong>l1_reg</strong> (<em>float</em>) – Controls the spatial L1 regularization</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance at which convergence is met.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -617,23 +593,6 @@ inverse solution and this came up with little adjustments required.</p>
 Zervakis, M., … &amp; Vanrumste, B. (2008). Review on solving the inverse
 problem in EEG source analysis. Journal of neuroengineering and
 rehabilitation, 5(1), 1-33.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverWMNE.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverWMNE.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.minimum_norm_estimates.SolverWMNE.make_inverse_operator">
 <span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.minimum_norm_estimates.SolverWMNE.make_inverse_operator" title="Permalink to this definition">#</a></dt>

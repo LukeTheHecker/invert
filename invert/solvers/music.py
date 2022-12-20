@@ -22,45 +22,34 @@ class SolverMUSIC(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", n="auto", stop_crit=0.95, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
-        
+        n : int/ str
+            Number of eigenvectors to use or "auto" for l-curve method.
+        stop_crit : float
+            Criterion to stop recursions. The lower, the more dipoles will be
+            incorporated.
+
         Return
         ------
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        self.inverse_operators = []
+        data = self.unpack_data_obj(mne_obj)
+        inverse_operator = self.make_music(data, n, stop_crit)
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", stop_crit=0.95) -> mne.SourceEstimate:
-        ''' Apply MUSIC inverse solution.
-        
-        Parameters
-        ----------
-        evoked : mne.Evoked
-            The evoked data object.
-        stop_crit : float
-            Controls the percentage of top active dipoles that are selected
-            (i.e., sparsity).
-
-        Return
-        ------
-        stc : mne.SourceEstimate
-            The inverse solution source estimate object.
-        '''
-        source_mat = self.apply_music(evoked.data, n, stop_crit)
-        stc = self.source_to_object(source_mat, evoked)
-        return stc
-
-    def apply_music(self, y, n, stop_crit):
+    def make_music(self, y, n, stop_crit):
         ''' Apply the MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -78,7 +67,7 @@ class SolverMUSIC(BaseSolver):
         x_hat : numpy.ndarray
             Source data matrix (sources, time)
         '''
-        n_dipoles = self.leadfield.shape[1]
+        n_chans, n_dipoles = self.leadfield.shape
         n_time = y.shape[1]
         
         leadfield = self.leadfield
@@ -116,9 +105,20 @@ class SolverMUSIC(BaseSolver):
         mu[mu<stop_crit] = 0
 
         dipole_idc = np.where(mu!=0)[0]
-        x_hat = np.zeros((n_dipoles, n_time))
-        x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
-        return x_hat
+        # x_hat = np.zeros((n_dipoles, n_time))
+        # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
+        # return x_hat
+
+        # WMNE-based
+        # x_hat = np.zeros((n_dipoles, n_time))
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+
+        L = self.leadfield[:, dipole_idc]
+        W = np.diag(np.linalg.norm(L, axis=0))
+        
+        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+
+        return inverse_operator
 
 
 class SolverRAPMUSIC(BaseSolver):
@@ -138,50 +138,39 @@ class SolverRAPMUSIC(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto",  n="auto", k="auto", stop_crit=0.95, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
+        n : int/ str
+            Number of eigenvectors to use or "auto" for l-curve method.
+        k : int
+            Number of recursions.
+        stop_crit : float
+            Criterion to stop recursions. The lower, the more dipoles will be
+            incorporated.
         
         Return
         ------
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.leadfield        
-        self.inverse_operators = []
+        data = self.unpack_data_obj(mne_obj)
+
+        inverse_operator = self.make_rap(data, n, k, stop_crit)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
-        ''' Apply RAP-MUSIC inverse solution.
-        
-        Parameters
-        ----------
-        evoked : mne.Evoked
-            The evoked data object.
-        n : ["auto", int]
-            Number of eigenvectors to use.
-        k : int
-            Number of recursions.
-        stop_crit : float
-            Controls the percentage of top active dipoles that are selected
-            (i.e., sparsity).
 
-        Return
-        ------
-        stc : mne.SourceEstimate
-            The inverse solution source estimate object.
-        '''
-        source_mat = self.apply_rapmusic(evoked.data, n, k, stop_crit)
-        stc = self.source_to_object(source_mat, evoked)
-        return stc
-
-    def apply_rapmusic(self, y, n, k, stop_crit):
+    def make_rap(self, y, n, k, stop_crit):
         ''' Apply the RAP-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -269,9 +258,24 @@ class SolverRAPMUSIC(BaseSolver):
             Us = U[:, :n_comp]
 
         dipole_idc = np.array(dipole_idc)
-        x_hat = np.zeros((n_dipoles, n_time))
-        x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
-        return x_hat
+        # x_hat = np.zeros((n_dipoles, n_time))
+        # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
+        # return x_hat
+
+        # WMNE-based
+        # x_hat = np.zeros((n_dipoles, n_time))
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+
+        L = self.leadfield[:, dipole_idc]
+        W = np.diag(np.linalg.norm(L, axis=0))
+        
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+
+        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+
+
+        return inverse_operator
+        
 
 class SolverTRAPMUSIC(BaseSolver):
     ''' Class for the Truncated Recursively Applied Multiple Signal
@@ -290,33 +294,17 @@ class SolverTRAPMUSIC(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha="auto", **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", n="auto", k="auto", stop_crit=0.95, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
-        
-        Return
-        ------
-        self : object returns itself for convenience
-        '''
-        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        leadfield = self.leadfield
-        self.inverse_operators = []
-
-        return self
-
-    def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95) -> mne.SourceEstimate:
-        ''' Apply TRAP-MUSIC inverse solution.
-        
-        Parameters
-        ----------
-        evoked : mne.Evoked
-            The evoked data object.
         n : ["auto", int]
             Number of eigenvectors to use.
         k : int
@@ -327,14 +315,20 @@ class SolverTRAPMUSIC(BaseSolver):
 
         Return
         ------
-        stc : mne.SourceEstimate
-            The inverse solution source estimate object.
+        self : object returns itself for convenience
         '''
-        source_mat = self.apply_trapmusic(evoked.data, n, k, stop_crit)
-        stc = self.source_to_object(source_mat, evoked)
-        return stc
 
-    def apply_trapmusic(self, y, n, k, stop_crit):
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        inverse_operator = self.make_trap(data, n, k, stop_crit)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
+        return self
+
+  
+
+    def make_trap(self, y, n, k, stop_crit):
         ''' Apply the TRAP-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -419,35 +413,52 @@ class SolverTRAPMUSIC(BaseSolver):
             U, D, _= np.linalg.svd(C, full_matrices=False)
             Us = U[:, :n_comp-i]
         dipole_idc = np.array(dipole_idc)
-        x_hat = np.zeros((n_dipoles, n_time))
-        x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
-        return x_hat
+        
+        # x_hat = np.zeros((n_dipoles, n_time))
 
-class SolverJAZZMUSIC(BaseSolver):
-    ''' Class for the Smooth RAP Multiple Signal Classification (JAZZ-MUSIC)
-        inverse solution.
+        # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
+        # return x_hat
+
+        # WMNE-based
+        # x_hat = np.zeros((n_dipoles, n_time))
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+
+        L = self.leadfield[:, dipole_idc]
+        W = np.diag(np.linalg.norm(L, axis=0))
+        
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+
+        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+
+
+        return inverse_operator
+
+class SolverFLEXMUSIC(BaseSolver):
+    ''' Class for the RAP Multiple Signal Classification with flexible extent
+        estimation (FLEX-MUSIC).
     
     Attributes
     ----------
     
     References
     ---------
-    This method is of my own making (Lukas Hecker, 2022) and unpublished.
+    This method is of my own making (Lukas Hecker, 2022) and soon to be
+    published.
 
     '''
-    def __init__(self, name="JAZZ-MUSIC", **kwargs):
+    def __init__(self, name="FLEX-MUSIC", **kwargs):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", n_orders=3, n="auto", k="auto", stop_crit=0.95, truncate=True, verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", n_orders=3, n="auto", k="auto", stop_crit=0.95, truncate=True, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked M/EEG data matrix.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
         n_orders : int
@@ -468,43 +479,13 @@ class SolverJAZZMUSIC(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         self.prepare_flex(n_orders)
-        inverse_operator = self.make_flex(evoked.data, n, k, stop_crit, truncate)
+        inverse_operator = self.make_flex(data, n, k, stop_crit, truncate)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
-
-    # def apply_inverse_operator(self, evoked, n="auto", k="auto", stop_crit=0.95, truncate=True) -> mne.SourceEstimate:
-    #     ''' Apply FLEX-MUSIC inverse solution.
-        
-    #     Parameters
-    #     ----------
-    #     evoked : mne.Evoked
-    #         The evoked data object.
-    #     n : ["auto", int]
-    #         Number of eigenvectors to use.
-    #     k : int
-    #         Number of recursions.
-    #     stop_crit : float
-    #         Controls the percentage of top active dipoles that are selected
-    #         (i.e., sparsity).
-    #     truncate : bool
-    #         If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
-    #         don't (like RAP-MUSIC).
-
-    #     Return
-    #     ------
-    #     stc : mne.SourceEstimate
-    #         The inverse solution source estimate object.
-    #     '''
-    #     source_mat = self.apply_jazzmusic(evoked.data, n, k, stop_crit, truncate)
-    #     stc = self.source_to_object(source_mat, evoked)
-    #     return stc
-    
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 
     def make_flex(self, y, n, k, stop_crit, truncate):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
@@ -644,7 +625,6 @@ class SolverJAZZMUSIC(BaseSolver):
 
         L = self.leadfield[:, dipole_idc]
         W = np.diag(np.linalg.norm(L, axis=0))
-        print(inverse_operator.shape, L.shape, W.shape)
         
         # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 

@@ -60,18 +60,4 @@ class SolverSMAP(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        ''' Apply the S-MAP inverse operator.
-        Parameters
-        ----------
-        evoked : mne.Evoked
-            The evoke data object.
-
-        Return
-        ------
-        stc : mne.SourceEstimate
-            The inverse solution object.
-        '''
-        return super().apply_inverse_operator(evoked)
     

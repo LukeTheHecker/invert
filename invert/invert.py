@@ -125,8 +125,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverRAPMUSIC(**kwargs)
     elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
         solver_object = solvers.SolverTRAPMUSIC(**kwargs)
-    elif solver.lower() == "jazz-music" or solver.lower() == "jazz music" or solver.lower() == "jazz":
-        solver_object = solvers.SolverJAZZMUSIC(**kwargs)
+    elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
+        solver_object = solvers.SolverFLEXMUSIC(**kwargs)
     
     # Other
     elif solver.lower() == "epifocus":

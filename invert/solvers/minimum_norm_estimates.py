@@ -51,9 +51,6 @@ class SolverMNE(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverWMNE(BaseSolver):
     ''' Class for the Weighted Minimum Norm Estimate (wMNE) inverse solution
         [1].
@@ -100,10 +97,6 @@ class SolverWMNE(BaseSolver):
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 
 class SolverDSPM(BaseSolver):
     ''' Class for the Dynamic Statistical Parametric Mapping (dSPM) inverse
@@ -173,9 +166,6 @@ class SolverDSPM(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
   
 class SolverMinimumL1Norm(BaseSolver):
     ''' Class for the Minimum Current Estimate (MCE) inverse solution using the
@@ -218,12 +208,32 @@ class SolverMinimumL1Norm(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, max_iter=1000, 
+    def apply_inverse_operator(self, mne_obj, max_iter=1000, 
                                l1_reg=1e-3, l2_reg=0, tol=1e-2) -> mne.SourceEstimate:
-
-        source_mat = self.fista_wrap(evoked.data, max_iter=max_iter, 
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        max_iter : int
+            Maximum number of iterations
+        l1_reg : float
+            Controls the spatial L1 regularization 
+        l2_reg : float
+            Controls the spatial L2 regularization 
+        tol : float
+            Tolerance at which convergence is met.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.fista_wrap(data, max_iter=max_iter, 
                                     l1_reg=l1_reg, l2_reg=l2_reg, tol=tol)
-        stc = self.source_to_object(source_mat, evoked)
+        stc = self.source_to_object(source_mat)
         return stc
     
     def fista_wrap(self, y_mat, max_iter=1000, l1_reg=1e-3, l2_reg=0, tol=1e-2):
@@ -331,7 +341,6 @@ class SolverMinimumL1Norm(BaseSolver):
         y = np.sign(x) * np.maximum(np.abs(x) - alpha, 0)
         return y
 
-
 class SolverMinimumL1NormGPT(BaseSolver):
     ''' Class for the Minimum Current Estimate inverse solution using
         interesting code from the Chat GPT AI by openai.com (GPT-solver). 
@@ -372,12 +381,31 @@ class SolverMinimumL1NormGPT(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, max_iter=1000, 
+    def apply_inverse_operator(self, mne_obj, max_iter=1000, 
                                l1_reg=1e-3, tol=1e-2) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        max_iter : int
+            Maximum number of iterations
+        l1_reg : float
+            Controls the spatial L1 regularization 
+        tol : float
+            Tolerance at which convergence is met.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
 
-        source_mat = self.solver_wrap(evoked.data, max_iter=max_iter, 
+        source_mat = self.solver_wrap(data, max_iter=max_iter, 
                                     l1_reg=l1_reg, tol=tol)
-        stc = self.source_to_object(source_mat, evoked)
+        stc = self.source_to_object(source_mat)
         return stc
     
     def solver_wrap(self, y_mat, max_iter=1000, l1_reg=1e-3, tol=1e-2):
@@ -507,28 +535,36 @@ class SolverMinimumL1L2Norm(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, alpha="auto", 
-                               l1_spatial=1e-3, l2_temporal=1e-3, 
-                               max_iter=100, tol=1e-6, ) -> mne.SourceEstimate:
-        ''' Apply the L1L2 inverse operator.
+    def apply_inverse_operator(self, mne_obj, alpha="auto", 
+                               max_iter=100, l1_spatial=1e-3, 
+                               l2_temporal=1e-3, tol=1e-6, ) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne M/EEG data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         max_iter : int
-            Maximum number of iterations (stopping criterion).
-        min_change : float
-            Convergence criterion.
-
+            Maximum number of iterations
+        l1_spatial : float
+            Controls the spatial L1 regularization 
+        l2_temporal : float
+            Controls the temporal L2 regularization 
+        tol : float
+            Tolerance at which convergence is met.
+        
         Return
         ------
         stc : mne.SourceEstimate
-            The source estimate object.
+            The mne Source Estimate object.
         '''
-        source_mat = self.fista_eeg(evoked.data, alpha=alpha, max_iter=max_iter, 
+        
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.fista_eeg(data, alpha=alpha, max_iter=max_iter, 
                                     tol=tol, l1_spatial=l1_spatial, 
                                     l2_temporal=l2_temporal)
-        stc = self.source_to_object(source_mat, evoked)
+        stc = self.source_to_object(source_mat)
         return stc
     
     def fista_eeg(self, y, alpha="auto", l1_spatial=1e-3, l2_temporal=1e-3, 
@@ -610,119 +646,3 @@ class SolverMinimumL1L2Norm(BaseSolver):
     @staticmethod
     def calc_norm(x, n_time):
         return np.sqrt( (x**2).sum() / n_time )
-        
-
-# class SolverMinimumL1L2Norm(BaseSolver):
-#     ''' Class for the Minimum L1-L2 Norm solution (MCE) inverse solution. It
-#         imposes a L1 norm on the source and L2 on the source time courses.
-    
-#     References
-#     ----------
-#     [!] Missing reference - please contact developers if you have it!
-
-#     '''
-#     def __init__(self, name="Minimum L1-L2 Norm", **kwargs):
-#         self.name = name
-#         return super().__init__(**kwargs)
-
-#     def make_inverse_operator(self, forward, *args, alpha=0.01, **kwargs):
-#         ''' Calculate inverse operator.
-
-#         Parameters
-#         ----------
-#         forward : mne.Forward
-#             The mne-python Forward model instance.
-#         alpha : float
-#             The regularization parameter.
-        
-#         Return
-#         ------
-#         self : object returns itself for convenience
-#         '''
-#         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        
-#         return self
-
-#     def apply_inverse_operator(self, evoked, max_iter=100, min_change=0.005) -> mne.SourceEstimate:
-#         ''' Apply the L1L2 inverse operator.
-#         Parameters
-#         ----------
-#         evoked : mne.Evoked
-#             The mne M/EEG data object.
-#         max_iter : int
-#             Maximum number of iterations (stopping criterion).
-#         min_change : float
-#             Convergence criterion.
-
-#         Return
-#         ------
-#         stc : mne.SourceEstimate
-#             The source estimate object.
-#         '''
-#         source_mat = self.calc_l1l2_solution(evoked.data, max_iter=max_iter, min_change=min_change)
-#         stc = self.source_to_object(source_mat, evoked)
-#         return stc
-    
-#     def calc_l1l2_solution(self, y, max_iter=100, min_change=1e-6):
-#         ''' Calculate the L1L2 inverse solution.
-#         Parameters
-#         ----------
-#         y : numpy.ndarray
-#             The M/EEG data matrix.
-#         max_iter : int
-#             Maximum number of iterations (stopping criterion).
-#         min_change : float
-#             Convergence criterion.
-
-#         Return
-#         ------
-#         x_hat :numpy.ndarray
-#             The inverse solution matrix.
-#         '''
-
-#         leadfield = self.leadfield
-#         _, n_dipoles = leadfield.shape
-#         n_chans, n_time = y.shape
-
-#         if self.alpha == "auto":
-#             _, s, _ = np.linalg.svd(leadfield)
-#             self.alpha = 1e-7 # * s.max()
-#         eps = 1e-16
-#         leadfield -= leadfield.mean(axis=0)
-#         y -= y.mean(axis=0)
-#         y_scaled = deepcopy(y)
-#         norm_y = np.linalg.norm(y_scaled)
-#         y_scaled /= norm_y
-
-#         I = np.identity(n_chans)
-#         x_hat = np.ones((n_dipoles, n_time))
-
-#         LLT = [ leadfield[:, rr][:, np.newaxis] @ leadfield[:, rr][:, np.newaxis].T for rr in range(n_dipoles)]
-#         L1_norms = [1e99,]
-
-#         for i in range(max_iter):
-#             y_hat = leadfield @ x_hat
-#             y_hat -= y_hat.mean(axis=0)
-#             # R = np.linalg.norm(y - y_hat)
-#             # print(i, " Residual: ", R)
-#             norms = [self.calc_norm(x_hat[rr, :], n_time) for rr in range(n_dipoles)]
-#             ALLT = np.stack( [ norms[rr] * LLT[rr]  for rr in range(n_dipoles)], axis=0).sum(axis=0)
-#             for r in range(n_dipoles):
-#                 Lr = leadfield[:, r][:, np.newaxis]
-#                 x_hat[r, :] = norms[r] * Lr.T @ np.linalg.inv( ALLT + self.alpha * I ) @ y_scaled
-#             L1_norms.append( np.abs(x_hat).sum() )
-#             # current_change = 1 - L1_norms[-1] / (L1_norms[-2]+eps)
-#             current_change = L1_norms[-2] - L1_norms[-1]
-#             print(current_change)
-#             if current_change < min_change:
-#                 # print(f"Percentage change is {100*current_change:.4f} % (below {100*(min_change):.1f} %) - stopping")
-#                 break
-#         # Rescale Sources
-#         x_hat = x_hat * norm_y
-#         return x_hat
-
-
-#     @staticmethod
-#     def calc_norm(x, n_time):
-#         return np.sqrt( (x**2).sum() / n_time )
-        

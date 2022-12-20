@@ -55,9 +55,6 @@ class SolverLORETA(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverSLORETA(BaseSolver):
     ''' Class for the standardized Low Resolution Tomography (sLORETA) inverse
         solution [1].
@@ -115,10 +112,6 @@ class SolverSLORETA(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 
 class SolverELORETA(BaseSolver):
     ''' Class for the exact Low Resolution Tomography (eLORETA) inverse
@@ -188,9 +181,7 @@ class SolverELORETA(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-    
+
     def calc_W(self, H, W_MNE, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
         n_chans, n_dipoles = self.leadfield.shape
         

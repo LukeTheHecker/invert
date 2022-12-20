@@ -37,26 +37,22 @@ class InverseOperator:
             self.data = [self.data,]
         self.type = type(self.data[0])
     
-    def apply(self, evoked):
-        if self.solver_name == "Multiple Sparse Priors" or "bayesian" in self.solver_name.lower():
-            M = evoked.data
-            
-            maximum_a_posteriori, A, S = self.data
-            # transform data M with spatial (A) and temporal (S) projector
-            M_ = A @ M @ S
-            # invert transformed data M_ to tansformed sources J_
-            J_ = maximum_a_posteriori @ M_
-            # Project tansformed sources J_ back to original time frame using temporal projector S
-            return J_ @ S.T 
-        elif self.solver_name == "Fully-Connected" or self.solver_name == "Long-Short Term Memory Network" or self.solver_name == "ConvDip":
-            net = self.data[0]
-            stc = net.predict(evoked)[0]
-            J = stc.data
-        else:
-            M = evoked.data
-            J = self.data @ M
-            if len(J.shape) > 2:
-                J = np.squeeze(J)
+    def apply(self, M):
+        ''' Apply the precomputed inverse operator to the data matrix M.
+        Parameters
+        ----------
+        M : numpy.ndarray
+            The M/EEG data matrix (n_channels, n_timepoints)
+
+        Return
+        ------
+        J : numpy.ndarray
+            The source estimate matrix (n_sources, n_timepoints)
+        '''
+ 
+        J = self.data @ M
+        if len(J.shape) > 2:
+            J = np.squeeze(J)
         return J
         
         
@@ -115,13 +111,22 @@ class BaseSolver:
         self.alpha = alpha
         self.alphas = self.get_alphas()
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
+    def store_obj_information(self, mne_obj):
+        if hasattr(mne_obj, "tmin"):
+            self.tmin = mne_obj.tmin
+        else:
+            self.tmin = 0
+        
+        self.obj_info = mne_obj.info
+        
+
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
         ''' Apply the inverse operator
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The Evoked data object
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         
         Return
         ------
@@ -129,22 +134,24 @@ class BaseSolver:
             The mne SourceEstimate object.
         
         '''
-        evoked = self.prep_data(evoked)
+        
+        data = self.unpack_data_obj(mne_obj)
+        
 
         if len(self.inverse_operators) == 1:
-            source_mat = self.inverse_operators[0].apply(evoked)
+            source_mat = self.inverse_operators[0].apply( data )
         elif self.use_last_alpha and self.last_reg_idx is not None:
-            source_mat = self.inverse_operators[self.last_reg_idx].apply( evoked ) 
+            source_mat = self.inverse_operators[self.last_reg_idx].apply( data ) 
             
         else:
             if self.regularisation_method.lower() == "l":
-                source_mat, idx = self.regularise_lcurve(evoked)
+                source_mat, idx = self.regularise_lcurve(data)
                 self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "gcv":
-                source_mat, idx = self.regularise_gcv(evoked)
+                source_mat, idx = self.regularise_gcv(data)
                 self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "product":
-                source_mat, idx = self.regularise_product(evoked)
+                source_mat, idx = self.regularise_product(data)
                 self.last_reg_idx = idx
             else:
                 msg = f"{self.regularisation_method} is no valid regularisation method."
@@ -152,15 +159,15 @@ class BaseSolver:
             
             
         # print(type(source_mat), source_mat.shape)
-        stc = self.source_to_object(source_mat, evoked)
+        stc = self.source_to_object(source_mat)
         return stc
         
     @staticmethod
-    def prep_data(evoked):
-        if not evoked.proj:
-            evoked.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
+    def prep_data(mne_obj):
+        if not mne_obj.proj:
+            mne_obj.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
         
-        return evoked
+        return mne_obj
 
     def unpack_data_obj(self, mne_obj, pick_types=None):
         ''' Unpacks the mne data object and returns the data.
@@ -179,6 +186,9 @@ class BaseSolver:
         type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray]
         if pick_types is None:
             pick_types = dict(meg=True, eeg=True, fnirs=True)
+        
+        # Prepare Data
+        mne_obj = self.prep_data(mne_obj)
 
         channels_in_fwd = self.forward.ch_names
         channels_in_mne_obj = mne_obj.ch_names
@@ -201,23 +211,26 @@ class BaseSolver:
         assert len(self.forward.ch_names) > 1, "forward model contains only a single channel"
 
         # check if the object is an evoked object
-        if isinstance(mne_obj, [mne.Evoked, mne.EvokedArray]):
+        if isinstance(mne_obj, (mne.Evoked, mne.EvokedArray)):
             # handle evoked object
             data = mne_obj_meeg.data
         
         # check if the object is a raw object
-        elif isinstance(mne_obj, [mne.Epochs, mne.EpochsArray]):
-            data = mne_obj_meeg.get_data()
+        elif isinstance(mne_obj, (mne.Epochs, mne.EpochsArray)):
+            data = mne_obj_meeg.average().data
         
         # check if the object is a raw object
-        elif isinstance(mne_obj, mne.io.Raw):
+        elif isinstance(mne_obj, (mne.io.Raw, mne.io.RawArray)):
             # handle raw object
             data = mne_obj_meeg._data
+            # data = mne_obj_meeg.get_data()
 
         # handle other cases
         else:
             msg = f"mne_obj is of type {type(mne_obj)} but needs to be one of the following types: {type_list}"
             raise AttributeError(msg)
+        
+        self.store_obj_information(mne_obj)
         
         return data
     
@@ -258,13 +271,13 @@ class BaseSolver:
             alphas = [self.alpha*self.max_eig, ]
         return alphas
 
-    def regularise_lcurve(self, evoked):
+    def regularise_lcurve(self, M):
         """ Find optimally regularized inverse solution using the L-Curve method [1].
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne Evoked object
+        M : numpy.ndarray
+            The M/EEG data matrix (n_channels, n_timepoints)
         
         Return
         ------
@@ -281,9 +294,9 @@ class BaseSolver:
         rehabilitation, 5(1), 1-33.
         
         """
-        M = evoked.data
+
         leadfield = self.leadfield
-        source_mats = [inverse_operator.apply( evoked ) for inverse_operator in self.inverse_operators]
+        source_mats = [inverse_operator.apply( M ) for inverse_operator in self.inverse_operators]
         
         M -= M.mean(axis=0)
         leadfield -= leadfield.mean(axis=0)
@@ -338,14 +351,14 @@ class BaseSolver:
 
         return curvature_val
 
-    def regularise_gcv(self, evoked):
+    def regularise_gcv(self, M):
         """ Find optimally regularized inverse solution using the generalized
         cross-validation method [1].
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne Evoked object
+        M : numpy.ndarray
+            The M/EEG data matrix (n_channels, n_timepoints)
         
         Return
         ------
@@ -363,8 +376,9 @@ class BaseSolver:
 
         """
         n_chans = self.leadfield.shape[0]
-        M = evoked.data
-        # M -= M.mean(axis=0)
+        # Common Average Reference
+        M -= M.mean(axis=0)
+        
         I = np.identity(n_chans)
         gcv_values = []
         for inverse_operator in self.inverse_operators:
@@ -402,13 +416,13 @@ class BaseSolver:
         return source_mat[0], optimum_idx
     
     
-    def regularise_product(self, evoked):
+    def regularise_product(self, M):
         """ Find optimally regularized inverse solution using the product method [1].
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne Evoked object
+        M : numpy.ndarray
+            The M/EEG data matrix (n_channels, n_timepoints)
         
         Return
         ------
@@ -426,7 +440,6 @@ class BaseSolver:
 
         """
 
-        M = evoked.data
         product_values = []
 
         for inverse_operator in self.inverse_operators:
@@ -553,15 +566,13 @@ class BaseSolver:
         area = (s*(s-AB)*(s-AC)*(s-CB)) ** 0.5
         return area
         
-    def source_to_object(self, source_mat, evoked):
+    def source_to_object(self, source_mat):
         ''' Converts the source_mat matrix to the mne.SourceEstimate object.
 
         Parameters
         ----------
         source_mat : numpy.ndarray
             Source matrix (dipoles, time points)-
-        evoekd : mne.Evoked
-            Evoked data object.
 
         Return
         ------
@@ -571,10 +582,10 @@ class BaseSolver:
         # Convert source to mne.SourceEstimate object
         source_model = self.forward['src']
         vertices = [source_model[0]['vertno'], source_model[1]['vertno']]
-        tmin = evoked.tmin
-        sfreq = evoked.info["sfreq"]
+        tmin = self.tmin
+        sfreq = self.obj_info["sfreq"]
         tstep = 1/sfreq
-        subject = evoked.info["subject_info"]
+        subject = self.obj_info["subject_info"]
 
         if type(subject) == dict:
             subject = "bst_raw"

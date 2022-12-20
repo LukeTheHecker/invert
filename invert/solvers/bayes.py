@@ -37,18 +37,17 @@ class SolverBCS(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        # self.leadfield_norm = (self.leadfield.T / np.linalg.norm(self.leadfield, axis=1)).T
-        # self.leadfield_norm = self.leadfield / np.linalg.norm(self.leadfield, axis=0)
         self.leadfield_norm = self.leadfield
+
         return self
 
-    def apply_inverse_operator(self, evoked, max_iter=100, alpha_0=0.01, eps=1e-16) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, max_iter=100, alpha_0=0.01, eps=1e-16) -> mne.SourceEstimate:
         ''' Apply the inverse operator.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne Evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         max_iter : int
             Maximum number of iterations
         alpha_0 : float
@@ -62,18 +61,18 @@ class SolverBCS(BaseSolver):
             The SourceEstimate data structure containing the inverse solution.
 
         '''
-
-        source_mat = self.calc_bcs_solution(evoked, max_iter=max_iter, alpha_0=alpha_0, eps=eps)
-        stc = self.source_to_object(source_mat, evoked)
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_bcs_solution(data, max_iter=max_iter, alpha_0=alpha_0, eps=eps)
+        stc = self.source_to_object(source_mat)
         return stc
     
-    def calc_bcs_solution(self, evoked, max_iter=100, alpha_0=0.01, eps=1e-16):
+    def calc_bcs_solution(self, y, max_iter=100, alpha_0=0.01, eps=1e-16):
         ''' This function computes the BCS inverse solution.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The mne Evoked data object.
+        y : numpy.ndarray
+            The M/EEG data matrix (n_channels, n_timepoints)
         max_iter : int
             Maximum number of iterations
         alpha_0 : float
@@ -88,7 +87,6 @@ class SolverBCS(BaseSolver):
         '''
 
         alpha_0 = np.clip(alpha_0, a_min=1e-6, a_max=None)
-        y = evoked.data
         n_chans, _ = y.shape
         n_dipoles = self.leadfield_norm.shape[1]
         
@@ -103,12 +101,6 @@ class SolverBCS(BaseSolver):
         mu = alpha_0 * sigma @ self.leadfield_norm.T @ y
         proj_norm = self.leadfield_norm.T @ y
         proj = self.leadfield.T @ y
-
-        # D_inv = np.linalg.inv(D)
-        # var = 1/alpha_0
-        # I = np.identity(n_chans)
-        # C = var**2 * I + self.leadfield @ D_inv @ self.leadfield.T
-        # marginal_likelihood = -0.5 * (n_chans * np.log(2*np.pi) + np.log(C) + y.T @ np.linalg.inv(C) @ y)
         
         residual_norms = [1e99]
         x_hats = []
@@ -160,7 +152,7 @@ class SolverGammaMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", smoothness_prior=False,
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", smoothness_prior=False,
                               max_iter=100, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -168,6 +160,8 @@ class SolverGammaMAP(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : str/ float
             The regularization parameter.
         max_iter : int
@@ -185,6 +179,7 @@ class SolverGammaMAP(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         leadfield = self.leadfield
         n_chans, n_dipoles = leadfield.shape
+        data = self.unpack_data_obj(mne_obj)
 
         if smoothness_prior:
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
@@ -193,17 +188,15 @@ class SolverGammaMAP(BaseSolver):
         else:
             self.gradient = None
             self.sigma_s = np.identity(n_dipoles)
-
+        
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_gamma_map_inverse_operator(evoked.data, alpha, max_iter=max_iter)
+            inverse_operator = self.make_gamma_map_inverse_operator(data, alpha, max_iter=max_iter)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
     
     def make_gamma_map_inverse_operator(self, B, alpha, max_iter=100):
         ''' Computes the gamma MAP inverse operator based on the M/EEG data.
@@ -282,7 +275,7 @@ class SolverSourceMAP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", smoothness_prior=False,
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", smoothness_prior=False,
                               max_iter=100, p=0.5, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -292,18 +285,19 @@ class SolverSourceMAP(BaseSolver):
             The mne-python Forward model instance.
         alpha : float
             The regularization parameter.
-        p : 0 < p < 2 
-            Hyperparameter which controls sparsity. Default: p = 0.5
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
             max_iter = 1 corresponds to sLORETA.
-
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0.5
+        
         Return
         ------
         self : object returns itself for convenience
 
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
         n_chans, n_dipoles = leadfield.shape
 
@@ -317,14 +311,12 @@ class SolverSourceMAP(BaseSolver):
 
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, max_iter=max_iter, p=p)
+            inverse_operator = self.make_source_map_inverse_operator(data, alpha, max_iter=max_iter, p=p)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
     
     def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5):
         ''' Computes the source MAP inverse operator based on the M/EEG data.
@@ -392,7 +384,6 @@ class SolverSourceMAP(BaseSolver):
             x = x[:, np.newaxis]
         return np.sqrt(np.trace(x@x.T))
 
-
 class SolverGammaMAPMSP(BaseSolver):
     ''' Class for the Gamma Maximum A Posteriori (Gamma-MAP) inverse solution
     using multiple sparse priors (MSP).
@@ -412,7 +403,7 @@ class SolverGammaMAPMSP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", 
                               max_iter=100, p=0.5, smoothness_order=1, verbose=0, 
                               **kwargs):
         ''' Calculate inverse operator.
@@ -421,13 +412,15 @@ class SolverGammaMAPMSP(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
-        p : 0 < p < 2 
-            Hyperparameter which controls sparsity. Default: p = 0
         max_iter : int
             Maximum numbers of iterations to find the optimal hyperparameters.
             max_iter = 1 corresponds to sLORETA-like solution.
+        p : 0 < p < 2 
+            Hyperparameter which controls sparsity. Default: p = 0
         smoothness_order : int
             Controls the smoothness prior. The higher this integer, the higher
             the pursued smoothness of the inverse solution.
@@ -437,12 +430,13 @@ class SolverGammaMAPMSP(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
         n_chans, _ = leadfield.shape
         
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, 
+            inverse_operator = self.make_source_map_inverse_operator(data, alpha, 
                                                                     max_iter=max_iter, p=p, 
                                                                     smoothness_order=smoothness_order)
             inverse_operators.append(inverse_operator)
@@ -450,9 +444,6 @@ class SolverGammaMAPMSP(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-    
     def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
         ''' Computes the source MAP inverse operator based on the M/EEG data.
         
@@ -577,7 +568,7 @@ class SolverSourceMAPMSP(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha="auto", 
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", 
                               max_iter=100, p=0.5, smoothness_order=1, verbose=0, 
                               **kwargs):
         ''' Calculate inverse operator.
@@ -586,6 +577,8 @@ class SolverSourceMAPMSP(BaseSolver):
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
         p : 0 < p < 2 
@@ -603,21 +596,19 @@ class SolverSourceMAPMSP(BaseSolver):
 
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
         n_chans, _ = leadfield.shape
         
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_source_map_inverse_operator(evoked.data, alpha, 
+            inverse_operator = self.make_source_map_inverse_operator(data, alpha, 
                                                                     max_iter=max_iter, p=p, 
                                                                     smoothness_order=smoothness_order)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
     
     def make_source_map_inverse_operator(self, B, alpha, max_iter=100, p=0.5, smoothness_order=1):
         ''' Computes the source MAP inverse operator based on the M/EEG data.

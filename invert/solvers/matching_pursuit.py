@@ -47,9 +47,21 @@ class SolverOMP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
-        source_mat = np.stack([self.calc_omp_solution(y, K=K) for y in evoked.data.T], axis=1)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = np.stack([self.calc_omp_solution(y, K=K) for y in data.T], axis=1)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -154,9 +166,21 @@ class SolverSOMP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
-        source_mat = self.calc_somp_solution(evoked.data, K)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_somp_solution(data, K)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -267,9 +291,23 @@ class SolverCOSAMP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K="auto", rv_thresh=1) -> mne.SourceEstimate:
-        source_mat = np.stack([self.calc_cosamp_solution(y, K=K,  rv_thresh=rv_thresh) for y in evoked.data.T], axis=1)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, K="auto", rv_thresh=1) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = np.stack([self.calc_cosamp_solution(y, K=K,  rv_thresh=rv_thresh) for y in data.T], axis=1)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -346,8 +384,6 @@ class SolverCOSAMP(BaseSolver):
         x_hat = best_index_residual(residuals, x_hats)
         
         return x_hat
-        
-
 
 class SolverREMBO(BaseSolver):
     ''' Class for the Reduce Multi-Measurement-Vector and Boost (ReMBo) inverse
@@ -391,13 +427,13 @@ class SolverREMBO(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
         """ Apply the REMBO inverse solution.
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked object holding the M/EEG data.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         K : int
             The number of atoms to select per iteration.
         
@@ -406,8 +442,9 @@ class SolverREMBO(BaseSolver):
         stc : mne.SourceEstimate
             The source estimate containing the inverse solution.
         """
-        source_mat = self.calc_rembo_solution(evoked.data, K=K)
-        stc = self.source_to_object(source_mat, evoked)
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_rembo_solution(data, K=K)
+        stc = self.source_to_object(source_mat)
         return stc
     
     def calc_rembo_solution(self, y, K=1):
@@ -477,10 +514,10 @@ class SolverREMBO(BaseSolver):
         # corner_idx = find_corner(n_sources[1:], unexplained_variance[1:])+1
         # corner_idx = idc[corner_idx]
         x_hat = x_hats[corner_idx]
-        import matplotlib.pyplot as plt
-        plt.figure()
-        plt.plot(n_sources, unexplained_variance, 'k*')
-        plt.plot(n_sources[corner_idx], unexplained_variance[corner_idx], 'ro')
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # plt.plot(n_sources, unexplained_variance, 'k*')
+        # plt.plot(n_sources[corner_idx], unexplained_variance[corner_idx], 'ro')
         
         
         return x_hat
@@ -536,7 +573,6 @@ class SolverREMBO(BaseSolver):
         x_hat = x_hats[corner_idx]
         return x_hat
 
-
 class SolverSP(BaseSolver):
     ''' Class for the Subspace Pursuit (SP) inverse solution [1]. The algorithm
         as described by [2] was implemented.
@@ -580,13 +616,13 @@ class SolverSP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
         """ Apply the SP inverse solution.
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked object holding the M/EEG data.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         K : int
             The number of atoms to select per iteration.
         
@@ -595,9 +631,9 @@ class SolverSP(BaseSolver):
         stc : mne.SourceEstimate
             The source estimate containing the inverse solution.
         """
-
-        source_mat = np.stack([self.calc_sp_solution(y, K=K) for y in evoked.data.T], axis=1)
-        stc = self.source_to_object(source_mat, evoked)
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = np.stack([self.calc_sp_solution(y, K=K) for y in data.T], axis=1)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -658,7 +694,6 @@ class SolverSP(BaseSolver):
         x_hat[T_l] = np.linalg.pinv(self.leadfield[:, T_l]) @ y
         return x_hat
 
-
 class SolverSSP(BaseSolver):
     ''' Class for the Simultaneous Subspace Pursuit (SSP) inverse solution.
     
@@ -700,13 +735,13 @@ class SolverSSP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked, K=1) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
         """ Apply the SSP inverse solution.
         
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked object holding the M/EEG data.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         K : int
             The number of atoms to select per iteration.
         
@@ -715,9 +750,9 @@ class SolverSSP(BaseSolver):
         stc : mne.SourceEstimate
             The source estimate containing the inverse solution.
         """
-
-        source_mat = self.calc_ssp_solution(evoked.data, K=K)
-        stc = self.source_to_object(source_mat, evoked)
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_ssp_solution(data, K=K)
+        stc = self.source_to_object(source_mat)
         return stc
     
 

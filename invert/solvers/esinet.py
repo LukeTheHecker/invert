@@ -119,19 +119,33 @@ class SolverCNN(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -139,7 +153,7 @@ class SolverCNN(BaseSolver):
             The source esimate.
 
         '''
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         n_channels, n_times = y.shape
         
@@ -161,14 +175,13 @@ class SolverCNN(BaseSolver):
 
         # 1) Calculate weighted minimum norm solution at active dipoles
         n_dipoles = len(gammas)
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         x_hat = np.zeros((n_dipoles, n_times))
         L = self.leadfield[:, dipole_idc]
         W = np.diag(np.linalg.norm(L, axis=0))
         x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 
-        
         return x_hat        
             
     def train_model(self,):
@@ -177,7 +190,6 @@ class SolverCNN(BaseSolver):
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=self.generator.__next__(), callbacks=callbacks)
-
 
     def build_model(self,):
         ''' Build the neural network model.
@@ -328,19 +340,33 @@ class SolverCovCNN(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -349,7 +375,7 @@ class SolverCovCNN(BaseSolver):
 
         '''
 
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         y_norm = y / np.linalg.norm(y, axis=0)
         n_channels, n_times = y.shape
@@ -528,19 +554,33 @@ class SolverFC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -549,7 +589,7 @@ class SolverFC(BaseSolver):
 
         '''
 
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
         y /= abs(y).max()
@@ -565,7 +605,7 @@ class SolverFC(BaseSolver):
         source_pred = np.swapaxes(source_pred, 1, 2)
 
         # Rescale sources
-        y_original = deepcopy(evoked.data)
+        y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
@@ -617,9 +657,7 @@ class SolverFC(BaseSolver):
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
-    
-    
-        
+
 class SolverLSTM(BaseSolver):
     ''' Class for the Long-Short Term Memory Neural Network (LSTM) for 
         EEG inverse solutions.
@@ -728,19 +766,33 @@ class SolverLSTM(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -748,7 +800,7 @@ class SolverLSTM(BaseSolver):
             The source esimate.
 
         '''
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
         y /= abs(y).max()
@@ -764,7 +816,7 @@ class SolverLSTM(BaseSolver):
         source_pred = np.swapaxes(source_pred, 1, 2)
 
         # Rescale sources
-        y_original = deepcopy(evoked.data)
+        y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
@@ -850,100 +902,7 @@ class SolverLSTM(BaseSolver):
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
-# class SolverFullyConnected(BaseSolver):
-#     ''' Class for the Fully-Connected (FC) neural network's inverse solution.
-    
-#     Attributes
-#     ----------
-#     forward : mne.Forward
-#         The mne-python Forward model instance.
-#     '''
-#     def __init__(self, name="Fully-Connected", **kwargs):
-#         self.name = name
-#         return super().__init__(**kwargs)
 
-#     def make_inverse_operator(self, forward, evoked, *args, alpha='auto', 
-#                             n_simulations=5000, settings=None, activation_function="tanh", 
-#                             verbose=0, **kwargs):
-#         ''' Calculate inverse operator.
-
-#         Parameters
-#         ----------
-#         forward : mne.Forward
-#             The mne-python Forward model instance.
-#         alpha : float
-#             The regularization parameter.
-        
-#         Return
-#         ------
-#         self : object returns itself for convenience
-#         '''
-#         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-#         info = evoked.info
-#         if settings is None:
-#             settings = dict(duration_of_trial=0., )
-#         sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)
-
-#         model_args = dict(model_type="FC", activation_function=activation_function, )
-#         inverse_operator = InverseOperator(Net(forward, **model_args, verbose=verbose).fit(sim), self.name)
-#         self.inverse_operators = [inverse_operator,]
-        
-#         return self
-
-#     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-#         return super().apply_inverse_operator(evoked)
-
-# def make_fullyconnected_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-#     """ Calculate the inverse operator using the Fully-Connected artificial neural network model.
-
-#     Parameters
-#     ----------
-#     leadfield : mne.Foward
-#         The forward model object.
-#     info : mne.Info
-#         The mne info object.
-
-#     Return
-#     ------
-#     inverse_operator : esinet.Net
-#         The neural network model object from the esinet package.
-
-#     """
-#     if settings is None:
-#         settings = dict(duration_of_trial=0.)
-#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
-
-#     model_args = dict(model_type="FC", activation_function="tanh")
-#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
-
-#     return inverse_operator
-
-
-# def make_lstm_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-#     """ Calculate the inverse operator using the Long-Short Term Memory
-#     artificial neural network model.
-
-#     Parameters
-#     ----------
-#     leadfield : mne.Foward
-#         The forward model object.
-#     info : mne.Info
-#         The mne info object.
-
-#     Return
-#     ------
-#     inverse_operator : esinet.Net
-#         The neural network model object from the esinet package.
-
-#     """
-#     if settings is None:
-#         settings = dict(duration_of_trial=0.)
-#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
-
-#     model_args = dict(model_type="LSTM")
-#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
-
-#     return inverse_operator
 
 def rms(x):
         return np.sqrt(np.mean(x**2))

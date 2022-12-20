@@ -1,4 +1,4 @@
-import sys; sys.path.insert(0, '../')
+# import sys; sys.path.insert(0, '../')
 from invert.config import all_solvers
 from invert import Solver
 import numpy as np

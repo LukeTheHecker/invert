@@ -234,14 +234,14 @@ From theory to applications. IEEE Transactions on signal processing, 59(9),
 4053-4085.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverCOSAMP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rv_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverCOSAMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rv_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverCOSAMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -312,17 +312,16 @@ From theory to applications. IEEE Transactions on signal processing, 59(9),
 4053-4085.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverOMP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverOMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverOMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.
+:param mne_obj: The MNE data object.
+:type mne_obj: [mne.Evoked, mne.Epochs, mne.io.Raw]</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>stc</strong> – The mne Source Estimate object</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>mne.SourceEstimate</p>
 </dd>
 </dl>
 </dd></dl>
@@ -397,12 +396,12 @@ Structured compressed sensing: From theory to applications. IEEE
 Transactions on signal processing, 59(9), 4053-4085.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverREMBO.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverREMBO.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverREMBO.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the REMBO inverse solution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked object holding the M/EEG data.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>K</strong> (<em>int</em>) – The number of atoms to select per iteration.</p></li>
 </ul>
 </dd>
@@ -497,17 +496,16 @@ From theory to applications. IEEE Transactions on signal processing, 59(9),
 information theory, 52(4), 1289-1306.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverSOMP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSOMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSOMP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.
+:param mne_obj: The MNE data object.
+:type mne_obj: [mne.Evoked, mne.Epochs, mne.io.Raw]</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>stc</strong> – The mne Source Estimate object</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>mne.SourceEstimate</p>
 </dd>
 </dl>
 </dd></dl>
@@ -581,12 +579,12 @@ From theory to applications. IEEE Transactions on signal processing, 59(9),
 4053-4085.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverSP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the SP inverse solution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked object holding the M/EEG data.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>K</strong> (<em>int</em>) – The number of atoms to select per iteration.</p></li>
 </ul>
 </dd>
@@ -654,12 +652,12 @@ From theory to applications. IEEE Transactions on signal processing, 59(9),
 4053-4085.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.matching_pursuit.SolverSSP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.matching_pursuit.SolverSSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the SSP inverse solution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked object holding the M/EEG data.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>K</strong> (<em>int</em>) – The number of atoms to select per iteration.</p></li>
 </ul>
 </dd>

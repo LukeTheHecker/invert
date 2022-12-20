@@ -180,11 +180,11 @@ more accurate the regularisation and the slower the computations.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.base.BaseSolver.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.base.BaseSolver.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the inverse operator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
@@ -303,12 +303,12 @@ common average referencing and unit norm scaling.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_gcv">
-<span class="sig-name descname"><span class="pre">regularise_gcv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_gcv" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">regularise_gcv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_gcv" title="Permalink to this definition">#</a></dt>
 <dd><p>Find optimally regularized inverse solution using the generalized
 cross-validation method [1].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+<dd class="field-odd"><p><strong>M</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix (n_channels, n_timepoints)</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
@@ -327,11 +327,11 @@ rehabilitation, 5(1), 1-33.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_lcurve">
-<span class="sig-name descname"><span class="pre">regularise_lcurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_lcurve" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">regularise_lcurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_lcurve" title="Permalink to this definition">#</a></dt>
 <dd><p>Find optimally regularized inverse solution using the L-Curve method [1].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+<dd class="field-odd"><p><strong>M</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix (n_channels, n_timepoints)</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
@@ -350,11 +350,11 @@ rehabilitation, 5(1), 1-33.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.regularise_product">
-<span class="sig-name descname"><span class="pre">regularise_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_product" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">regularise_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.regularise_product" title="Permalink to this definition">#</a></dt>
 <dd><p>Find optimally regularized inverse solution using the product method [1].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked object</p>
+<dd class="field-odd"><p><strong>M</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix (n_channels, n_timepoints)</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
@@ -391,14 +391,11 @@ rehabilitation, 5(1), 1-33.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver.source_to_object">
-<span class="sig-name descname"><span class="pre">source_to_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.source_to_object" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">source_to_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver.source_to_object" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts the source_mat matrix to the mne.SourceEstimate object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – Source matrix (dipoles, time points)-</p></li>
-<li><p><strong>evoekd</strong> (<em>mne.Evoked</em>) – Evoked data object.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>source_mat</strong> (<em>numpy.ndarray</em>) – Source matrix (dipoles, time points)-</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>stc</strong></p>
@@ -438,6 +435,22 @@ numpy.ndarray matrix or some object like an esinet.net()</p>
 <dd class="field-odd"><p><strong>operator</strong> (<em>inverse</em>) – </p>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.base.InverseOperator.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.InverseOperator.apply" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the precomputed inverse operator to the data matrix M.
+:param M: The M/EEG data matrix (n_channels, n_timepoints)
+:type M: numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>J</strong> – The source estimate matrix (n_sources, n_timepoints)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.base.InverseOperator.has_multiple_operators">
 <span class="sig-name descname"><span class="pre">has_multiple_operators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.InverseOperator.has_multiple_operators" title="Permalink to this definition">#</a></dt>
