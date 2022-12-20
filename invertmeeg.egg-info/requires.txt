@@ -5,6 +5,7 @@ colorednoise
 matplotlib
 pyvista
 pyvistaqt
+PyQt5
 vtk
 tqdm
 pytest

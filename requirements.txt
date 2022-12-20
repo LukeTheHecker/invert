@@ -49,7 +49,7 @@ imagesize==1.4.1
 importlib-metadata==4.12.0
 importlib-resources==5.8.0
 iniconfig==1.1.1
-invert==0.0.1
+invertmeeg==0.0.2
 ipykernel==6.15.0
 ipython==8.4.0
 ipython-genutils==0.2.0
