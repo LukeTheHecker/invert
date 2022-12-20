@@ -1,6 +1,0 @@
-Base Class
-==========
-
-
-.. automodule:: ../invert/invert
-    :members:
