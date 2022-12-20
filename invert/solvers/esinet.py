@@ -233,7 +233,7 @@ class SolverCNN(BaseSolver):
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range)
         self.generator = generator(self.forward, **gen_args)
-        
+
 class SolverCovCNN(BaseSolver):
     ''' Class for the Covariance-based Convolutional Neural Network (CovCNN) for EEG inverse solutions.
     

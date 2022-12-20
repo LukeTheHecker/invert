@@ -4,3 +4,4 @@
 .vscode
 inverse.egg-info
 sphinx
+build
