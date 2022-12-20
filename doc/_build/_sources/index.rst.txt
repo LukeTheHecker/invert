@@ -1,7 +1,7 @@
-**invert** - A high-level M/EEG Python library for EEG inverse solutions
+**inverse** - A high-level M/EEG Python library for EEG inverse solutions
 ======
 
-Welcome to the documentation of the invert package for python! You can find the
+Welcome to the documentation of the inverse package for python! You can find the
 documentation of **over 40** inverse solutions here: :doc:`content/solvers`. In
 the future, there will be some tutorials.
 
@@ -12,7 +12,7 @@ You can simply install the package using pip:
 
 ..  code-block::
     
-    pip install invert
+    pip install inverse
 
 Quickstart
 ==========
@@ -23,7 +23,7 @@ calculate an inverse solution as such:
 ..  code-block:: python
     
     # import
-    from invert import Solver
+    from inverse import Solver
     
     # create a solver instance
     solver = Solver("MNE")

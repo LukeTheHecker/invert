@@ -1,0 +1,13 @@
+tensorflow
+mne
+scipy
+colorednoise
+matplotlib
+pyvista
+pyvistaqt
+vtk
+tqdm
+pytest
+dill
+scikit-learn
+pandas
