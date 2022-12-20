@@ -23,7 +23,7 @@ To test the package simply run:
 pytest
 ```
 
-To calculate an inverse solution using MNE simply type:
+To calculate an inverse solution using *minimum norm estimates* simply type:
 
 ```
 from invert import Solver
@@ -32,7 +32,8 @@ from invert import Solver
 # evoked = ...
 
 # Create a Solver instance
-solver = Solver()
+solver_name = "MNE"
+solver = Solver(solver_name)
 
 # Calculate the inverse operator
 solver.make_inverse_operator(fwd)
@@ -43,3 +44,6 @@ stc = solver.apply_inverse_operator(evoked)
 # Plot the resulting source estimate
 stc.plot()
 ```
+
+There are many solvers implemented in the package, and you can find them
+[here!](https://lukethehecker.github.io/invert/content/solvers.html)
