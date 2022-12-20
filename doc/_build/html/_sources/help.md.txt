@@ -7,5 +7,5 @@ documentation](https://www.sphinx-doc.org/)
 Build the sphinx :
 
 ```
-documentation sphinx-build -b html . ./_build
+sphinx-build -b html . ./_build
 ```

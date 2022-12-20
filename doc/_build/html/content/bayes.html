@@ -92,6 +92,14 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/invert" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
       </ul>
       </div>
       
@@ -218,12 +226,12 @@
 Transactions on signal processing, 56(6), 2346-2356.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverBCS.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-16</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverBCS.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-16</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverBCS.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked data object.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations</p></li>
 <li><p><strong>alpha_0</strong> (<em>float</em>) – Regularization parameter</p></li>
 <li><p><strong>eps</strong> (<em>float</em>) – Epsilon, used to avoid division by zero.</p></li>
@@ -240,12 +248,12 @@ Transactions on signal processing, 56(6), 2346-2356.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverBCS.calc_bcs_solution">
-<span class="sig-name descname"><span class="pre">calc_bcs_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverBCS.calc_bcs_solution" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_bcs_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverBCS.calc_bcs_solution" title="Permalink to this definition">#</a></dt>
 <dd><p>This function computes the BCS inverse solution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The mne Evoked data object.</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix (n_channels, n_timepoints)</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations</p></li>
 <li><p><strong>alpha_0</strong> (<em>float</em>) – Regularization parameter</p></li>
 <li><p><strong>eps</strong> (<em>float</em>) – Epsilon, used to avoid division by zero.</p></li>
@@ -290,23 +298,6 @@ Transactions on signal processing, 56(6), 2346-2356.</p>
 <p>Wipf, D., &amp; Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
 source imaging. NeuroImage, 44(3), 947-966.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAP.make_gamma_map_inverse_operator">
 <span class="sig-name descname"><span class="pre">make_gamma_map_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAP.make_gamma_map_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes the gamma MAP inverse operator based on the M/EEG data.</p>
@@ -330,12 +321,13 @@ max_iter = 1 corresponds to sLORETA.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAP.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>alpha</strong> (<em>str/ float</em>) – The regularization parameter.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum numbers of iterations to find the optimal hyperparameters.
 max_iter = 1 corresponds to sLORETA.</p></li>
@@ -373,23 +365,6 @@ using multiple sparse priors (MSP).</p>
 <p>Wipf, D., &amp; Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
 source imaging. NeuroImage, 44(3), 947-966.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAPMSP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAPMSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAPMSP.get_smooth_prior_cov">
 <span class="sig-name descname"><span class="pre">get_smooth_prior_cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_order</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAPMSP.get_smooth_prior_cov" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a smooth prior on the covariance matrix.</p>
@@ -412,16 +387,17 @@ source imaging. NeuroImage, 44(3), 947-966.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverGammaMAPMSP.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAPMSP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverGammaMAPMSP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
-<li><p><strong>p</strong> (<em>0 &lt; p &lt; 2</em>) – Hyperparameter which controls sparsity. Default: p = 0</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum numbers of iterations to find the optimal hyperparameters.
 max_iter = 1 corresponds to sLORETA-like solution.</p></li>
+<li><p><strong>p</strong> (<em>0 &lt; p &lt; 2</em>) – Hyperparameter which controls sparsity. Default: p = 0</p></li>
 <li><p><strong>smoothness_order</strong> (<em>int</em>) – Controls the smoothness prior. The higher this integer, the higher
 the pursued smoothness of the inverse solution.</p></li>
 </ul>
@@ -470,34 +446,17 @@ the pursued smoothness of the inverse solution.</p></li>
 <p>Wipf, D., &amp; Nagarajan, S. (2009). A unified Bayesian framework for MEG/EEG
 source imaging. NeuroImage, 44(3), 947-966.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.bayes.SolverSourceMAP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverSourceMAP.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
-<li><p><strong>p</strong> (<em>0 &lt; p &lt; 2</em>) – Hyperparameter which controls sparsity. Default: p = 0.5</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum numbers of iterations to find the optimal hyperparameters.
 max_iter = 1 corresponds to sLORETA.</p></li>
+<li><p><strong>p</strong> (<em>0 &lt; p &lt; 2</em>) – Hyperparameter which controls sparsity. Default: p = 0.5</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -547,30 +506,14 @@ MEG/EEG source imaging. NeuroImage, 44(3), 947-966.</p>
 Trujillo-Barreto, N., … &amp; Mattout, J. (2008). Multiple sparse priors for
 the M/EEG inverse problem. NeuroImage, 39(3), 1104-1120.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.bayes.SolverSourceMAPMSP.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAPMSP.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.bayes.SolverSourceMAPMSP.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAPMSP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothness_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.bayes.SolverSourceMAPMSP.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
 <li><p><strong>p</strong> (<em>0 &lt; p &lt; 2</em>) – Hyperparameter which controls sparsity. Default: p = 0.5</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum numbers of iterations to find the optimal hyperparameters.
@@ -633,23 +576,6 @@ Nagarajan, S. S. (2012). Performance evaluation of the Champagne source
 reconstruction algorithm on simulated and real M/EEG data. Neuroimage,
 60(1), 305-323.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverChampagne.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverChampagne.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverChampagne.champagne">
 <span class="sig-name descname"><span class="pre">champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverChampagne.champagne" title="Permalink to this definition">#</a></dt>
 <dd><p>Champagne method.</p>
@@ -673,16 +599,80 @@ function formula).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverChampagne.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations.</p></li>
 <li><p><strong>noise_cov</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The noise covariance matrix. Use “None” if not available.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverEMChampagne">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.empirical_bayes.</span></span><span class="sig-name descname"><span class="pre">SolverEMChampagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EM-Champagne'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverEMChampagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Expectation Maximization Champagne inverse solution.</p>
+<p class="rubric">References</p>
+<p>[1] Hashemi, A., &amp; Haufe, S. (2018, September). Improving EEG source
+localization through spatio-temporal sparse Bayesian learning. In 2018 26th
+European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverEMChampagne.em_champagne">
+<span class="sig-name descname"><span class="pre">em_champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverEMChampagne.em_champagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Expectation Maximization Champagne method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Y</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>n_sensors</em><em>,</em><em>)</em>) – measurement vector, capturing sensor measurements</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of inner loop iterations</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero (pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Parameter vector, e.g., source vector in the context of BSI (x in the cost
+function formula).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverEMChampagne.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverEMChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations.</p></li>
+<li><p><strong>noise_cov</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The noise covariance matrix. Use “None” if not available.</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero
+(pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -705,32 +695,19 @@ function formula).</p>
 localization through spatio-temporal sparse Bayesian learning. In 2018 26th
 European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverLowSNRChampagne.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverLowSNRChampagne.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>mne.SourceEstimate</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverLowSNRChampagne.low_snr_champagne">
-<span class="sig-name descname"><span class="pre">low_snr_champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverLowSNRChampagne.low_snr_champagne" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">low_snr_champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverLowSNRChampagne.low_snr_champagne" title="Permalink to this definition">#</a></dt>
 <dd><p>Low SNR Champagne method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>y</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>n_sensors</em><em>,</em><em>)</em>) – measurement vector, capturing sensor measurements</p></li>
+<li><p><strong>Y</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>n_sensors</em><em>,</em><em>)</em>) – measurement vector, capturing sensor measurements</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of inner loop iterations</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero (pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -738,23 +715,28 @@ European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.</p>
 function formula).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array, shape (dipoles, time)</p>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverLowSNRChampagne.make_inverse_operator">
-<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverLowSNRChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverLowSNRChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
-<li><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked data object.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
 <li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations.</p></li>
 <li><p><strong>noise_cov</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The noise covariance matrix. Use “None” if not available.</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero
+(pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -762,6 +744,137 @@ function formula).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverMMChampagne">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.empirical_bayes.</span></span><span class="sig-name descname"><span class="pre">SolverMMChampagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MM-Champagne'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverMMChampagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Majority Maximization Champagne inverse solution.</p>
+<p class="rubric">References</p>
+<p>[1] Hashemi, A., &amp; Haufe, S. (2018, September). Improving EEG source
+localization through spatio-temporal sparse Bayesian learning. In 2018 26th
+European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverMMChampagne.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverMMChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations.</p></li>
+<li><p><strong>noise_cov</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The noise covariance matrix. Use “None” if not available.</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero
+(pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverMMChampagne.mm_champagne">
+<span class="sig-name descname"><span class="pre">mm_champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverMMChampagne.mm_champagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Majority Maximization Champagne method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Y</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>n_sensors</em><em>,</em><em>)</em>) – measurement vector, capturing sensor measurements</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of inner loop iterations</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero (pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Parameter vector, e.g., source vector in the context of BSI (x in the cost
+function formula).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverTEMChampagne">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.empirical_bayes.</span></span><span class="sig-name descname"><span class="pre">SolverTEMChampagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TEM-Champagne'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverTEMChampagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Class for the Temporal Expectation Maximization Champagne (T-EM
+Champagne) inverse solution.</p>
+<p class="rubric">References</p>
+<p>[1] Hashemi, A., &amp; Haufe, S. (2018, September). Improving EEG source
+localization through spatio-temporal sparse Bayesian learning. In 2018 26th
+European Signal Processing Conference (EUSIPCO) (pp. 1935-1939). IEEE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverTEMChampagne.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverTEMChampagne.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations.</p></li>
+<li><p><strong>noise_cov</strong> (<em>[</em><em>None</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The noise covariance matrix. Use “None” if not available.</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero
+(pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – Another regularization term</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.empirical_bayes.SolverTEMChampagne.tem_champagne">
+<span class="sig-name descname"><span class="pre">tem_champagne</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pruning_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.empirical_bayes.SolverTEMChampagne.tem_champagne" title="Permalink to this definition">#</a></dt>
+<dd><p>Temporal Trade-Off Expectation Maximization Champagne method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Y</strong> (<em>array</em><em>, </em><em>shape</em><em> (</em><em>n_sensors</em><em>,</em><em>)</em>) – measurement vector, capturing sensor measurements</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of inner loop iterations</p></li>
+<li><p><strong>prune</strong> (<em>bool</em>) – If True, the algorithm sets small-activity dipoles to zero (pruning).</p></li>
+<li><p><strong>pruning_thresh</strong> (<em>float</em>) – The threshold at which small gammas (dipole candidates) are set to
+zero.</p></li>
+<li><p><strong>convergence_criterion</strong> (<em>float</em>) – Minimum change of loss function until convergence is assumed.</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – Another regularization term</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – Parameter vector, e.g., source vector in the context of BSI (x in the cost
+function formula).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>

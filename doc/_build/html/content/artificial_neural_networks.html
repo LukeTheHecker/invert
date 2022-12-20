@@ -92,6 +92,14 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/invert" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
       </ul>
       </div>
       
@@ -226,14 +234,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -243,11 +251,11 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverCNN.apply_model">
-<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_model" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCNN.apply_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the inverse solution of the M/EEG data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
@@ -336,14 +344,14 @@ all sources that are active at least 25 % of the maximum dipoles.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -353,11 +361,11 @@ all sources that are active at least 25 % of the maximum dipoles.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverCovCNN.apply_model">
-<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_model" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverCovCNN.apply_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the inverse solution of the M/EEG data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
@@ -439,14 +447,14 @@ maximum dipoles.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -456,11 +464,11 @@ maximum dipoles.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverFC.apply_model">
-<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_model" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverFC.apply_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the inverse solution of the M/EEG data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
@@ -549,14 +557,14 @@ data until a new batch is simulated.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.apply_inverse_operator">
-<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
-<dd><p>Apply the inverse operator</p>
+<span class="sig-name descname"><span class="pre">apply_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">mne.source_estimate.SourceEstimate</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the inverse operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The Evoked data object</p>
+<dd class="field-odd"><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>stc</strong> – The mne SourceEstimate object.</p>
+<dd class="field-even"><p><strong>stc</strong> – The mne Source Estimate object.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>mne.SourceEstimate</p>
@@ -566,11 +574,11 @@ data until a new batch is simulated.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="invert.solvers.esinet.SolverLSTM.apply_model">
-<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evoked</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_model" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#invert.solvers.esinet.SolverLSTM.apply_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the inverse solution of the M/EEG data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evoked</strong> (<em>mne.Evoked</em>) – The evoked M/EEG data object.</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>numpy.ndarray</em>) – The M/EEG data matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>x_hat</strong> – The source esimate.</p>
