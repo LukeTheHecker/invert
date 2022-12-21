@@ -935,7 +935,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
 
     sources = np.identity(n_dipoles)
-    if type(n_orders) == tuple:
+    if isinstance(n_orders, (tuple, list)):
         min_order, max_order = n_orders
     else:
         min_order = 1
@@ -946,7 +946,9 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         new_sources /= new_sources.max(axis=0)
         if i >= min_order-1:
             sources = np.concatenate( [sources, new_sources], axis=0 )
-
+    if min_order>0:
+        print(sources.shape)
+        sources = sources[n_dipoles:]
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
     # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)

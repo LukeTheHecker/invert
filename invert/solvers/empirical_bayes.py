@@ -314,7 +314,6 @@ class SolverEMChampagne(BaseSolver):
         # This is how the final source estimate could be calculated:
         # mu_x = inverse_operator @ Y
 
-
         return inverse_operator
 
 class SolverMMChampagne(BaseSolver):
