@@ -110,178 +110,178 @@ Here we calculate all inverse solutions and plot them:
 Ground Truth
 ############
 
-.. image:: ../../../../figures/solver_gallery/GroundTruth.png
+.. image:: ../../../figures/solver_gallery/GroundTruth.png
   :width: 700
 
 Minimum Norm/Current Estimates
 ##############################
 
-.. image:: ../../../../figures/solver_gallery/MinimumNormEstimate.png
+.. image:: ../../../figures/solver_gallery/MinimumNormEstimate.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/WeightedMinimumNormEstimate.png
+.. image:: ../../../figures/solver_gallery/WeightedMinimumNormEstimate.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/DynamicStatisticalParametricMapping.png
+.. image:: ../../../figures/solver_gallery/DynamicStatisticalParametricMapping.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/MinimumCurrentEstimate.png
+.. image:: ../../../figures/solver_gallery/MinimumCurrentEstimate.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/MinimumL1-L2Norm.png
+.. image:: ../../../figures/solver_gallery/MinimumL1-L2Norm.png
   :width: 700
   
 
 LORETA
 ######
 
-.. image:: ../../../../figures/solver_gallery/LowResolutionTomography.png
+.. image:: ../../../figures/solver_gallery/LowResolutionTomography.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/StandardizedLowResolutionTomography.png
+.. image:: ../../../figures/solver_gallery/StandardizedLowResolutionTomography.png
   :width: 700
   
-.. image:: ../../../../figures/solver_gallery/ExactLowResolutionTomography.png
+.. image:: ../../../figures/solver_gallery/ExactLowResolutionTomography.png
   :width: 700
 
 
 Bayes
 #####
 
-.. image:: ../../../../figures/solver_gallery/Source-MAP.png
+.. image:: ../../../figures/solver_gallery/Source-MAP.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/Gamma-MAP.png
+.. image:: ../../../figures/solver_gallery/Gamma-MAP.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/Source-MAP-MSP.png
+.. image:: ../../../figures/solver_gallery/Source-MAP-MSP.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/GAMMA-MAP-MSP.png
+.. image:: ../../../figures/solver_gallery/GAMMA-MAP-MSP.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/Champagne.png
+.. image:: ../../../figures/solver_gallery/Champagne.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/MM-Champagne.png
+.. image:: ../../../figures/solver_gallery/MM-Champagne.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/LowSNR-Champagne.png
+.. image:: ../../../figures/solver_gallery/LowSNR-Champagne.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/BayesianCompressedSensing.png
+.. image:: ../../../figures/solver_gallery/BayesianCompressedSensing.png
   :width: 700
 
 
 Matching Pursuit
 ################
 
-.. image:: ../../../../figures/solver_gallery/OrthogonalMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/OrthogonalMatchingPursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/CompressedSamplingMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/CompressedSamplingMatchingPursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/SimultaneousSubspacePursuit.png
+.. image:: ../../../figures/solver_gallery/SimultaneousSubspacePursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/SubspacePursuit.png
+.. image:: ../../../figures/solver_gallery/SubspacePursuit.png
   :width: 700
 
 
 Smooth Matching Pursuit
 #######################
 
-.. image:: ../../../../figures/solver_gallery/SmoothMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/SmoothMatchingPursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/SubspaceSmoothMatchingPursuit.png
+.. image:: ../../../figures/solver_gallery/SubspaceSmoothMatchingPursuit.png
   :width: 700
   
 
 Artificial Neural Networks
 ##########################
 
-.. image:: ../../../../figures/solver_gallery/Fully-Connected.png
+.. image:: ../../../figures/solver_gallery/Fully-Connected.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/CNN.png
+.. image:: ../../../figures/solver_gallery/CNN.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/Cov-CNN.png
+.. image:: ../../../figures/solver_gallery/Cov-CNN.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/LSTM.png
+.. image:: ../../../figures/solver_gallery/LSTM.png
   :width: 700
 
 
 MUSIC
 #####
 
-.. image:: ../../../../figures/solver_gallery/MUSIC.png
+.. image:: ../../../figures/solver_gallery/MUSIC.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/RAP-MUSIC.png
+.. image:: ../../../figures/solver_gallery/RAP-MUSIC.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/TRAP-MUSIC.png
+.. image:: ../../../figures/solver_gallery/TRAP-MUSIC.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/FLEX-MUSIC.png
+.. image:: ../../../figures/solver_gallery/FLEX-MUSIC.png
   :width: 700
 
 
 Beamformers
 ###########
 
-.. image:: ../../../../figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png
+.. image:: ../../../figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png
   :width: 700
   
-.. image:: ../../../../figures/solver_gallery/LCMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/LCMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/SMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/SMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/WNMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/WNMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/HOCMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/HOCMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/ESMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/ESMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/MCMVBeamformer.png
+.. image:: ../../../figures/solver_gallery/MCMVBeamformer.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/ReciPSIICOS.png
+.. image:: ../../../figures/solver_gallery/ReciPSIICOS.png
   :width: 700
     
-.. image:: ../../../../figures/solver_gallery/SAMBeamformer.png
+.. image:: ../../../figures/solver_gallery/SAMBeamformer.png
   :width: 700
     
 
 MISC
 ####
 
-.. image:: ../../../../figures/solver_gallery/Backus-Gilbert.png
+.. image:: ../../../figures/solver_gallery/Backus-Gilbert.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/GPTSolver.png
+.. image:: ../../../figures/solver_gallery/GPTSolver.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/EPIFOCUS.png
+.. image:: ../../../figures/solver_gallery/EPIFOCUS.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/LocalAuto-RegressiveAverage.png
+.. image:: ../../../figures/solver_gallery/LocalAuto-RegressiveAverage.png
   :width: 700
 
-.. image:: ../../../../figures/solver_gallery/S-MAP.png
+.. image:: ../../../figures/solver_gallery/S-MAP.png
   :width: 700

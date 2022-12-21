@@ -12,7 +12,7 @@ cd sphinx
 3. Build the Project
 
 ```
-sphinx-build -b html . ./_build
+sphinx-build -b html sphinx sphinx/_build
 ```
 
 4. Copy all files in .sphinx/_build/html/ to .docs/
