@@ -38,6 +38,9 @@ calculate an inverse solution as such:
     # Plot the resulting source estimate
     stc.plot()
 
+There are many solvers implemented in the package. You can find them in the
+Gallery!
+
 .. toctree::
    :maxdepth: 2
    :hidden:
