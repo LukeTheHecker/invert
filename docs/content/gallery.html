@@ -323,75 +323,209 @@ given as follows:</p>
 </section>
 <section id="minimum-norm-current-estimates">
 <h2>Minimum Norm/Current Estimates<a class="headerlink" href="#minimum-norm-current-estimates" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MNE&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MinimumNormEstimate.png"><img alt="../_images/MinimumNormEstimate.png" src="../_images/MinimumNormEstimate.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;wMNE&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/WeightedMinimumNormEstimate.png"><img alt="../_images/WeightedMinimumNormEstimate.png" src="../_images/WeightedMinimumNormEstimate.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;dSPM&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/DynamicStatisticalParametricMapping.png"><img alt="../_images/DynamicStatisticalParametricMapping.png" src="../_images/DynamicStatisticalParametricMapping.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;FISTA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MinimumCurrentEstimate.png"><img alt="../_images/MinimumCurrentEstimate.png" src="../_images/MinimumCurrentEstimate.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;L1L2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MinimumL1-L2Norm.png"><img alt="../_images/MinimumL1-L2Norm.png" src="../_images/MinimumL1-L2Norm.png" style="width: 700px;" /></a>
 </section>
 <section id="loreta">
 <h2>LORETA<a class="headerlink" href="#loreta" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LORETA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/LowResolutionTomography.png"><img alt="../_images/LowResolutionTomography.png" src="../_images/LowResolutionTomography.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;sLORETA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/StandardizedLowResolutionTomography.png"><img alt="../_images/StandardizedLowResolutionTomography.png" src="../_images/StandardizedLowResolutionTomography.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;eLORETA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/ExactLowResolutionTomography.png"><img alt="../_images/ExactLowResolutionTomography.png" src="../_images/ExactLowResolutionTomography.png" style="width: 700px;" /></a>
 </section>
 <section id="bayes">
 <h2>Bayes<a class="headerlink" href="#bayes" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Source-MAP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Source-MAP.png"><img alt="../_images/Source-MAP.png" src="../_images/Source-MAP.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Gamma-MAP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Gamma-MAP.png"><img alt="../_images/Gamma-MAP.png" src="../_images/Gamma-MAP.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Source-MAP-MSP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Source-MAP-MSP.png"><img alt="../_images/Source-MAP-MSP.png" src="../_images/Source-MAP-MSP.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Gamma-MAP-MSP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/GAMMA-MAP-MSP.png"><img alt="../_images/GAMMA-MAP-MSP.png" src="../_images/GAMMA-MAP-MSP.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Champagne&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Champagne.png"><img alt="../_images/Champagne.png" src="../_images/Champagne.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MM Champagne&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MM-Champagne.png"><img alt="../_images/MM-Champagne.png" src="../_images/MM-Champagne.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LowSNR Champagne&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/LowSNR-Champagne.png"><img alt="../_images/LowSNR-Champagne.png" src="../_images/LowSNR-Champagne.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;BCS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/BayesianCompressedSensing.png"><img alt="../_images/BayesianCompressedSensing.png" src="../_images/BayesianCompressedSensing.png" style="width: 700px;" /></a>
 </section>
 <section id="matching-pursuit">
 <h2>Matching Pursuit<a class="headerlink" href="#matching-pursuit" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;OMP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/OrthogonalMatchingPursuit.png"><img alt="../_images/OrthogonalMatchingPursuit.png" src="../_images/OrthogonalMatchingPursuit.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SOMP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SimultaneousOrthogonalMatchingPursuit.png"><img alt="../_images/SimultaneousOrthogonalMatchingPursuit.png" src="../_images/SimultaneousOrthogonalMatchingPursuit.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;CoSaMP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/CompressedSamplingMatchingPursuit.png"><img alt="../_images/CompressedSamplingMatchingPursuit.png" src="../_images/CompressedSamplingMatchingPursuit.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SSP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SimultaneousSubspacePursuit.png"><img alt="../_images/SimultaneousSubspacePursuit.png" src="../_images/SimultaneousSubspacePursuit.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SubspacePursuit.png"><img alt="../_images/SubspacePursuit.png" src="../_images/SubspacePursuit.png" style="width: 700px;" /></a>
 </section>
 <section id="smooth-matching-pursuit">
 <h2>Smooth Matching Pursuit<a class="headerlink" href="#smooth-matching-pursuit" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SOMP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SmoothMatchingPursuit.png"><img alt="../_images/SmoothMatchingPursuit.png" src="../_images/SmoothMatchingPursuit.png" style="width: 700px;" /></a>
-<a class="reference internal image-reference" href="../_images/SmoothSimultaneousMatchingPursuit.png"><img alt="../_images/SmoothSimultaneousMatchingPursuit.png" src="../_images/SmoothSimultaneousMatchingPursuit.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SSMP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SubspaceSmoothMatchingPursuit.png"><img alt="../_images/SubspaceSmoothMatchingPursuit.png" src="../_images/SubspaceSmoothMatchingPursuit.png" style="width: 700px;" /></a>
 </section>
 <section id="artificial-neural-networks">
 <h2>Artificial Neural Networks<a class="headerlink" href="#artificial-neural-networks" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;FC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Fully-Connected.png"><img alt="../_images/Fully-Connected.png" src="../_images/Fully-Connected.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;CNN&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/CNN.png"><img alt="../_images/CNN.png" src="../_images/CNN.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Cov-CNN&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Cov-CNN.png"><img alt="../_images/Cov-CNN.png" src="../_images/Cov-CNN.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LSTM&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/LSTM.png"><img alt="../_images/LSTM.png" src="../_images/LSTM.png" style="width: 700px;" /></a>
 </section>
 <section id="music">
 <h2>MUSIC<a class="headerlink" href="#music" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MUSIC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MUSIC.png"><img alt="../_images/MUSIC.png" src="../_images/MUSIC.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;RAP-MUSIC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/RAP-MUSIC.png"><img alt="../_images/RAP-MUSIC.png" src="../_images/RAP-MUSIC.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;TRAP-MUSIC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/TRAP-MUSIC.png"><img alt="../_images/TRAP-MUSIC.png" src="../_images/TRAP-MUSIC.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;FLEX-MUSIC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/FLEX-MUSIC.png"><img alt="../_images/FLEX-MUSIC.png" src="../_images/FLEX-MUSIC.png" style="width: 700px;" /></a>
 </section>
 <section id="beamformers">
 <h2>Beamformers<a class="headerlink" href="#beamformers" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MVAB&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MinimumVarianceAdaptiveBeamformer.png"><img alt="../_images/MinimumVarianceAdaptiveBeamformer.png" src="../_images/MinimumVarianceAdaptiveBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LCMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/LCMVBeamformer.png"><img alt="../_images/LCMVBeamformer.png" src="../_images/LCMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SMVBeamformer.png"><img alt="../_images/SMVBeamformer.png" src="../_images/SMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;WNMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/WNMVBeamformer.png"><img alt="../_images/WNMVBeamformer.png" src="../_images/WNMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;HOCMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/HOCMVBeamformer.png"><img alt="../_images/HOCMVBeamformer.png" src="../_images/HOCMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;ESMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/ESMVBeamformer.png"><img alt="../_images/ESMVBeamformer.png" src="../_images/ESMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MCMV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/MCMVBeamformer.png"><img alt="../_images/MCMVBeamformer.png" src="../_images/MCMVBeamformer.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;ReciPSIICOS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/ReciPSIICOS.png"><img alt="../_images/ReciPSIICOS.png" src="../_images/ReciPSIICOS.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;SAM&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/SAMBeamformer.png"><img alt="../_images/SAMBeamformer.png" src="../_images/SAMBeamformer.png" style="width: 700px;" /></a>
 </section>
 <section id="misc">
 <h2>MISC<a class="headerlink" href="#misc" title="Permalink to this headline">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;Backus-Gilbert&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/Backus-Gilbert.png"><img alt="../_images/Backus-Gilbert.png" src="../_images/Backus-Gilbert.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;GPT&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/GPTSolver.png"><img alt="../_images/GPTSolver.png" src="../_images/GPTSolver.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;EPIFOCUS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/EPIFOCUS.png"><img alt="../_images/EPIFOCUS.png" src="../_images/EPIFOCUS.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LAURA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/LocalAuto-RegressiveAverage.png"><img alt="../_images/LocalAuto-RegressiveAverage.png" src="../_images/LocalAuto-RegressiveAverage.png" style="width: 700px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;S-MAP&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <a class="reference internal image-reference" href="../_images/S-MAP.png"><img alt="../_images/S-MAP.png" src="../_images/S-MAP.png" style="width: 700px;" /></a>
 </section>
 </section>

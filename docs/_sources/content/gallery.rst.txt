@@ -116,31 +116,63 @@ Ground Truth
 Minimum Norm/Current Estimates
 ##############################
 
+..  code-block:: python
+
+    solver = Solver("MNE")
+
 .. image:: figures/solver_gallery/MinimumNormEstimate.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("wMNE")
 
 .. image:: figures/solver_gallery/WeightedMinimumNormEstimate.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("dSPM")
+
 .. image:: figures/solver_gallery/DynamicStatisticalParametricMapping.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FISTA")
 
 .. image:: figures/solver_gallery/MinimumCurrentEstimate.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("L1L2")
+
 .. image:: figures/solver_gallery/MinimumL1-L2Norm.png
   :width: 700
-  
+
 
 LORETA
 ######
 
+..  code-block:: python
+
+    solver = Solver("LORETA")
+
 .. image:: figures/solver_gallery/LowResolutionTomography.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("sLORETA")
+
 .. image:: figures/solver_gallery/StandardizedLowResolutionTomography.png
   :width: 700
-  
+
+..  code-block:: python
+
+    solver = Solver("eLORETA")
+
 .. image:: figures/solver_gallery/ExactLowResolutionTomography.png
   :width: 700
 
@@ -148,26 +180,58 @@ LORETA
 Bayes
 #####
 
+..  code-block:: python
+
+    solver = Solver("Source-MAP")
+
 .. image:: figures/solver_gallery/Source-MAP.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("Gamma-MAP")
+
 .. image:: figures/solver_gallery/Gamma-MAP.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("Source-MAP-MSP")
+
 .. image:: figures/solver_gallery/Source-MAP-MSP.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Gamma-MAP-MSP")
 
 .. image:: figures/solver_gallery/GAMMA-MAP-MSP.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("Champagne")
+
 .. image:: figures/solver_gallery/Champagne.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("MM Champagne")
+
 .. image:: figures/solver_gallery/MM-Champagne.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("LowSNR Champagne")
+
 .. image:: figures/solver_gallery/LowSNR-Champagne.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("BCS")
 
 .. image:: figures/solver_gallery/BayesianCompressedSensing.png
   :width: 700
@@ -176,17 +240,37 @@ Bayes
 Matching Pursuit
 ################
 
+..  code-block:: python
+
+    solver = Solver("OMP")
+
 .. image:: figures/solver_gallery/OrthogonalMatchingPursuit.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SOMP")
 
 .. image:: figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("CoSaMP")
+
 .. image:: figures/solver_gallery/CompressedSamplingMatchingPursuit.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("SSP")
+
 .. image:: figures/solver_gallery/SimultaneousSubspacePursuit.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SP")
 
 .. image:: figures/solver_gallery/SubspacePursuit.png
   :width: 700
@@ -195,27 +279,55 @@ Matching Pursuit
 Smooth Matching Pursuit
 #######################
 
+..  code-block:: python
+
+    solver = Solver("SOMP")
+
 .. image:: figures/solver_gallery/SmoothMatchingPursuit.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SSMP")
 
 .. image:: figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png
   :width: 700
 
+  ..  code-block:: python
+
+    solver = Solver("SubSMP")
+
 .. image:: figures/solver_gallery/SubspaceSmoothMatchingPursuit.png
   :width: 700
-  
+
 
 Artificial Neural Networks
 ##########################
 
+..  code-block:: python
+
+    solver = Solver("FC")
+
 .. image:: figures/solver_gallery/Fully-Connected.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("CNN")
 
 .. image:: figures/solver_gallery/CNN.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("Cov-CNN")
+
 .. image:: figures/solver_gallery/Cov-CNN.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("LSTM")
 
 .. image:: figures/solver_gallery/LSTM.png
   :width: 700
@@ -224,14 +336,30 @@ Artificial Neural Networks
 MUSIC
 #####
 
+..  code-block:: python
+
+    solver = Solver("MUSIC")
+
 .. image:: figures/solver_gallery/MUSIC.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("RAP-MUSIC")
 
 .. image:: figures/solver_gallery/RAP-MUSIC.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("TRAP-MUSIC")
+
 .. image:: figures/solver_gallery/TRAP-MUSIC.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FLEX-MUSIC")
 
 .. image:: figures/solver_gallery/FLEX-MUSIC.png
   :width: 700
@@ -240,48 +368,105 @@ MUSIC
 Beamformers
 ###########
 
+..  code-block:: python
+
+    solver = Solver("MVAB")
+
 .. image:: figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png
   :width: 700
-  
+
+..  code-block:: python
+
+    solver = Solver("LCMV")
+
 .. image:: figures/solver_gallery/LCMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("SMV")
+
 .. image:: figures/solver_gallery/SMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("WNMV")
+
 .. image:: figures/solver_gallery/WNMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("HOCMV")
+
 .. image:: figures/solver_gallery/HOCMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("ESMV")
+
 .. image:: figures/solver_gallery/ESMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("MCMV")
+
 .. image:: figures/solver_gallery/MCMVBeamformer.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("ReciPSIICOS")
+
 .. image:: figures/solver_gallery/ReciPSIICOS.png
   :width: 700
-    
+
+..  code-block:: python
+
+    solver = Solver("SAM")
+
 .. image:: figures/solver_gallery/SAMBeamformer.png
   :width: 700
-    
+
 
 MISC
 ####
 
+
+..  code-block:: python
+
+    solver = Solver("Backus-Gilbert")
+
 .. image:: figures/solver_gallery/Backus-Gilbert.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("GPT")
 
 .. image:: figures/solver_gallery/GPTSolver.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("EPIFOCUS")
+
 .. image:: figures/solver_gallery/EPIFOCUS.png
   :width: 700
 
+..  code-block:: python
+
+    solver = Solver("LAURA")
+
 .. image:: figures/solver_gallery/LocalAuto-RegressiveAverage.png
   :width: 700
+
+..  code-block:: python
+
+    solver = Solver("S-MAP")
 
 .. image:: figures/solver_gallery/S-MAP.png
   :width: 700
