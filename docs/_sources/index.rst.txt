@@ -22,22 +22,21 @@ calculate an inverse solution as such:
 
 ..  code-block:: python
     
-    # import
-    from invert import Solver
-    
-    # create a solver instance
-    solver = Solver("MNE")
+    # fwd = ...
+    # evoked = ...
 
-    # Make an inverse operator
-    solver.make_inverse_operator(forward)
+    # Create a Solver instance
+    solver_name = "MNE"
+    solver = Solver(solver_name)
 
-    # Apply the inverse operator
+    # Calculate the inverse operator
+    solver.make_inverse_operator(fwd)
+
+    # Apply the inverse operator to your data
     stc = solver.apply_inverse_operator(evoked)
 
-    # Plot the result
+    # Plot the resulting source estimate
     stc.plot()
-
-
 
 .. toctree::
    :maxdepth: 2
@@ -45,3 +44,4 @@ calculate an inverse solution as such:
    
    content/solvers
    content/adapters
+   content/gallery

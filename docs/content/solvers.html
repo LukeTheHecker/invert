@@ -34,7 +34,7 @@
     <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Minimum Norm-Type" href="minimum_norm.html" />
+    <link rel="next" title="Base Class" href="base.html" />
     <link rel="prev" title="invertmeeg - A high-level M/EEG Python library for EEG inverse solutions" href="../index.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -82,6 +82,12 @@
  </a>
 </li>
 
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="gallery.html">
+  Gallery
+ </a>
+</li>
+
     
 </ul>
       </div>
@@ -97,7 +103,7 @@
             <label class="sr-only">GitHub</label></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://pypi.org/project/invert" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+          <a class="nav-link" href="https://pypi.org/project/invertmeeg" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
             <label class="sr-only">PyPI</label></a>
         </li>
       </ul>
@@ -126,6 +132,11 @@
  </span>
 </p>
 <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="base.html">
+   Base Class
+  </a>
+ </li>
  <li class="toctree-l1">
   <a class="reference internal" href="minimum_norm.html">
    Minimum Norm-Type
@@ -302,10 +313,11 @@ class</p>
 <h1><a class="reference internal" href="minimum_norm.html"><span class="doc">Minimum Norm-Type</span></a><a class="headerlink" href="#minimum-norm" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
 <li><p>Minimum Norm Estimates (MNE)</p></li>
-<li><p>Weighted Minimum Norm Estimates</p></li>
+<li><p>Weighted Minimum Norm Estimates (wMNE)</p></li>
 <li><p>Dynamic Statistical Parametric Mapping (dSPM)</p></li>
-<li><p>Minimum Current Estimates (FISTA solver)</p></li>
-<li><p>L1-L2 Optimization</p></li>
+<li><p>Minimum Current Estimates (FISTA)</p></li>
+<li><p>L1-L2 Optimization (L1L2)</p></li>
+<li><p>Chat GPT’s FISTA (GPT)</p></li>
 </ul>
 </section>
 <section id="loreta">
@@ -320,7 +332,7 @@ class</p>
 <section id="wrop">
 <h1><a class="reference internal" href="wrop.html"><span class="doc">Weighted Resolution Optimization</span></a><a class="headerlink" href="#wrop" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
-<li><p>Backus-Gilbert</p></li>
+<li><p>Backus-Gilbert (BG)</p></li>
 <li><p>Local Autoregressive Average (LAURA)</p></li>
 </ul>
 </section>
@@ -334,6 +346,8 @@ class</p>
 <li><p>Bayesian Compressed Sensing (BCS)</p></li>
 <li><p>Champagne</p></li>
 <li><p>Low SNR Champagne</p></li>
+<li><p>Expectation Maximization Champagne</p></li>
+<li><p>Majorization Maximization Champagne</p></li>
 </ul>
 </section>
 <section id="matching-pursuit">
@@ -344,6 +358,7 @@ class</p>
 <li><p>Compressed Sampling Matching Pursuit (CoSaMP)</p></li>
 <li><p>Reduce Multi-Measurement-Vector and Boost (ReMBo)</p></li>
 <li><p>Subspace Pursuit (SP)</p></li>
+<li><p>Simultaneous Subspace Pursuit (SSP)</p></li>
 </ul>
 </section>
 <section id="smooth-matching-pursuit">
@@ -366,10 +381,10 @@ class</p>
 <section id="artificial-neural-networks">
 <h1><a class="reference internal" href="artificial_neural_networks.html"><span class="doc">Artificial Neural Networks</span></a><a class="headerlink" href="#artificial-neural-networks" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
-<li><p>Convolutional Neural Network for Spatio-Temporal Inverse Solution</p></li>
-<li><p>Long-Short Term Memory Network for Spatio-Temporal Inverse Solution</p></li>
-<li><p>Fully-Connected Neural Network for Inverse Solution at single time instances</p></li>
-<li><p>Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution</p></li>
+<li><p>Convolutional Neural Network for Spatio-Temporal Inverse Solution (CNN)</p></li>
+<li><p>Long-Short Term Memory Network for Spatio-Temporal Inverse Solution (LSTM)</p></li>
+<li><p>Fully-Connected Neural Network for Inverse Solution at single time instances (FC)</p></li>
+<li><p>Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (Cov CNN)</p></li>
 </ul>
 </section>
 <section id="beamformer">
@@ -382,7 +397,6 @@ class</p>
 <li><p>Higher-Order Minimum Variance (HOCMV) Beamformer</p></li>
 <li><p>Eigenspace-Based Minimum Variance (ESMV) Beamformer</p></li>
 <li><p>Multiple Constrained Minimum Variance (MCMV) Beamformer</p></li>
-<li><p>Eigenspace-Based Multiple Constrained Minimum Variance (ESMCMV) Beamformer</p></li>
 <li><p>Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
 Beamformer</p></li>
 <li><p>Synthetic Aperture Magnetometry (SAM)</p></li>
@@ -396,6 +410,7 @@ Beamformer</p></li>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Full List of Solvers</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Base Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="minimum_norm.html">Minimum Norm-Type</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loreta.html">LORETA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrop.html">Weighted Resolution Optimization</a></li>
@@ -423,10 +438,10 @@ Beamformer</p></li>
             <p class="prev-next-title"><strong>invertmeeg</strong> - A high-level M/EEG Python library for EEG inverse solutions</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="minimum_norm.html" title="next page">
+    <a class='right-next' id="next-link" href="base.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Minimum Norm-Type</p>
+        <p class="prev-next-title">Base Class</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

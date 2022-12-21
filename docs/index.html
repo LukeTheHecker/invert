@@ -81,6 +81,12 @@
  </a>
 </li>
 
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="content/gallery.html">
+  Gallery
+ </a>
+</li>
+
     
 </ul>
       </div>
@@ -96,7 +102,7 @@
             <label class="sr-only">GitHub</label></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://pypi.org/project/invert" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+          <a class="nav-link" href="https://pypi.org/project/invertmeeg" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
             <label class="sr-only">PyPI</label></a>
         </li>
       </ul>
@@ -197,19 +203,20 @@ the future, there will be some tutorials.</p>
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">#</a></h1>
 <p>Given that you have a mne.Forward model and some mne.Evoked data, you can simply
 calculate an inverse solution as such:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># import</span>
-<span class="kn">from</span> <span class="nn">invert</span> <span class="kn">import</span> <span class="n">Solver</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># fwd = ...</span>
+<span class="c1"># evoked = ...</span>
 
-<span class="c1"># create a solver instance</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;MNE&quot;</span><span class="p">)</span>
+<span class="c1"># Create a Solver instance</span>
+<span class="n">solver_name</span> <span class="o">=</span> <span class="s2">&quot;MNE&quot;</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">solver_name</span><span class="p">)</span>
 
-<span class="c1"># Make an inverse operator</span>
-<span class="n">solver</span><span class="o">.</span><span class="n">make_inverse_operator</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span>
+<span class="c1"># Calculate the inverse operator</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">make_inverse_operator</span><span class="p">(</span><span class="n">fwd</span><span class="p">)</span>
 
-<span class="c1"># Apply the inverse operator</span>
+<span class="c1"># Apply the inverse operator to your data</span>
 <span class="n">stc</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">apply_inverse_operator</span><span class="p">(</span><span class="n">evoked</span><span class="p">)</span>
 
-<span class="c1"># Plot the result</span>
+<span class="c1"># Plot the resulting source estimate</span>
 <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>

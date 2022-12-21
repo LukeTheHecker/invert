@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Gallery &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Spatio-Temporal Matching Pursuit Contextualizer (STAMP-C)" href="stampc.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="solvers.html">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Gallery
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/invertmeeg" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#ground-truth">
+   Ground Truth
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#minimum-norm-current-estimates">
+   Minimum Norm/Current Estimates
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#loreta">
+   LORETA
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bayes">
+   Bayes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#matching-pursuit">
+   Matching Pursuit
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#smooth-matching-pursuit">
+   Smooth Matching Pursuit
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#artificial-neural-networks">
+   Artificial Neural Networks
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#music">
+   MUSIC
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beamformers">
+   Beamformers
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#misc">
+   MISC
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="gallery">
+<h1>Gallery<a class="headerlink" href="#gallery" title="Permalink to this headline">#</a></h1>
+<p>The Gallery showcases all solvers with an example inverse solution for a small
+source patch projected to 64 EEG channels with high signal-to-noise ratio. The
+code that generated the data, the inverse solutions and saved the results is
+given as follows:</p>
+<p>Import functions and create a generic Forward Model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="o">%</span><span class="n">load_ext</span> <span class="n">autoreload</span>
+<span class="o">%</span><span class="n">autoreload</span> <span class="mi">2</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="p">;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;../&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span>
+<span class="kn">import</span> <span class="nn">mne</span>
+
+<span class="kn">from</span> <span class="nn">invert.forward</span> <span class="kn">import</span> <span class="n">get_info</span><span class="p">,</span> <span class="n">create_forward_model</span>
+<span class="kn">from</span> <span class="nn">invert.util</span> <span class="kn">import</span> <span class="n">pos_from_forward</span>
+<span class="n">pp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">surface</span><span class="o">=</span><span class="s1">&#39;inflated&#39;</span><span class="p">,</span> <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;percent&quot;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">99</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">info</span> <span class="o">=</span> <span class="n">get_info</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;biosemi64&#39;</span><span class="p">)</span>
+<span class="n">fwd</span> <span class="o">=</span> <span class="n">create_forward_model</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="s1">&#39;ico3&#39;</span><span class="p">)</span>
+
+<span class="n">pos</span> <span class="o">=</span> <span class="n">pos_from_forward</span><span class="p">(</span><span class="n">fwd</span><span class="p">)</span>
+<span class="n">leadfield</span> <span class="o">=</span> <span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+<span class="n">n_chans</span><span class="p">,</span> <span class="n">n_dipoles</span> <span class="o">=</span> <span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">source_model</span> <span class="o">=</span> <span class="n">fwd</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_model</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;vertno&#39;</span><span class="p">],</span> <span class="n">source_model</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;vertno&#39;</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Next we simulate a sample using the invert data generator:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">invert.solvers.esinet</span> <span class="kn">import</span> <span class="n">generator</span>
+
+<span class="n">sim_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">use_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">batch_repetitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">n_sources</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">n_orders</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">snr_range</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
+    <span class="n">n_timecourses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">scale_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="n">gen</span> <span class="o">=</span> <span class="n">generator</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_params</span><span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
+
+<span class="n">tmin</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tstep</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;sfreq&quot;</span><span class="p">]</span>
+<span class="n">subject</span> <span class="o">=</span> <span class="s2">&quot;fsaverage&quot;</span>
+<span class="n">evoked</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EvokedArray</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">)</span>
+<span class="n">stc</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">SourceEstimate</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tstep</span><span class="o">=</span><span class="n">tstep</span><span class="p">,</span>
+                        <span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here we calculate all inverse solutions and plot them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="kn">from</span> <span class="nn">invert</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">from</span> <span class="nn">invert.config</span> <span class="kn">import</span> <span class="n">all_solvers</span>
+
+<span class="c1"># Plot Ground Truth</span>
+<span class="n">stc</span><span class="o">.</span><span class="n">data</span> <span class="o">/=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="n">clim</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">pp</span><span class="p">[</span><span class="s2">&quot;clim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">pp</span><span class="p">,</span> <span class="n">brain_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Ground Truth&quot;</span><span class="p">))</span>
+<span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">&quot;Ground Truth&quot;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">brain</span><span class="o">.</span><span class="n">screenshot</span><span class="p">()</span>
+<span class="n">brain</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+<span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;../figures/solver_gallery/GroundTruth&quot;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># Plot Source Estimates</span>
+<span class="k">for</span> <span class="n">solver_name</span> <span class="ow">in</span> <span class="n">all_solvers</span><span class="p">[</span><span class="mi">15</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">solver_name</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">make_inverse_operator</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="n">evoked</span><span class="p">)</span>
+    <span class="n">stc_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">apply_inverse_operator</span><span class="p">(</span><span class="n">evoked</span><span class="p">)</span>
+    <span class="n">stc_</span><span class="o">.</span><span class="n">data</span> <span class="o">/=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc_</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">clim</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">pp</span><span class="p">[</span><span class="s2">&quot;clim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clim</span>
+    <span class="n">brain</span> <span class="o">=</span> <span class="n">stc_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">pp</span><span class="p">,</span> <span class="n">brain_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">brain</span><span class="o">.</span><span class="n">screenshot</span><span class="p">()</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+    <span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;../figures/solver_gallery/</span><span class="si">{</span><span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="ground-truth">
+<h2>Ground Truth<a class="headerlink" href="#ground-truth" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/GroundTruth.png"><img alt="../../../figures/solver_gallery/GroundTruth.png" src="../../../figures/solver_gallery/GroundTruth.png" style="width: 700px;" /></a>
+</section>
+<section id="minimum-norm-current-estimates">
+<h2>Minimum Norm/Current Estimates<a class="headerlink" href="#minimum-norm-current-estimates" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MinimumNormEstimate.png"><img alt="../../../figures/solver_gallery/MinimumNormEstimate.png" src="../../../figures/solver_gallery/MinimumNormEstimate.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/WeightedMinimumNormEstimate.png"><img alt="../../../figures/solver_gallery/WeightedMinimumNormEstimate.png" src="../../../figures/solver_gallery/WeightedMinimumNormEstimate.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/DynamicStatisticalParametricMapping.png"><img alt="../../../figures/solver_gallery/DynamicStatisticalParametricMapping.png" src="../../../figures/solver_gallery/DynamicStatisticalParametricMapping.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MinimumCurrentEstimate.png"><img alt="../../../figures/solver_gallery/MinimumCurrentEstimate.png" src="../../../figures/solver_gallery/MinimumCurrentEstimate.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MinimumL1-L2Norm.png"><img alt="../../../figures/solver_gallery/MinimumL1-L2Norm.png" src="../../../figures/solver_gallery/MinimumL1-L2Norm.png" style="width: 700px;" /></a>
+</section>
+<section id="loreta">
+<h2>LORETA<a class="headerlink" href="#loreta" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/LowResolutionTomography.png"><img alt="../../../figures/solver_gallery/LowResolutionTomography.png" src="../../../figures/solver_gallery/LowResolutionTomography.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/StandardizedLowResolutionTomography.png"><img alt="../../../figures/solver_gallery/StandardizedLowResolutionTomography.png" src="../../../figures/solver_gallery/StandardizedLowResolutionTomography.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/ExactLowResolutionTomography.png"><img alt="../../../figures/solver_gallery/ExactLowResolutionTomography.png" src="../../../figures/solver_gallery/ExactLowResolutionTomography.png" style="width: 700px;" /></a>
+</section>
+<section id="bayes">
+<h2>Bayes<a class="headerlink" href="#bayes" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Source-MAP.png"><img alt="../../../figures/solver_gallery/Source-MAP.png" src="../../../figures/solver_gallery/Source-MAP.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Gamma-MAP.png"><img alt="../../../figures/solver_gallery/Gamma-MAP.png" src="../../../figures/solver_gallery/Gamma-MAP.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Source-MAP-MSP.png"><img alt="../../../figures/solver_gallery/Source-MAP-MSP.png" src="../../../figures/solver_gallery/Source-MAP-MSP.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/GAMMA-MAP-MSP.png"><img alt="../../../figures/solver_gallery/GAMMA-MAP-MSP.png" src="../../../figures/solver_gallery/GAMMA-MAP-MSP.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Champagne.png"><img alt="../../../figures/solver_gallery/Champagne.png" src="../../../figures/solver_gallery/Champagne.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MM-Champagne.png"><img alt="../../../figures/solver_gallery/MM-Champagne.png" src="../../../figures/solver_gallery/MM-Champagne.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/LowSNR-Champagne.png"><img alt="../../../figures/solver_gallery/LowSNR-Champagne.png" src="../../../figures/solver_gallery/LowSNR-Champagne.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/BayesianCompressedSensing.png"><img alt="../../../figures/solver_gallery/BayesianCompressedSensing.png" src="../../../figures/solver_gallery/BayesianCompressedSensing.png" style="width: 700px;" /></a>
+</section>
+<section id="matching-pursuit">
+<h2>Matching Pursuit<a class="headerlink" href="#matching-pursuit" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/OrthogonalMatchingPursuit.png"><img alt="../../../figures/solver_gallery/OrthogonalMatchingPursuit.png" src="../../../figures/solver_gallery/OrthogonalMatchingPursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png"><img alt="../../../figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png" src="../../../figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/CompressedSamplingMatchingPursuit.png"><img alt="../../../figures/solver_gallery/CompressedSamplingMatchingPursuit.png" src="../../../figures/solver_gallery/CompressedSamplingMatchingPursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SimultaneousSubspacePursuit.png"><img alt="../../../figures/solver_gallery/SimultaneousSubspacePursuit.png" src="../../../figures/solver_gallery/SimultaneousSubspacePursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SubspacePursuit.png"><img alt="../../../figures/solver_gallery/SubspacePursuit.png" src="../../../figures/solver_gallery/SubspacePursuit.png" style="width: 700px;" /></a>
+</section>
+<section id="smooth-matching-pursuit">
+<h2>Smooth Matching Pursuit<a class="headerlink" href="#smooth-matching-pursuit" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SmoothMatchingPursuit.png"><img alt="../../../figures/solver_gallery/SmoothMatchingPursuit.png" src="../../../figures/solver_gallery/SmoothMatchingPursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png"><img alt="../../../figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png" src="../../../figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SubspaceSmoothMatchingPursuit.png"><img alt="../../../figures/solver_gallery/SubspaceSmoothMatchingPursuit.png" src="../../../figures/solver_gallery/SubspaceSmoothMatchingPursuit.png" style="width: 700px;" /></a>
+</section>
+<section id="artificial-neural-networks">
+<h2>Artificial Neural Networks<a class="headerlink" href="#artificial-neural-networks" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Fully-Connected.png"><img alt="../../../figures/solver_gallery/Fully-Connected.png" src="../../../figures/solver_gallery/Fully-Connected.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/CNN.png"><img alt="../../../figures/solver_gallery/CNN.png" src="../../../figures/solver_gallery/CNN.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Cov-CNN.png"><img alt="../../../figures/solver_gallery/Cov-CNN.png" src="../../../figures/solver_gallery/Cov-CNN.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/LSTM.png"><img alt="../../../figures/solver_gallery/LSTM.png" src="../../../figures/solver_gallery/LSTM.png" style="width: 700px;" /></a>
+</section>
+<section id="music">
+<h2>MUSIC<a class="headerlink" href="#music" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MUSIC.png"><img alt="../../../figures/solver_gallery/MUSIC.png" src="../../../figures/solver_gallery/MUSIC.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/RAP-MUSIC.png"><img alt="../../../figures/solver_gallery/RAP-MUSIC.png" src="../../../figures/solver_gallery/RAP-MUSIC.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/TRAP-MUSIC.png"><img alt="../../../figures/solver_gallery/TRAP-MUSIC.png" src="../../../figures/solver_gallery/TRAP-MUSIC.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/FLEX-MUSIC.png"><img alt="../../../figures/solver_gallery/FLEX-MUSIC.png" src="../../../figures/solver_gallery/FLEX-MUSIC.png" style="width: 700px;" /></a>
+</section>
+<section id="beamformers">
+<h2>Beamformers<a class="headerlink" href="#beamformers" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png"><img alt="../../../figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png" src="../../../figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/LCMVBeamformer.png"><img alt="../../../figures/solver_gallery/LCMVBeamformer.png" src="../../../figures/solver_gallery/LCMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SMVBeamformer.png"><img alt="../../../figures/solver_gallery/SMVBeamformer.png" src="../../../figures/solver_gallery/SMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/WNMVBeamformer.png"><img alt="../../../figures/solver_gallery/WNMVBeamformer.png" src="../../../figures/solver_gallery/WNMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/HOCMVBeamformer.png"><img alt="../../../figures/solver_gallery/HOCMVBeamformer.png" src="../../../figures/solver_gallery/HOCMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/ESMVBeamformer.png"><img alt="../../../figures/solver_gallery/ESMVBeamformer.png" src="../../../figures/solver_gallery/ESMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/MCMVBeamformer.png"><img alt="../../../figures/solver_gallery/MCMVBeamformer.png" src="../../../figures/solver_gallery/MCMVBeamformer.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/ReciPSIICOS.png"><img alt="../../../figures/solver_gallery/ReciPSIICOS.png" src="../../../figures/solver_gallery/ReciPSIICOS.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/SAMBeamformer.png"><img alt="../../../figures/solver_gallery/SAMBeamformer.png" src="../../../figures/solver_gallery/SAMBeamformer.png" style="width: 700px;" /></a>
+</section>
+<section id="misc">
+<h2>MISC<a class="headerlink" href="#misc" title="Permalink to this headline">#</a></h2>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/Backus-Gilbert.png"><img alt="../../../figures/solver_gallery/Backus-Gilbert.png" src="../../../figures/solver_gallery/Backus-Gilbert.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/GPTSolver.png"><img alt="../../../figures/solver_gallery/GPTSolver.png" src="../../../figures/solver_gallery/GPTSolver.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/EPIFOCUS.png"><img alt="../../../figures/solver_gallery/EPIFOCUS.png" src="../../../figures/solver_gallery/EPIFOCUS.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/LocalAuto-RegressiveAverage.png"><img alt="../../../figures/solver_gallery/LocalAuto-RegressiveAverage.png" src="../../../figures/solver_gallery/LocalAuto-RegressiveAverage.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="../../../figures/solver_gallery/S-MAP.png"><img alt="../../../figures/solver_gallery/S-MAP.png" src="../../../figures/solver_gallery/S-MAP.png" style="width: 700px;" /></a>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="stampc.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Spatio-Temporal Matching Pursuit Contextualizer (STAMP-C)</p>
+        </div>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

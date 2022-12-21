@@ -1,11 +1,23 @@
-# Help
-This file is intended to store some information on how to generate documentation
-using sphinx. Generally, you should however refer to the [original
-documentation](https://www.sphinx-doc.org/)
+# Helping information on sphinx
 
+## Update Documentation:
+1. Make changes to the content files in the sphinx folder (.rst files)
 
-Build the sphinx :
+2. cd to the sphinx folder:
 
 ```
-documentation sphinx-build -b html . ./_build
+cd sphinx
 ```
+
+3. Build the Project
+
+```
+sphinx-build -b html . ./_build
+```
+
+4. Copy all files in .sphinx/_build/html/ to .docs/
+5. Push your changes to github
+
+## List of helpful information
+
+* Publish sphinx docs on github: https://www.youtube.com/watch?v=zSZpCrwgVOM

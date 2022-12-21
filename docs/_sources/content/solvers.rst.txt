@@ -7,10 +7,11 @@ class
 :doc:`minimum_norm`
 ===================
 - Minimum Norm Estimates (MNE)
-- Weighted Minimum Norm Estimates
+- Weighted Minimum Norm Estimates (wMNE)
 - Dynamic Statistical Parametric Mapping (dSPM)
-- Minimum Current Estimates (FISTA solver)
-- L1-L2 Optimization
+- Minimum Current Estimates (FISTA)
+- L1-L2 Optimization (L1L2)
+- Chat GPT's FISTA (GPT)
 
 :doc:`loreta`
 =============
@@ -21,7 +22,7 @@ class
 
 :doc:`wrop`
 ================================
-- Backus-Gilbert
+- Backus-Gilbert (BG)
 - Local Autoregressive Average (LAURA)
 
 :doc:`bayes`
@@ -33,6 +34,8 @@ class
 - Bayesian Compressed Sensing (BCS)
 - Champagne
 - Low SNR Champagne
+- Expectation Maximization Champagne
+- Majorization Maximization Champagne
 
 
 :doc:`matching_pursuit`
@@ -42,6 +45,7 @@ class
 - Compressed Sampling Matching Pursuit (CoSaMP)
 - Reduce Multi-Measurement-Vector and Boost (ReMBo)
 - Subspace Pursuit (SP)
+- Simultaneous Subspace Pursuit (SSP)
 
 :doc:`smooth_matching_pursuit`
 =========
@@ -58,10 +62,10 @@ class
 
 :doc:`artificial_neural_networks`
 ==========
-- Convolutional Neural Network for Spatio-Temporal Inverse Solution
-- Long-Short Term Memory Network for Spatio-Temporal Inverse Solution
-- Fully-Connected Neural Network for Inverse Solution at single time instances
-- Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution
+- Convolutional Neural Network for Spatio-Temporal Inverse Solution (CNN)
+- Long-Short Term Memory Network for Spatio-Temporal Inverse Solution (LSTM)
+- Fully-Connected Neural Network for Inverse Solution at single time instances (FC)
+- Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (Cov CNN)
 
 :doc:`beamformer`
 =================
@@ -72,7 +76,6 @@ class
 - Higher-Order Minimum Variance (HOCMV) Beamformer
 - Eigenspace-Based Minimum Variance (ESMV) Beamformer
 - Multiple Constrained Minimum Variance (MCMV) Beamformer
-- Eigenspace-Based Multiple Constrained Minimum Variance (ESMCMV) Beamformer
 - Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
   Beamformer
 - Synthetic Aperture Magnetometry (SAM)
@@ -84,7 +87,8 @@ Other
 .. toctree::
     :maxdepth: 2
     :caption: Full List of Solvers
-
+    
+    base
     minimum_norm
     loreta
     wrop
