@@ -442,14 +442,12 @@ class SolverMMChampagne(BaseSolver):
             if prune:
                 prune_candidates = gammas<pruning_thresh
                 gammas[prune_candidates] = 0
-                # print("Pruned: ", prune_candidates.sum())
-            # print((gammas==0).sum())
             
             # update rest
             Gamma = np.diag(gammas)
             Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
             Sigma_y_inv = np.linalg.inv(Sigma_y)
-            Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+            # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
             mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
             loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
             # first_term = z.T @ gammas

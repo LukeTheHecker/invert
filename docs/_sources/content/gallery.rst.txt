@@ -293,7 +293,7 @@ Smooth Matching Pursuit
 .. image:: figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png
   :width: 700
 
-  ..  code-block:: python
+..  code-block:: python
 
     solver = Solver("SubSMP")
 

@@ -207,20 +207,26 @@ class SolverRAPMUSIC(BaseSolver):
         U, D, _= np.linalg.svd(C, full_matrices=True)
         if n == "auto":
             # L-curve method
-            # D = D[:int(n_chans/2)]
-            # iters = np.arange(len(D))
-            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            iters = np.arange(len(D))
+            n_comp_L = find_corner(deepcopy(iters), deepcopy(D))
             
-            # eigenvalue magnitude-based
-            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # Based on eigenvalue drop-off
+            D_ = D/D.max()
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
+
+            # Combine the two:
+            n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
+
 
             # import matplotlib.pyplot as plt
+            # iters = np.arange(len(D))
+            # D_ = D/D.max()
             # plt.figure()
-            # plt.plot(iters, D, '*k')
-            # plt.plot(iters[n_comp], D[n_comp], 'or')
-            # plt.plot(iters[n_comp], D[n_comp], 'og')
-            D_ = D/D.max()
-            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
+            # plt.plot(iters, D_, '*k')
+            # plt.plot(iters[n_comp], D_[n_comp], 'og', label=f"Eig drop-off {n_comp}")
+            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            # plt.legend()
 
         else:
             n_comp = deepcopy(n)
@@ -365,20 +371,26 @@ class SolverTRAPMUSIC(BaseSolver):
         U, D, _= np.linalg.svd(C, full_matrices=True)
         if n == "auto":
             # L-curve method
-            # D = D[:int(n_chans/2)]
-            # iters = np.arange(len(D))
-            # n_comp = find_corner(deepcopy(iters), deepcopy(D))
+            iters = np.arange(len(D))
+            n_comp_L = find_corner(deepcopy(iters), deepcopy(D))
             
-            # eigenvalue magnitude-based
-            # n_comp = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
+            # Based on eigenvalue drop-off
+            D_ = D/D.max()
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
+
+            # Combine the two:
+            n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
+
 
             # import matplotlib.pyplot as plt
+            # iters = np.arange(len(D))
+            # D_ = D/D.max()
             # plt.figure()
-            # plt.plot(iters, D, '*k')
-            # plt.plot(iters[n_comp], D[n_comp], 'or')
-            # plt.plot(iters[n_comp], D[n_comp], 'og')
-            D_ = D/D.max()
-            n_comp = np.where( abs(np.diff(D_)) < 0.01 )[0][0]+1
+            # plt.plot(iters, D_, '*k')
+            # plt.plot(iters[n_comp], D_[n_comp], 'og', label=f"Eig drop-off {n_comp}")
+            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            # plt.legend()
 
         else:
             n_comp = deepcopy(n)
@@ -533,31 +545,26 @@ class SolverFLEXMUSIC(BaseSolver):
 
         if n == "auto":
             # L-curve method
-            # D = D[:int(n_chans)]
-            # iters = np.arange(len(D))
-            # n_comp_L = find_corner(deepcopy(iters), deepcopy(D)) + 1
-            
-            # eigenvalue magnitude-based
-            # n_comp_spm = np.where(((D**2)*len((D**2)) / (D**2).sum()) < np.exp(-16))[0][0]
-
-            
+            iters = np.arange(len(D))
+            n_comp_L = find_corner(deepcopy(iters), deepcopy(D))
             
             # Based on eigenvalue drop-off
             D_ = D/D.max()
-            n_comp = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
-            # plt.plot(iters[n_comp], D_[n_comp], 'ob')
-            # print("Spatial Components: ", n_comp)
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 1
 
+            # Combine the two:
+            n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-            # import matplotlib.pyplot as plt
-            # iters = np.arange(len(D))
-            # D_ = D/D.max()
-            # plt.figure()
-            # plt.plot(iters, D_, '*k')
-            # plt.plot(iters[n_comp], D_[n_comp], 'og', label="Eig drop-off")
-            # # plt.plot(iters[n_comp_spm], D_[n_comp_spm], 'or', label="SPM Method")
-            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label="L Curve Method")
-            
+            import matplotlib.pyplot as plt
+            iters = np.arange(len(D))
+            D_ = D/D.max()
+            plt.figure()
+            plt.plot(iters, D_, '*k')
+            plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
+            plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            plt.legend()
+
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]
