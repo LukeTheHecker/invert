@@ -555,15 +555,13 @@ class SolverFLEXMUSIC(BaseSolver):
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-            import matplotlib.pyplot as plt
-            iters = np.arange(len(D))
-            D_ = D/D.max()
-            plt.figure()
-            plt.plot(iters, D_, '*k')
-            plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
-            plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
-            plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
-            plt.legend()
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D_, '*k')
+            # plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
+            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            # plt.legend()
 
         else:
             n_comp = deepcopy(n)
