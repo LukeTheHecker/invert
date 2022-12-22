@@ -2,6 +2,7 @@ import numpy as np
 import mne
 from copy import deepcopy
 from scipy.sparse.csgraph import laplacian
+from scipy.sparse import csr_matrix, vstack
 from ..util import find_corner
 from .base import BaseSolver, InverseOperator
 
@@ -659,8 +660,15 @@ class SolverFLEXMUSIC(BaseSolver):
 
         new_leadfield = deepcopy(self.leadfield)
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+
         self.gradient = abs(laplacian(self.adjacency))
+        # Convert to sparse matrix for speedup
+        self.gradient = csr_matrix(self.gradient)
+
         new_adjacency = deepcopy(self.adjacency)
+        # Convert to sparse matrix for speedup
+        new_adjacency = csr_matrix(new_adjacency)
+        
 
         
         for _ in range(n_orders):
@@ -668,8 +676,9 @@ class SolverFLEXMUSIC(BaseSolver):
             new_leadfield -= new_leadfield.mean(axis=0)
             new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
 
-            new_adjacency = new_adjacency @ self.adjacency
+            new_adjacency = (new_adjacency @ self.adjacency).toarray()
             neighbors = [np.where(ad!=0)[0] for ad in self.adjacency.toarray()]
             
             self.leadfields.append( deepcopy(new_leadfield) )
             self.neighbors.append( neighbors )
+            new_adjacency = csr_matrix(new_adjacency)

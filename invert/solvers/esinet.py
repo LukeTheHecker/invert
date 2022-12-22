@@ -4,6 +4,8 @@ from .base import BaseSolver, InverseOperator
 import colorednoise as cn
 from scipy.sparse.csgraph import laplacian
 from scipy.stats import pearsonr
+from scipy.sparse import csr_matrix, vstack
+from time import time
 import mne
 import numpy as np
 import pandas as pd
@@ -917,7 +919,7 @@ def add_white_noise(X_clean, snr):
     X_full = X_clean + X_noise*scaler
     X_full -= X_full.mean(axis=0)
     return X_full
-    
+
 def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
@@ -925,7 +927,14 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
+    # Convert to sparse matrix for speedup
+    adjacency = csr_matrix(adjacency)
     gradient = abs(laplacian(adjacency))
+    del adjacency
+    
+    # Convert to sparse matrix for speedup
+    gradient = csr_matrix(gradient)
+
     leadfield = fwd["sol"]["data"]
     leadfield -= leadfield.mean()
     # Normalize columns of the leadfield
@@ -934,7 +943,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     n_chans, n_dipoles = leadfield.shape
 
 
-    sources = np.identity(n_dipoles)
+    sources = csr_matrix(np.identity(n_dipoles))
     if isinstance(n_orders, (tuple, list)):
         min_order, max_order = n_orders
     else:
@@ -942,13 +951,16 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         max_order = n_orders
 
     for i in range(max_order-1):
-        new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
-        new_sources /= new_sources.max(axis=0)
+        new_sources = csr_matrix(sources.toarray()[-n_dipoles:, -n_dipoles:]) @ gradient
+        row_maxes = new_sources.max(axis=0).toarray().flatten()
+        new_sources = new_sources / row_maxes[np.newaxis]
+
+        # new_sources /= new_sources.max(axis=0)
         if i >= min_order-1:
-            sources = np.concatenate( [sources, new_sources], axis=0 )
+            # sources = np.concatenate( [sources, new_sources], axis=0 )
+            sources = vstack([sources, new_sources])
     if min_order>0:
-        print(sources.shape)
-        sources = sources[n_dipoles:]
+        sources = csr_matrix(sources.toarray()[n_dipoles:])
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
     # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)
@@ -969,6 +981,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
         amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
         y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+        # y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+        
         
         # Project simulated sources through leadfield
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
