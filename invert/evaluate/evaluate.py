@@ -11,14 +11,20 @@ def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix):
     nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true, y_pred)]
     mle = [eval_mean_localization_error(yy_true[:,0], yy_pred[:, 0], pos_1, ghost_thresh=40, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true, y_pred)]
     auc = [np.mean(eval_auc(yy_true[:, 0], yy_pred[:, 0], pos_1, epsilon=0.05, n_redraw=25)) for yy_true, yy_pred in zip(y_true, y_pred)]
+    sparsity = [eval_sparsity(yy_pred) for yy_pred in y_pred]
     d = dict(
         Mean_Squared_Error=np.nanmedian(mse) ,
         Normalized_Mean_Squared_Error=np.nanmedian(nmse),
         Mean_Localization_Error=np.nanmedian(mle),
         AUC=np.nanmedian(auc),
+        Sparsity=sparsity[0],
     )
     
     return d
+
+def eval_sparsity(y):
+    y_scaled = y / np.linalg.norm(y, axis=0)
+    return np.linalg.norm(y_scaled, ord=1)
 
 def eval_mse(y_true, y_est):
     '''Returns the mean squared error between predicted and true source. '''

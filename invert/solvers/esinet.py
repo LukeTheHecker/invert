@@ -926,7 +926,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
     gradient = abs(laplacian(adjacency))
-    leadfield = fwd["sol"]["data"]
+    leadfield = deepcopy(fwd["sol"]["data"])
     leadfield -= leadfield.mean()
     # Normalize columns of the leadfield
     leadfield /= np.linalg.norm(leadfield, axis=0)
@@ -935,20 +935,25 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
 
     sources = np.identity(n_dipoles)
+
     if isinstance(n_orders, (tuple, list)):
         min_order, max_order = n_orders
     else:
-        min_order = 1
+        min_order = 0
         max_order = n_orders
 
     for i in range(max_order-1):
         new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
         new_sources /= new_sources.max(axis=0)
-        if i >= min_order-1:
-            sources = np.concatenate( [sources, new_sources], axis=0 )
+        sources = np.concatenate( [sources, new_sources], axis=0 )
+    
+    print(sources.shape)
+
     if min_order>0:
-        print(sources.shape)
-        sources = sources[n_dipoles:]
+        start_idx = int(n_dipoles*min_order)
+        sources = sources[start_idx:, :]
+
+    print(min_order, max_order, sources.shape)
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
     # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)

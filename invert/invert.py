@@ -18,7 +18,7 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverWMNE(**kwargs)
     elif solver.lower() == "dspm":
         solver_object = solvers.SolverDSPM(**kwargs)
-    elif solver.lower() == "l1" or solver.lower() == "fista":
+    elif solver.lower() == "l1" or solver.lower() == "fista" or solver.lower() == "mce" or solver.lower() == "minimum current estimate":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
     elif solver.lower() == "gpt" or solver.lower() == "l1 gpt" or solver.lower() == "l1gpt":
         solver_object = solvers.SolverMinimumL1NormGPT(**kwargs)
