@@ -20,7 +20,7 @@ python -c 'import invert'
 To test the package simply run:
 
 ```
-pytest
+pytest tests
 ```
 
 To calculate an inverse solution using *minimum norm estimates* simply type:

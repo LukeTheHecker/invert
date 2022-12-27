@@ -39,7 +39,8 @@ calculate an inverse solution as such:
     stc.plot()
 
 There are many solvers implemented in the package. You can find them in the
-Gallery!
+:doc:`content/solvers` page and the :doc:`content/gallery`! Check out our
+:doc:`content/tutorial` for a more comprehensive step-by-step tutorial!
 
 .. toctree::
    :maxdepth: 2
@@ -48,3 +49,4 @@ Gallery!
    content/solvers
    content/adapters
    content/gallery
+   content/tutorial

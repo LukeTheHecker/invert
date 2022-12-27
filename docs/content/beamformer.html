@@ -230,7 +230,7 @@
 <span id="beamformers"></span><h1>Beamformers<a class="headerlink" href="#module-invert.solvers.beamformer" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverESMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverESMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ESMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverESMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverESMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ESMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverESMV" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Eigenspace-based Minimum Variance (ESMV) Beamformer</dt><dd><p>inverse solution [1].</p>
 </dd>
@@ -274,8 +274,56 @@ Biomedical Signal Processing and Control, 14, 175-188.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="invert.solvers.beamformer.SolverHOCMCMV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverHOCMCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HOCMCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverHOCMCMV" title="Permalink to this definition">#</a></dt>
+<dd><dl class="simple">
+<dt>Class for the Higher-Order Covariance Multiple Constrained Minimum Variance (HOCMCMV)</dt><dd><p>Beamformer inverse solution [1].</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="invert.solvers.beamformer.SolverHOCMCMV.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><a class="headerlink" href="#invert.solvers.beamformer.SolverHOCMCMV.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>The mne-python Forward model instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>mne.Forward</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<p>[1] Jonmohamadi, Y., Poudel, G., Innes, C., Weiss, D., Krueger, R., &amp; Jones,
+R. (2014). Comparison of beamformers for EEG source signal reconstruction.
+Biomedical Signal Processing and Control, 14, 175-188.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="invert.solvers.beamformer.SolverHOCMCMV.make_inverse_operator">
+<span class="sig-name descname"><span class="pre">make_inverse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mne_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverHOCMCMV.make_inverse_operator" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculate inverse operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward</strong> (<em>mne.Forward</em>) – The mne-python Forward model instance.</p></li>
+<li><p><strong>mne_obj</strong> (<em>[</em><em>mne.Evoked</em><em>, </em><em>mne.Epochs</em><em>, </em><em>mne.io.Raw</em><em>]</em>) – The MNE data object.</p></li>
+<li><p><strong>weight_norm</strong> (<em>bool</em>) – Normalize the filter weight matrix W to unit length of the columns.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – The regularization parameter.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – The order of the covariance matrix. Should be a positive integer not
+evenly divisible by two {3, 5, 7, …}</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object returns itself for convenience</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverHOCMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverHOCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HOCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverHOCMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverHOCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HOCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverHOCMV" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Higher-Order Covariance Minimum Variance (HOCMV)</dt><dd><p>Beamformer inverse solution [1].</p>
 </dd>
@@ -323,7 +371,7 @@ evenly divisible by two {3, 5, 7, …}</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverLCMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverLCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverLCMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverLCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverLCMV" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Linearly Constrained Minimum Variance Beamformer (LCMV)</dt><dd><p>inverse solution [1].</p>
 </dd>
@@ -357,7 +405,7 @@ approach to spatial filtering. IEEE assp magazine, 5(2), 4-24.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverMCMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverMCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverMCMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverMCMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MCMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverMCMV" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for the Multiple Constrained Minimum Variance (MCMV) Beamformer
 inverse solution [1].</p>
 <p class="rubric">References</p>
@@ -390,7 +438,7 @@ Doesburg, S. M. (2020). Multiple constrained minimum variance beamformer
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverMVAB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverMVAB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Minimum</span> <span class="pre">Variance</span> <span class="pre">Adaptive</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverMVAB" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverMVAB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Minimum</span> <span class="pre">Variance</span> <span class="pre">Adaptive</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverMVAB" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Minimum Variance Adaptive Beamformer (MVAB) inverse</dt><dd><p>solution [1].</p>
 </dd>
@@ -423,7 +471,7 @@ beamforming design. Signal Processing, 93(12), 3264-3277.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverReciPSIICOS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverReciPSIICOS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ReciPSIICOS'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverReciPSIICOS" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverReciPSIICOS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ReciPSIICOS'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverReciPSIICOS" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for the Reciprocal Phase Shift Invariant Imaging of Coherent
 Sources (ReciPSIICOS) Beamformer inverse solution [1].</p>
 <p class="rubric">References</p>
@@ -456,7 +504,7 @@ with correlated sources. Neuroimage, 228, 117677.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverSAM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverSAM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SAM</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverSAM" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverSAM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SAM</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverSAM" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for the Synthetic Aperture Magnetometry Beamformer (SAM) inverse
 solution [1].</p>
 <p class="rubric">References</p>
@@ -488,7 +536,7 @@ aperture magnetometry (SAM). Recent advances in biomagnetism.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverSMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverSMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverSMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverSMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverSMV" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Standardized Minimum Variance (SMV) Beamformer inverse</dt><dd><p>solution [1].</p>
 </dd>
@@ -523,7 +571,7 @@ Biomedical Signal Processing and Control, 14, 175-188.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.beamformer.SolverWNMV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverWNMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'WNMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverWNMV" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.beamformer.</span></span><span class="sig-name descname"><span class="pre">SolverWNMV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'WNMV</span> <span class="pre">Beamformer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.beamformer.SolverWNMV" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Class for the Weight-normalized Minimum Variance (WNMV) Beamformer</dt><dd><p>inverse solution [1].</p>
 </dd>

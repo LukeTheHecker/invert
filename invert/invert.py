@@ -77,6 +77,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverESMV(**kwargs)
     elif solver.lower() == "mcmv":
         solver_object = solvers.SolverMCMV(**kwargs)
+    elif solver.lower() == "hocmcmv":
+        solver_object = solvers.SolverHOCMCMV(**kwargs)
     # elif solver.lower() == "esmcmv":
     #     solver_object = solvers.SolverESMCMV(**kwargs)
     elif solver.lower() == "recipsiicos":
