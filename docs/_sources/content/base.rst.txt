@@ -1,6 +1,11 @@
 Base Class
 ==========
 
+The BaseSolver class is inherited by all solvers. It implements regularization
+with various methods (generalized cross-validation, L-Curve and product method).
+Furthermore, it specifies the number of regularization parameters (n_reg_params)
+and the range of parameters to test.
+
 
 .. automodule:: invert.solvers.base
     :members:

@@ -7,3 +7,4 @@ sphinx
 build
 dist
 invertmeeg.egg-info
+figures

@@ -419,6 +419,13 @@ Beamformers
 
 ..  code-block:: python
 
+    solver = Solver("HOCMCMV")
+
+.. image:: figures/solver_gallery/HOCMCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
     solver = Solver("ReciPSIICOS")
 
 .. image:: figures/solver_gallery/ReciPSIICOS.png

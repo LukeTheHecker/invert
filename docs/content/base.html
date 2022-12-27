@@ -34,8 +34,8 @@
     <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Minimum Norm-Type" href="minimum_norm.html" />
-    <link rel="prev" title="Solvers" href="solvers.html" />
+    <link rel="next" title="Solvers" href="solvers.html" />
+    <link rel="prev" title="invertmeeg - A high-level M/EEG Python library for EEG inverse solutions" href="../index.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -70,7 +70,13 @@
       
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 nav-item">
+    <li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Base Class
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="solvers.html">
   Solvers
  </a>
@@ -85,6 +91,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="gallery.html">
   Gallery
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorial.html">
+  Tutorial
  </a>
 </li>
 
@@ -126,69 +138,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
   <div class="bd-toc-item active">
-    <p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Full List of Solvers
- </span>
-</p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Base Class
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="minimum_norm.html">
-   Minimum Norm-Type
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="loreta.html">
-   LORETA
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="wrop.html">
-   Weighted Resolution Optimization
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="bayes.html">
-   Bayesian Inverse Solutions
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="matching_pursuit.html">
-   Matching Pursuit
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="smooth_matching_pursuit.html">
-   Smooth Matching Pursuit
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="music.html">
-   MUSIC
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="artificial_neural_networks.html">
-   Artificial Neural Networks
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="beamformer.html">
-   Beamformers
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="epifocus.html">
-   EPIFOCUS
-  </a>
- </li>
-</ul>
-
+    
   </div>
 </nav>
               </div>
@@ -226,9 +176,13 @@
               
               <div>
                 
-  <section id="module-invert.solvers.base">
-<span id="base-class"></span><h1>Base Class<a class="headerlink" href="#module-invert.solvers.base" title="Permalink to this headline">#</a></h1>
-<dl class="py class">
+  <section id="base-class">
+<h1>Base Class<a class="headerlink" href="#base-class" title="Permalink to this headline">#</a></h1>
+<p>The BaseSolver class is inherited by all solvers. It implements regularization
+with various methods (generalized cross-validation, L-Curve and product method).
+Furthermore, it specifies the number of regularization parameters (n_reg_params)
+and the range of parameters to test.</p>
+<span class="target" id="module-invert.solvers.base"></span><dl class="py class">
 <dt class="sig sig-object py" id="invert.solvers.base.BaseSolver">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">invert.solvers.base.</span></span><span class="sig-name descname"><span class="pre">BaseSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regularisation_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GCV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reg_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prep_leadfield</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_last_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert.solvers.base.BaseSolver" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -544,17 +498,17 @@ numpy.ndarray matrix or some object like an esinet.net()</p>
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="solvers.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Solvers</p>
+            <p class="prev-next-title"><strong>invertmeeg</strong> - A high-level M/EEG Python library for EEG inverse solutions</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="minimum_norm.html" title="next page">
+    <a class='right-next' id="next-link" href="solvers.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Minimum Norm-Type</p>
+        <p class="prev-next-title">Solvers</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

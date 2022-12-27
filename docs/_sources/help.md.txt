@@ -3,20 +3,14 @@
 ## Update Documentation:
 1. Make changes to the content files in the sphinx folder (.rst files)
 
-2. cd to the sphinx folder:
-
-```
-cd sphinx
-```
-
-3. Build the Project
+2. Build the Project
 
 ```
 sphinx-build -b html sphinx sphinx/_build
 ```
 
-4. Copy all files in .sphinx/_build/html/ to .docs/
-5. Push your changes to github
+3. Copy all files in .sphinx/_build/html/ to .docs/
+4. Push your changes to github
 
 ## List of helpful information
 
