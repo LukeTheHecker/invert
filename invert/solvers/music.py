@@ -556,14 +556,14 @@ class SolverFLEXMUSIC(BaseSolver):
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-            import matplotlib.pyplot as plt
-            plt.figure()
-            plt.plot(iters, D_, '*k')
-            plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
-            plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
-            plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
-            plt.legend()
-            n_comp = n_comp_L
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(iters, D_, '*k')
+            # plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
+            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            # plt.legend()
+            # n_comp = n_comp_L
 
         else:
             n_comp = deepcopy(n)
@@ -595,8 +595,9 @@ class SolverFLEXMUSIC(BaseSolver):
             dipole_idx = self.neighbors[best_order][best_dipole]
             dipole_idc.extend( dipole_idx )
 
-            # print(source_covariance.shape, self.adjacencies[best_order][best_dipole].shape)
+            # source_covariance += np.squeeze(self.adjacencies[best_order][best_dipole] * (1/np.sqrt(i+1)))
             source_covariance += np.squeeze(self.adjacencies[best_order][best_dipole])
+
 
             if np.max(mu) < stop_crit:
                 # print("stopping at ", np.max(mu))
