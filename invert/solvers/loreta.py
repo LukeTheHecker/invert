@@ -91,9 +91,10 @@ class SolverSLORETA(BaseSolver):
         n_chans = leadfield.shape[0]
         
         LLT = leadfield @ leadfield.T
+        
         I = np.identity(n_chans)
         one = np.ones((n_chans, 1))
-        H = I - (one @ one.T) / (one.T @ one)
+        # H = I - (one @ one.T) / (one.T @ one)
         
 
         inverse_operators = []
@@ -103,11 +104,14 @@ class SolverSLORETA(BaseSolver):
             # W_diag = 1 / np.diag(K_MNE @ leadfield)
             # W_slor = np.diag(W_diag)
             # W_slor = np.sqrt(W_slor)
+            # print(W_slor.shape)
             
             # according to pascual-marqui 2002
-            T = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
+            # W_slor = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
+            C = LLT + alpha*I
+            W_slor = np.linalg.pinv(leadfield.T @ C @ leadfield) @ leadfield.T @ C
             
-            inverse_operator = T
+            inverse_operator = W_slor
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]

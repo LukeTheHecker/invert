@@ -131,6 +131,11 @@ class SolverLCMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
+
+
+    
+        
+
 class SolverSMV(BaseSolver):
     ''' Class for the Standardized Minimum Variance (SMV) Beamformer inverse
         solution [1].
@@ -403,28 +408,47 @@ class SolverESMV(BaseSolver):
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
         self.alphas = self.get_alphas(reference=C)
+        subspace = self.reduce_rank_matrix(C)
 
-        U, s, _ = np.linalg.svd(C)
-        # j = find_corner(np.arange(len(s)), s)
         
-        # Find number of Signal Subspaces:
-        j = np.where(((s**2)*len((s**2)) / (s**2).sum()) < np.exp(-16))[0][0]
-
-        Us = U[:, :j]
-        # Un = U[:, j:]
-
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
 
             W_mv = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
-            W = Us @ Us.T @ W_mv
+            W = subspace @ W_mv
 
             inverse_operator = W.T
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
+
+    def reduce_rank_matrix(self, C):
+        # Calculte eigenvectors and eigenvalues
+        U, s, _ = np.linalg.svd(C)
+        
+        # Find optimal rank using L-curve Corner approach:
+        n_comp_l = find_corner(np.arange(len(s)), s)
+        
+        # Find optimal rank using drop-off approach:
+        s_ = s / s.max()
+        n_comp_d = np.where( abs(np.diff(s_)) < 0.001 )[0]
+        if len(n_comp_d) > 0:
+            n_comp_d = n_comp_d[0] + 2
+        else:
+            n_comp_d = n_comp_l
+        
+        # Kaiser Rule
+        n_comp_k = np.where(s < np.mean(s))[0][0]
+        print(n_comp_k, n_comp_l, n_comp_d)
+        
+        # Combine the approaches
+        n_comp = np.ceil((n_comp_d + n_comp_l + n_comp_k)/3).astype(int)
+        
+        # Transform data
+        subspace = U[:, :n_comp] @ U[:, :n_comp].T
+        return subspace
 
 class SolverMCMV(BaseSolver):
     ''' Class for the Multiple Constrained Minimum Variance (MCMV) Beamformer
@@ -505,6 +529,8 @@ class SolverMCMV(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
+
+    
 
 class SolverHOCMCMV(BaseSolver):
     ''' Class for the Higher-Order Covariance Multiple Constrained Minimum Variance (HOCMCMV)
