@@ -556,19 +556,21 @@ class SolverFLEXMUSIC(BaseSolver):
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # plt.plot(iters, D_, '*k')
-            # plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
-            # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
-            # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
-            # plt.legend()
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.plot(iters, D_, '*k')
+            plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
+            plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
+            plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
+            plt.legend()
+            n_comp = n_comp_L
 
         else:
             n_comp = deepcopy(n)
         Us = U[:, :n_comp]
 
         dipole_idc = []
+        source_covariance = np.zeros(n_dipoles)
         n_time = y.shape[1]
         for i in range(k):
             # print(Us.shape)
@@ -592,6 +594,9 @@ class SolverFLEXMUSIC(BaseSolver):
             # Add dipole index or patch indices to the list of active dipoles
             dipole_idx = self.neighbors[best_order][best_dipole]
             dipole_idc.extend( dipole_idx )
+
+            # print(source_covariance.shape, self.adjacencies[best_order][best_dipole].shape)
+            source_covariance += np.squeeze(self.adjacencies[best_order][best_dipole])
 
             if np.max(mu) < stop_crit:
                 # print("stopping at ", np.max(mu))
@@ -625,16 +630,20 @@ class SolverFLEXMUSIC(BaseSolver):
         # x_hat = np.zeros((n_dipoles, n_time))
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
 
-        # WMNE-based
-        # x_hat = np.zeros((n_dipoles, n_time))
-        inverse_operator = np.zeros((n_dipoles, n_chans))
+        # WMNE-based - use the selected dipole indices and calc WMNE solution
+        # # x_hat = np.zeros((n_dipoles, n_time))
+        # inverse_operator = np.zeros((n_dipoles, n_chans))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
+        # # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
-        L = self.leadfield[:, dipole_idc]
+        # Prior-Cov based: Use the selected smooth patches as source covariance priors
+        source_covariance = np.diag(source_covariance)
+        L = self.leadfield
         W = np.diag(np.linalg.norm(L, axis=0))
-        
-        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
-
-        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+        # print(source_covariance.shape, L.shape, W.shape)
+        inverse_operator = np.linalg.inv(source_covariance @ L.T @ L + W.T @ W) @ source_covariance @ L.T
 
 
         return inverse_operator
@@ -668,6 +677,7 @@ class SolverFLEXMUSIC(BaseSolver):
         new_adjacency = deepcopy(self.adjacency)
         # Convert to sparse matrix for speedup
         new_adjacency = csr_matrix(new_adjacency)
+        self.adjacencies = [np.identity(n_dipoles),]
         
 
         
@@ -675,10 +685,12 @@ class SolverFLEXMUSIC(BaseSolver):
             new_leadfield = new_leadfield @ self.gradient
             new_leadfield -= new_leadfield.mean(axis=0)
             new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
-
+            smooth_adjacency = self.adjacencies[-1] @ self.gradient
+            self.adjacencies.append( smooth_adjacency / smooth_adjacency.max(axis=0) )
             new_adjacency = (new_adjacency @ self.adjacency).toarray()
             neighbors = [np.where(ad!=0)[0] for ad in self.adjacency.toarray()]
             
             self.leadfields.append( deepcopy(new_leadfield) )
             self.neighbors.append( neighbors )
+            
             new_adjacency = csr_matrix(new_adjacency)

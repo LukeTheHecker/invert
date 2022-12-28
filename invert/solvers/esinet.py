@@ -979,8 +979,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Assign each source (or source patch) a time course
         amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
         amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
-        y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
-        # y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+        # y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+        y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
         
         
         # Project simulated sources through leadfield

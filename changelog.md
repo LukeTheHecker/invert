@@ -1,5 +1,14 @@
 # Changelog
 
+
+## 0.0.4 ???
+* Change in FLEX-MUSIC: use selected dipoles/ smooth patches as source covariance during WMNE inversion
+  * before: indices were selected as full flat priors for WMNE inversion
+
+## 0.0.3 28.12.2022
+* Added rank-reduction option to invert.BaseSolver class
+* Set rank_reduction as default for all Beamforming approaches for better results
+
 ## 0.0.2 20.12.2022
 * Added PyQt5 to the package dependencies
 
