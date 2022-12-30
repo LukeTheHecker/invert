@@ -1,9 +1,10 @@
 # Changelog
 
 
-## 0.0.4 ???
+## 0.0.4 30.12.2022
 * Change in FLEX-MUSIC: use selected dipoles/ smooth patches as source covariance during WMNE inversion
   * before: indices were selected as full flat priors for WMNE inversion
+* Fixed error with the sLORETA formula
 
 ## 0.0.3 28.12.2022
 * Added rank-reduction option to invert.BaseSolver class

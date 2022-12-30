@@ -17,9 +17,8 @@ class InverseOperator:
     inverse operator : 
     Return
     ------
-
-
     '''
+
     def __init__(self, inverse_operator, solver_name):
         self.solver_name = solver_name
         self.data = inverse_operator
@@ -394,7 +393,7 @@ class BaseSolver:
         I = np.identity(n_chans)
         gcv_values = []
         for inverse_operator in self.inverse_operators:
-            x = inverse_operator.data @ M
+            x = inverse_operator.apply( M )
             M_hat = self.leadfield @ x 
             # M_hat -= M_hat.mean(axis=0)
             residual_norm = np.linalg.norm(M_hat- M)

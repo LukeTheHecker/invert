@@ -72,7 +72,7 @@ class SolverSLORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -87,6 +87,7 @@ class SolverSLORETA(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(evoked)
         leadfield = self.leadfield
         n_chans = leadfield.shape[0]
         
@@ -94,22 +95,26 @@ class SolverSLORETA(BaseSolver):
         
         I = np.identity(n_chans)
         one = np.ones((n_chans, 1))
-        # H = I - (one @ one.T) / (one.T @ one)
-        
+        H = I - (one @ one.T) / (one.T @ one)
 
         inverse_operators = []
         for alpha in self.alphas:
             # according to Grech et al 2008
-            # K_MNE = leadfield.T @ np.linalg.inv(LLT + alpha * np.identity(n_chans))
-            # W_diag = 1 / np.diag(K_MNE @ leadfield)
-            # W_slor = np.diag(W_diag)
-            # W_slor = np.sqrt(W_slor)
-            # print(W_slor.shape)
-            
+            K_MNE = leadfield.T @ np.linalg.pinv(LLT + alpha * np.identity(n_chans))
+            W_diag = 1 / np.sqrt(np.diag(K_MNE @ leadfield))
+            W_slor = (K_MNE.T * W_diag).T
+
             # according to pascual-marqui 2002
             # W_slor = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
-            C = LLT + alpha*I
-            W_slor = np.linalg.pinv(leadfield.T @ C @ leadfield) @ leadfield.T @ C
+            # J = leadfield.T @ np.linalg.pinv(LLT + alpha * H)
+            # S = leadfield.T @ np.linalg.pinv(LLT + alpha * H) @ leadfield
+            # W_slor = J.T @ np.linalg.inv(S) @ J
+            # print(J.shape, S.shape, W_slor.shape)
+
+            # According to pascual-marqui 2009 (?)
+            # C = LLT + alpha*I
+            # LTC = leadfield.T @ C
+            # W_slor = np.linalg.pinv(LTC @ leadfield) @ LTC
             
             inverse_operator = W_slor
             inverse_operators.append(inverse_operator)
