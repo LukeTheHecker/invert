@@ -403,13 +403,14 @@ class BaseSolver:
             gcv_values.append(gcv_value)
             # print(np.linalg.norm(x), gcv_value)
         # Filter gcv_values that first increase
-        if len(np.where((np.diff(gcv_values)<0))[0]) == 0:
-            if not np.isnan(gcv_values[0]):
-                keep_idx = 0
-            else:
-                keep_idx = 1
-        else:
-            keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
+        keep_idx = 0
+        # if len(np.where((np.diff(gcv_values)<0))[0]) == 0:
+        #     if not np.isnan(gcv_values[0]):
+        #         keep_idx = 0
+        #     else:
+        #         keep_idx = 1
+        # else:
+        #     keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
             
         optimum_idx = np.argmin(gcv_values[keep_idx:])+keep_idx
 

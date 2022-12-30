@@ -72,7 +72,7 @@ class SolverSLORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha=0.01, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -86,23 +86,26 @@ class SolverSLORETA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        if alpha == "auto":
+            msg = "sLORETA does not work well for automated regularization. Please use a floating points number (e.g., alpha=0.01)."
+            raise AttributeError(msg)
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        data = self.unpack_data_obj(evoked)
+
         leadfield = self.leadfield
         n_chans = leadfield.shape[0]
         
         LLT = leadfield @ leadfield.T
         
         I = np.identity(n_chans)
-        one = np.ones((n_chans, 1))
-        H = I - (one @ one.T) / (one.T @ one)
+        # one = np.ones((n_chans, 1))
+        # H = I - (one @ one.T) / (one.T @ one)
 
         inverse_operators = []
         for alpha in self.alphas:
             # according to Grech et al 2008
-            K_MNE = leadfield.T @ np.linalg.pinv(LLT + alpha * np.identity(n_chans))
-            W_diag = 1 / np.sqrt(np.diag(K_MNE @ leadfield))
-            W_slor = (K_MNE.T * W_diag).T
+            K_MNE = leadfield.T @ np.linalg.pinv(LLT + alpha *I)
+            W_diag = np.sqrt(np.diag(K_MNE @ leadfield))
+            W_slor = (K_MNE.T / W_diag).T
 
             # according to pascual-marqui 2002
             # W_slor = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
