@@ -48,4 +48,4 @@ stc.plot()
 There are many solvers implemented in the package, and you can find them
 [here!](https://lukethehecker.github.io/invert/content/solvers.html)
 
-I am looking for collaborators! If you are interested you can write a :mailbox: to [lukas_hecker@web.de](mailto:lukas_hecker@web.de)
+I am looking for collaborators! If you are interested you can write an :email: to [lukas_hecker@web.de](mailto:lukas_hecker@web.de)
