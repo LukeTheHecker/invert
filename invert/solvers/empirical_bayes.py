@@ -479,6 +479,329 @@ class SolverMMChampagne(BaseSolver):
 
         return inverse_operator
 
+class SolverMacKayChampagne(BaseSolver):
+    ''' Class for the MacKay Champagne (MacKay) inverse solution. 
+
+    References
+    ----------
+    [1] Cai, C., Kang, H., Hashemi, A., Chen, D., Diwakar, M., Haufe, S., ... &
+    Nagarajan, S. S. (2022). Bayesian algorithms for joint estimation of brain
+    activity and noise in electromagnetic imaging. IEEE Transactions on Medical
+    Imaging.
+    '''
+
+    def __init__(self, name="MacKay-Champagne", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', 
+                              max_iter=1000, noise_cov=None, prune=True, 
+                              pruning_thresh=1e-3, convergence_criterion=1e-8, 
+                              **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero
+            (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        self.get_alphas(reference=self.leadfield@self.leadfield.T)
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.mackay_champagne(data, alpha, max_iter=max_iter, prune=prune, pruning_thresh=pruning_thresh, convergence_criterion=convergence_criterion)
+            inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+    
+    def mackay_champagne(self, Y, alpha, max_iter=1000, prune=True, 
+                          pruning_thresh=1e-3, convergence_criterion=1e-8):
+        ''' Majority Maximization Champagne method.
+
+        Parameters
+        ----------
+        Y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        alpha : float
+            The regularization parameter.
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        Returns
+        -------
+        x : numpy.ndarray
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        L = deepcopy(self.leadfield)
+        
+        # re-reference data
+        Y -= Y.mean(axis=0)
+
+        # Scaling of the data (necessary for convergence criterion and pruning
+        # threshold)
+        Y_scaled = deepcopy(Y)
+        Y_scaled /= abs(Y_scaled).mean()
+
+        I = np.identity(n_chans)
+        gammas = np.ones(n_dipoles)
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+        # z_0 = L.T @ Sigma_y_inv @ L
+        mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+        loss_list = [1e99,]
+        for i in range(max_iter):
+            old_gammas = deepcopy(gammas)
+            z = []
+            for n in range(len(gammas)):
+                Ln = L[:, n][:,np.newaxis]
+                z_n = gammas[n] * Ln.T @ Sigma_y_inv @ Ln
+                upper_term = (1/n_times) *(mu_x[n]**2).sum()
+
+                gammas[n] = upper_term / z_n
+                z.append(z_n)
+                # gammas[n] = Sigma_x[n,n] + (1/n_times) * (mu_x[n]**2).sum()
+            # z = np.diag(z)
+            
+            gammas[np.isnan(gammas)] = 0
+            # print("max gamma: ", gammas.max())
+            if prune:
+                prune_candidates = gammas<pruning_thresh
+                gammas[prune_candidates] = 0
+            
+            # update rest
+            Gamma = np.diag(gammas)
+            Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+            mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+            loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
+            # first_term = z.T @ gammas
+            # loss = first_term + second_term
+            loss_list.append(loss)
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+            # Check convergence:
+            change = loss_list[-2] - loss_list[-1] 
+            # print(change)
+            if change < convergence_criterion:
+                # print("Converged!")
+                break
+            
+        # update rest
+        gammas /= gammas.max()
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+
+
+        return inverse_operator
+
+class SolverConvexityChampagne(BaseSolver):
+    ''' Class for the Convexity Champagne inverse solution. 
+
+    References
+    ----------
+    [1] Cai, C., Kang, H., Hashemi, A., Chen, D., Diwakar, M., Haufe, S., ... &
+    Nagarajan, S. S. (2022). Bayesian algorithms for joint estimation of brain
+    activity and noise in electromagnetic imaging. IEEE Transactions on Medical
+    Imaging.
+    '''
+
+    def __init__(self, name="Convexity-Champagne", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', 
+                              max_iter=1000, noise_cov=None, prune=True, 
+                              pruning_thresh=1e-3, convergence_criterion=1e-8, 
+                              **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero
+            (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        self.get_alphas(reference=self.leadfield@self.leadfield.T)
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.mackay_champagne(data, alpha, max_iter=max_iter, prune=prune, pruning_thresh=pruning_thresh, convergence_criterion=convergence_criterion)
+            inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+    
+    def mackay_champagne(self, Y, alpha, max_iter=1000, prune=True, 
+                          pruning_thresh=1e-3, convergence_criterion=1e-8):
+        ''' Majority Maximization Champagne method.
+
+        Parameters
+        ----------
+        Y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        alpha : float
+            The regularization parameter.
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        Returns
+        -------
+        x : numpy.ndarray
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        L = deepcopy(self.leadfield)
+        
+        # re-reference data
+        Y -= Y.mean(axis=0)
+
+        # Scaling of the data (necessary for convergence criterion and pruning
+        # threshold)
+        Y_scaled = deepcopy(Y)
+        Y_scaled /= abs(Y_scaled).mean()
+
+        I = np.identity(n_chans)
+        gammas = np.ones(n_dipoles)
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+        # z_0 = L.T @ Sigma_y_inv @ L
+        mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+        loss_list = [1e99,]
+        for i in range(max_iter):
+            old_gammas = deepcopy(gammas)
+            # z = []
+            for n in range(len(gammas)):
+                Ln = L[:, n][:,np.newaxis]
+                g = np.trace(Ln.T @ Sigma_y_inv @ Ln)
+                upper_term = (1/n_times) *(mu_x[n]**2).sum()
+                gammas[n] = np.sqrt(upper_term / g)
+
+            gammas[np.isnan(gammas)] = 0
+            # print("max gamma: ", gammas.max())
+            if prune:
+                prune_candidates = gammas<pruning_thresh
+                gammas[prune_candidates] = 0
+            
+            # update rest
+            Gamma = np.diag(gammas)
+            Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+            mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+            loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
+            # first_term = z.T @ gammas
+            # loss = first_term + second_term
+            loss_list.append(loss)
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+            # Check convergence:
+            change = loss_list[-2] - loss_list[-1] 
+            # print(change)
+            if change < convergence_criterion:
+                # print("Converged!")
+                break
+            
+        # update rest
+        gammas /= gammas.max()
+        Gamma = np.diag(gammas)
+        Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+        
+        return inverse_operator
+
 class SolverTEMChampagne(BaseSolver):
     ''' Class for the Temporal Expectation Maximization Champagne (T-EM
     Champagne) inverse solution. 

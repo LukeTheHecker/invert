@@ -51,6 +51,10 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverEMChampagne(**kwargs)
     elif solver.lower() == "mmchampagne" or solver.lower() == "mm champagne" or solver.lower() == "mmc":
         solver_object = solvers.SolverMMChampagne(**kwargs)
+    elif solver.lower() == "mackaychampagne" or solver.lower() == "mackay champagne" or solver.lower() == "mcc":
+        solver_object = solvers.SolverMacKayChampagne(**kwargs)
+    elif solver.lower() == "convexitychampagne" or solver.lower() == "convexity champagne" or solver.lower() == "coc":
+        solver_object = solvers.SolverConvexityChampagne(**kwargs)
     # elif solver.lower() == "temchampagne" or solver.lower() == "tem champagne" or solver.lower() == "temc":
     #     solver_object = solvers.SolverTEMChampagne(**kwargs)
     elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
