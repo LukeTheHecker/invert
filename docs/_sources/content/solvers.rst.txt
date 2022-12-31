@@ -36,6 +36,8 @@ class
 - Low SNR Champagne (Low SNR Champagne)
 - Expectation Maximization Champagne (EM Champagne)
 - Majorization Maximization Champagne (MM Champagne)
+- MacKay Champagne (MacKay-Champagne)
+- Convexity Champagne (Convexity-Champagne)
 
 
 :doc:`matching_pursuit`

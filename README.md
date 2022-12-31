@@ -1,7 +1,7 @@
 # **invertmeeg** - A high-level M/EEG Python library for EEG inverse solutions
 
-This package contains various approaches to solve the M/EEG inverse problems. It
-integrates with the [mne-python](https://mne.tools) framework.
+This package contains various (>50) approaches to solve the M/EEG inverse
+problems. It integrates with the [mne-python](https://mne.tools) framework.
 
 Read the [Documentation here!](https://lukethehecker.github.io/invert/)
 

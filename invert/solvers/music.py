@@ -212,21 +212,23 @@ class SolverRAPMUSIC(BaseSolver):
             
             # Based on eigenvalue drop-off
             D_ = D/D.max()
-            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
-
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0]
+            if len(n_comp_drop) > 0:
+                n_comp_drop = n_comp_drop[0] + 1
+            else:
+                n_comp_drop = n_comp_L
+            
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-
             # import matplotlib.pyplot as plt
-            # iters = np.arange(len(D))
-            # D_ = D/D.max()
             # plt.figure()
             # plt.plot(iters, D_, '*k')
-            # plt.plot(iters[n_comp], D_[n_comp], 'og', label=f"Eig drop-off {n_comp}")
+            # plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
             # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
             # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
             # plt.legend()
+            # n_comp = n_comp_L
 
         else:
             n_comp = deepcopy(n)
@@ -375,21 +377,23 @@ class SolverTRAPMUSIC(BaseSolver):
             
             # Based on eigenvalue drop-off
             D_ = D/D.max()
-            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 2
-
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0]
+            if len(n_comp_drop) > 0:
+                n_comp_drop = n_comp_drop[0] + 1
+            else:
+                n_comp_drop = n_comp_L
+            
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
-
             # import matplotlib.pyplot as plt
-            # iters = np.arange(len(D))
-            # D_ = D/D.max()
             # plt.figure()
             # plt.plot(iters, D_, '*k')
-            # plt.plot(iters[n_comp], D_[n_comp], 'og', label=f"Eig drop-off {n_comp}")
+            # plt.plot(iters[n_comp_drop], D_[n_comp_drop], 'og', label=f"Eig drop-off {n_comp_drop}")
             # plt.plot(iters[n_comp_L], D_[n_comp_L], 'ob', label=f"L Curve Method {n_comp_L}")
             # plt.plot(iters[n_comp], D_[n_comp], 'or', label=f"Combined {n_comp}")
             # plt.legend()
+            # n_comp = n_comp_L
 
         else:
             n_comp = deepcopy(n)
@@ -548,8 +552,12 @@ class SolverFLEXMUSIC(BaseSolver):
             
             # Based on eigenvalue drop-off
             D_ = D/D.max()
-            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0][0] + 1
-
+            n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0]
+            if len(n_comp_drop) > 0:
+                n_comp_drop = n_comp_drop[0] + 1
+            else:
+                n_comp_drop = n_comp_L
+            
             # Combine the two:
             n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
 
