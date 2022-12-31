@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5 ???
+* removed automated regularisation from sloreta due to unexpected behaviors
+* refactored FLEX-MUSIC with minor speed improvements
+* fixed an error in the final estimation of the current source density with FLEX-MUSIC
 
 ## 0.0.4 30.12.2022
 * Change in FLEX-MUSIC: use selected dipoles/ smooth patches as source covariance during WMNE inversion

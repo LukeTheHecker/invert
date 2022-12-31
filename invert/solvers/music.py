@@ -121,7 +121,6 @@ class SolverMUSIC(BaseSolver):
 
         return inverse_operator
 
-
 class SolverRAPMUSIC(BaseSolver):
     ''' Class for the Recursively Applied Multiple Signal Classification
     (RAP-MUSIC) inverse solution [1].
@@ -282,7 +281,6 @@ class SolverRAPMUSIC(BaseSolver):
 
 
         return inverse_operator
-        
 
 class SolverTRAPMUSIC(BaseSolver):
     ''' Class for the Truncated Recursively Applied Multiple Signal
@@ -493,7 +491,6 @@ class SolverFLEXMUSIC(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         data = self.unpack_data_obj(mne_obj)
-
         self.prepare_flex(n_orders)
         inverse_operator = self.make_flex(data, n, k, stop_crit, truncate)
         
@@ -533,16 +530,16 @@ class SolverFLEXMUSIC(BaseSolver):
         n_orders = len(self.leadfields)
         if k == "auto":
             k = n_chans
-        # Data Covariance
+        # Assert common average reference
         y -= y.mean(axis=0)
-
+        # Compute Data Covariance
         C = y@y.T
 
 
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
         U, D, _= np.linalg.svd(C, full_matrices=True)
-        # U -= U.mean(axis=0)
+        
 
         if n == "auto":
             # L-curve method
@@ -567,36 +564,38 @@ class SolverFLEXMUSIC(BaseSolver):
 
         else:
             n_comp = deepcopy(n)
+
         Us = U[:, :n_comp]
 
         dipole_idc = []
         source_covariance = np.zeros(n_dipoles)
-        n_time = y.shape[1]
+        
         for i in range(k):
             # print(Us.shape)
             Ps = Us@Us.T
 
             mu = np.zeros((n_orders, n_dipoles))
-            # for nn in range(n_orders):
-            #     for p in range(n_dipoles):
-            #         l = leadfields[nn][:, p][:, np.newaxis]
-            #         norm_1 = np.linalg.norm(Ps @ Q @ l)
-            #         norm_2 = np.linalg.norm(Q @ l) # Q @ l
-            #         mu[nn, p] = norm_1 / norm_2
+            last_maximum = 1
             for nn in range(n_orders):
+                
                 norm_1 = np.linalg.norm(Ps @ Q @ leadfields[nn], axis=0)
                 norm_2 = np.linalg.norm(Q @ leadfields[nn], axis=0) 
                 mu[nn, :] = norm_1 / norm_2
+                # if nn>0 and np.max(mu[nn]) < np.max(mu[nn-1]):
+                #     # print("found appropriate order, skipping next ones")
+                #     break
         
+                
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
-            # print("Best order: ", best_order)
+            # print("best_order ", best_order, "best dipole: ", best_dipole)
             # Add dipole index or patch indices to the list of active dipoles
             dipole_idx = self.neighbors[best_order][best_dipole]
             dipole_idc.extend( dipole_idx )
+            # print("dipole idx: ", dipole_idx)
 
-            # source_covariance += np.squeeze(self.adjacencies[best_order][best_dipole] * (1/np.sqrt(i+1)))
-            source_covariance += np.squeeze(self.adjacencies[best_order][best_dipole])
+            # source_covariance += np.squeeze(self.gradients[best_order][best_dipole] * (1/np.sqrt(i+1)))
+            source_covariance += np.squeeze(self.gradients[best_order][best_dipole])
 
 
             if np.max(mu) < stop_crit:
@@ -619,14 +618,14 @@ class SolverFLEXMUSIC(BaseSolver):
             # U -= U.mean(axis=0)
             
         
-            # 
+            # Truncate eigenvectors
             if truncate:
                 Us = U[:, :n_comp-i]
             else:
                 Us = U[:, :n_comp]
             
-        dipole_idc = np.array(dipole_idc)
-
+        # dipole_idc = np.array(dipole_idc)
+        # n_time = y.shape[1]
         # Simple minimum norm inversion using found dipoles
         # x_hat = np.zeros((n_dipoles, n_time))
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
@@ -640,11 +639,12 @@ class SolverFLEXMUSIC(BaseSolver):
         # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
         # Prior-Cov based: Use the selected smooth patches as source covariance priors
+        # print("non-zero dipoles in source cov: ", (source_covariance!=0).sum())
         source_covariance = np.diag(source_covariance)
         L = self.leadfield
-        W = np.diag(np.linalg.norm(L, axis=0))
+        W = np.diag(np.linalg.norm(L, axis=0)) 
         # print(source_covariance.shape, L.shape, W.shape)
-        inverse_operator = np.linalg.inv(source_covariance @ L.T @ L + W.T @ W) @ source_covariance @ L.T
+        inverse_operator = source_covariance @ np.linalg.inv(source_covariance @ L.T @ L + W.T @ W) @ source_covariance @ L.T
 
 
         return inverse_operator
@@ -664,34 +664,33 @@ class SolverFLEXMUSIC(BaseSolver):
 
         self.leadfields = [deepcopy(self.leadfield), ]
         self.neighbors = [[np.array([i]) for i in range(n_dipoles)], ]
+        self.gradients = [np.identity(n_dipoles),]
 
         if n_orders==0:
             return
 
         new_leadfield = deepcopy(self.leadfield)
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
-
-        self.gradient = abs(laplacian(self.adjacency))
+        gradient = abs(laplacian(deepcopy(self.adjacency)))
+        gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
         # Convert to sparse matrix for speedup
-        self.gradient = csr_matrix(self.gradient)
-
-        new_adjacency = deepcopy(self.adjacency)
-        # Convert to sparse matrix for speedup
-        new_adjacency = csr_matrix(new_adjacency)
-        self.adjacencies = [np.identity(n_dipoles),]
-        
+        gradient = csr_matrix(gradient)
 
         
         for _ in range(n_orders):
-            new_leadfield = new_leadfield @ self.gradient
+            new_leadfield = new_leadfield @ gradient
             new_leadfield -= new_leadfield.mean(axis=0)
             new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
-            smooth_adjacency = self.adjacencies[-1] @ self.gradient
-            self.adjacencies.append( smooth_adjacency / smooth_adjacency.max(axis=0) )
-            new_adjacency = (new_adjacency @ self.adjacency).toarray()
-            neighbors = [np.where(ad!=0)[0] for ad in self.adjacency.toarray()]
+            
+            neighbors = [np.where(ad!=0)[0] for ad in gradient.toarray()]
             
             self.leadfields.append( deepcopy(new_leadfield) )
             self.neighbors.append( neighbors )
+            self.gradients.append( gradient.toarray() )
+
+            gradient = gradient @ deepcopy(self.adjacency)
+            gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
+        
             
-            new_adjacency = csr_matrix(new_adjacency)
+            
+            
