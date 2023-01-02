@@ -494,22 +494,13 @@ class SolverFLEXMUSIC(BaseSolver):
         self : object returns itself for convenience
         '''
         from time import time
-        start = time()
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-        end1 = time()
         
         data = self.unpack_data_obj(mne_obj)
-        end2 = time()
-        
+
         self.prepare_flex(n_orders)
-        end3 = time()
         
         inverse_operator = self.make_flex(data, n, k, stop_crit, truncate)
-        end4 = time()
-        print(f"Make: {end1-start}")
-        print(f"Unpack: {end2-end1}")
-        print(f"Prep: {end3-end2}")
-        print(f"Make Flex: {end4-end3}")
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self

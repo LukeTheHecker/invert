@@ -966,7 +966,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     
     if min_order>0:
         start_idx = int(n_dipoles*min_order)
-        sources = csr_matrix(sources[start_idx:, :])
+        sources = csr_matrix(sources.toarray()[start_idx:, :])
         
 
 
