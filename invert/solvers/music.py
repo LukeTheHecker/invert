@@ -204,7 +204,7 @@ class SolverRAPMUSIC(BaseSolver):
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
 
-        U, D, _= np.linalg.svd(C, full_matrices=True)
+        U, D, _= np.linalg.svd(C, full_matrices=False)
         if n == "auto":
             # L-curve method
             iters = np.arange(len(D))
@@ -369,7 +369,7 @@ class SolverTRAPMUSIC(BaseSolver):
         C = y@y.T
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
-        U, D, _= np.linalg.svd(C, full_matrices=True)
+        U, D, _= np.linalg.svd(C, full_matrices=False)
         if n == "auto":
             # L-curve method
             iters = np.arange(len(D))
@@ -493,10 +493,23 @@ class SolverFLEXMUSIC(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        from time import time
+        start = time()
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        end1 = time()
+        
         data = self.unpack_data_obj(mne_obj)
+        end2 = time()
+        
         self.prepare_flex(n_orders)
+        end3 = time()
+        
         inverse_operator = self.make_flex(data, n, k, stop_crit, truncate)
+        end4 = time()
+        print(f"Make: {end1-start}")
+        print(f"Unpack: {end2-end1}")
+        print(f"Prep: {end3-end2}")
+        print(f"Make Flex: {end4-end3}")
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
@@ -542,7 +555,7 @@ class SolverFLEXMUSIC(BaseSolver):
 
         I = np.identity(n_chans)
         Q = np.identity(n_chans)
-        U, D, _= np.linalg.svd(C, full_matrices=True)
+        U, D, _= np.linalg.svd(C, full_matrices=False)
         
 
         if n == "auto":
@@ -651,7 +664,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # inverse_operator = source_covariance @ np.linalg.inv(source_covariance @ L.T @ L + W.T @ W) @ source_covariance @ L.T
         
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
-        source_covariance = np.diag(source_covariance)
+        source_covariance = csr_matrix(np.diag(source_covariance))
         L_s = self.leadfield @ source_covariance
         L = self.leadfield
         W = np.diag(np.linalg.norm(L, axis=0)) 

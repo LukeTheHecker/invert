@@ -130,7 +130,6 @@ class BaseSolver:
         
         self.obj_info = mne_obj.info
         
-
     def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
         ''' Apply the inverse operator
         
@@ -195,13 +194,14 @@ class BaseSolver:
         
         # Prepare Data
         mne_obj = self.prep_data(mne_obj)
+        mne_obj_meeg = mne_obj.copy().pick_types(**pick_types)
 
         channels_in_fwd = self.forward.ch_names
-        channels_in_mne_obj = mne_obj.ch_names
+        channels_in_mne_obj = mne_obj_meeg.ch_names
         picks = self.select_list_intersection(channels_in_fwd, channels_in_mne_obj)
         
         # Select only data channels in mne_obj
-        mne_obj_meeg = mne_obj.copy().pick_channels(picks).pick_types(**pick_types)
+        mne_obj_meeg.pick_channels(picks)
         
         # Store original forward model for later
         self.forward_original = deepcopy(self.forward)
@@ -270,9 +270,9 @@ class BaseSolver:
 
         '''
         if reference is None:
-            _, eigs, _ = np.linalg.svd(self.leadfield) 
+            _, eigs, _ = np.linalg.svd(self.leadfield, full_matrices=False) 
         else:
-            _, eigs, _ = np.linalg.svd(reference)
+            _, eigs, _ = np.linalg.svd(reference, full_matrices=False)
         self.max_eig = eigs.max()
 
         if self.alpha == "auto":
@@ -523,7 +523,7 @@ class BaseSolver:
     def select_signal_subspace(data_matrix, rank="auto"):
     
         # Compute the SVD of the data matrix
-        U, S, V = np.linalg.svd(data_matrix)
+        U, S, V = np.linalg.svd(data_matrix, full_matrices=False)
         
         if rank == "auto":
             iters = np.arange(len(S))

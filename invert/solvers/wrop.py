@@ -66,7 +66,6 @@ class SolverBackusGilbert(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-
 class SolverLAURA(BaseSolver):
     ''' Class for the Local AUtoRegressive Average (LAURA) inverse solution.
     
@@ -106,14 +105,15 @@ class SolverLAURA(BaseSolver):
 
         d = cdist(pos, pos)
 
-        # Get the adjacency matrix of the source spaces
-        for i in range(d.shape[0]):
-            # find dipoles that are no neighbor to dipole i
-            non_neighbors = np.where(~adjacency.astype(bool)[i, :])[0]
-            # append dipole itself
-            non_neighbors = np.append(non_neighbors, i)
-            # set non-neighbors to zero
-            d[i, non_neighbors] = 0
+        # # Get the adjacency matrix of the source spaces
+        # for i in range(d.shape[0]):
+        #     # find dipoles that are no neighbor to dipole i
+        #     non_neighbors = np.where(~adjacency.astype(bool)[i, :])[0]
+        #     # append dipole itself
+        #     non_neighbors = np.append(non_neighbors, i)
+        #     # set non-neighbors to zero
+        #     d[i, non_neighbors] = 0
+        d *= adjacency
         A = -d
         A[A!=0] **= -drop_off
         A[np.isinf(A)] = 0

@@ -426,7 +426,7 @@ class SolverESMV(BaseSolver):
 
     def reduce_rank_matrix(self, C):
         # Calculte eigenvectors and eigenvalues
-        U, s, _ = np.linalg.svd(C)
+        U, s, _ = np.linalg.svd(C, full_matrices=False)
         
         # Find optimal rank using L-curve Corner approach:
         n_comp_l = find_corner(np.arange(len(s)), s)
