@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import pickle as pkl
 import tensorflow as tf
-
+from mne.io.constants import FIFF
     
 class InverseOperator:
     ''' This class holds the inverse operator, which may be a simple
@@ -548,7 +548,15 @@ class BaseSolver:
         Return
         ------
         '''
+        # Check whether forward model has free source orientation
+        # if yes -> convert to fixed
+        if self.forward["source_ori"] == FIFF.FIFFV_MNE_FREE_ORI:
+            print("Forward model has free source orientation. This is currently not possible, converting to fixed.")
+            # convert to fixed
+            self.forward = mne.convert_forward_solution(self.forward, force_fixed=True, verbose=0)
+        
         self.leadfield = deepcopy(self.forward["sol"]["data"])
+        
         if self.prep_leadfield:
             self.leadfield -= self.leadfield.mean(axis=0)
             self.leadfield /= np.linalg.norm(self.leadfield, axis=0)
@@ -587,10 +595,10 @@ class BaseSolver:
         tstep = 1/sfreq
         subject = self.obj_info["subject_info"]
 
-        if type(subject) == dict:
-            subject = "bst_raw"
-
-        if subject is None:
+        if type(subject) == dict and "his_id" in subject:
+            subject = subject["his_id"]
+        # else assume fsaverage as subject id
+        else:
             subject = "fsaverage"
         
         stc = mne.SourceEstimate(source_mat, vertices, tmin=tmin, tstep=tstep, subject=subject, verbose=self.verbose)
