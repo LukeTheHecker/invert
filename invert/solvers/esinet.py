@@ -255,7 +255,7 @@ class SolverCovCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=100,
-                            alpha="auto", verbose=0, **kwargs):
+                            alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -437,7 +437,7 @@ class SolverCovCNN(BaseSolver):
             activation=self.activation_function, 
             name='FC1')(flat)
         out = Dense(n_dipoles, 
-            activation="relu", 
+            activation="sigmoid", 
             name='Output')(fc1)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
@@ -905,7 +905,6 @@ class SolverLSTM(BaseSolver):
         self.generator.__next__()
 
 
-
 def rms(x):
         return np.sqrt(np.mean(x**2))
     
@@ -1006,8 +1005,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Apply common average reference
         x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
         # Scale eeg
-        if scale_data:
-            x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+        # if scale_data:
+        #     x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
         
         if use_cov:
             # Calculate Covariance

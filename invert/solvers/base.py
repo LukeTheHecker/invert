@@ -6,7 +6,8 @@ import os
 import pickle as pkl
 import tensorflow as tf
 from mne.io.constants import FIFF
-    
+from ..util import find_corner
+
 class InverseOperator:
     ''' This class holds the inverse operator, which may be a simple
     numpy.ndarray matrix or some object like an esinet.net()
@@ -16,9 +17,8 @@ class InverseOperator:
     inverse operator : 
     Return
     ------
-
-
     '''
+
     def __init__(self, inverse_operator, solver_name):
         self.solver_name = solver_name
         self.data = inverse_operator
@@ -65,19 +65,27 @@ class BaseSolver:
         Can be either 
             "GCV"       -> generalized cross validation
             "L"         -> L-Curve method using triangle method
-            "L_new"     -> L-Curve method using triangle and scale-free params
             "Product"   -> Minimal product method
-
     n_reg_params : int
         The number of regularisation parameters to try. The higher, the 
         more accurate the regularisation and the slower the computations.
     prep_leadfield : bool
-        If True -> Apply common average referencing on the leadfield columns.
+        If True -> Apply common average referencing and normalisation of the leadfield columns.
+    reduce_rank : bool
+        Whether to reduce the rank of the M/EEG data
+    rank : str/int
+        Can be either int -> select only the <rank> largest eigenvectors of the data
+        "auto" -> automatically select the optimal rank using the L-curve method and 
+                  an eigenvalue drop-off criterion
+    plot_reg : bool
+        Plot the regularization parameters.
+
     '''
     def __init__(self, regularisation_method="GCV", n_reg_params=24, 
-        prep_leadfield=True, use_last_alpha=False, verbose=0):
+        prep_leadfield=True, use_last_alpha=False, rank="auto",
+        reduce_rank=False, plot_reg=False, verbose=0):
         self.verbose = verbose
-        # self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
+
         self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
 
 
@@ -87,7 +95,10 @@ class BaseSolver:
         self.prep_leadfield = prep_leadfield
         self.use_last_alpha = use_last_alpha
         self.last_reg_idx = None
-        
+        self.rank = rank
+        self.reduce_rank = reduce_rank
+        self.plot_reg = plot_reg
+
     def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", **kwargs):
         """ Base function to create the inverse operator based on the forward
             model.
@@ -119,7 +130,6 @@ class BaseSolver:
         
         self.obj_info = mne_obj.info
         
-
     def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
         ''' Apply the inverse operator
         
@@ -137,28 +147,23 @@ class BaseSolver:
         
         data = self.unpack_data_obj(mne_obj)
         
-
-        if len(self.inverse_operators) == 1:
-            source_mat = self.inverse_operators[0].apply( data )
-        elif self.use_last_alpha and self.last_reg_idx is not None:
+        if self.use_last_alpha and self.last_reg_idx is not None:
             source_mat = self.inverse_operators[self.last_reg_idx].apply( data ) 
             
         else:
             if self.regularisation_method.lower() == "l":
-                source_mat, idx = self.regularise_lcurve(data)
+                source_mat, idx = self.regularise_lcurve(data, plot=self.plot_reg)
                 self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "gcv":
-                source_mat, idx = self.regularise_gcv(data)
+                source_mat, idx = self.regularise_gcv(data, plot=self.plot_reg)
                 self.last_reg_idx = idx
             elif self.regularisation_method.lower() == "product":
-                source_mat, idx = self.regularise_product(data)
+                source_mat, idx = self.regularise_product(data, plot=self.plot_reg)
                 self.last_reg_idx = idx
             else:
                 msg = f"{self.regularisation_method} is no valid regularisation method."
                 raise AttributeError(msg)
             
-            
-        # print(type(source_mat), source_mat.shape)
         stc = self.source_to_object(source_mat)
         return stc
         
@@ -189,13 +194,14 @@ class BaseSolver:
         
         # Prepare Data
         mne_obj = self.prep_data(mne_obj)
+        mne_obj_meeg = mne_obj.copy().pick_types(**pick_types)
 
         channels_in_fwd = self.forward.ch_names
-        channels_in_mne_obj = mne_obj.ch_names
+        channels_in_mne_obj = mne_obj_meeg.ch_names
         picks = self.select_list_intersection(channels_in_fwd, channels_in_mne_obj)
         
         # Select only data channels in mne_obj
-        mne_obj_meeg = mne_obj.copy().pick_channels(picks).pick_types(**pick_types)
+        mne_obj_meeg.pick_channels(picks)
         
         # Store original forward model for later
         self.forward_original = deepcopy(self.forward)
@@ -231,6 +237,11 @@ class BaseSolver:
             raise AttributeError(msg)
         
         self.store_obj_information(mne_obj)
+
+        if self.reduce_rank:
+            data = self.select_signal_subspace(data, rank=self.rank)
+
+            
         
         return data
     
@@ -259,19 +270,18 @@ class BaseSolver:
 
         '''
         if reference is None:
-            _, eigs, _ = np.linalg.svd(self.leadfield) 
+            _, eigs, _ = np.linalg.svd(self.leadfield, full_matrices=False) 
         else:
-            _, eigs, _ = np.linalg.svd(reference)
+            _, eigs, _ = np.linalg.svd(reference, full_matrices=False)
         self.max_eig = eigs.max()
 
         if self.alpha == "auto":
-            
             alphas = list(self.max_eig * self.r_values)
         else:
             alphas = [self.alpha*self.max_eig, ]
         return alphas
 
-    def regularise_lcurve(self, M):
+    def regularise_lcurve(self, M, plot=False):
         """ Find optimally regularized inverse solution using the L-Curve method [1].
         
         Parameters
@@ -321,16 +331,17 @@ class BaseSolver:
         
         # curvature = self.get_curvature(residual_norms, l2_norms)
         # print(curvature)
+
         # optimum_idx = np.argmax(curvature)
 
 
         source_mat = source_mats[optimum_idx]
-        
-        # plt.figure()
-        # plt.plot(residual_norms, l2_norms, 'ok')
-        # plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # plt.title(f"L-Curve: {alpha}")
+        if plot:
+            plt.figure()
+            plt.plot(residual_norms, l2_norms, 'ok')
+            plt.plot(residual_norms[optimum_idx], l2_norms[optimum_idx], 'r*')
+            alpha = self.alphas[optimum_idx]
+            plt.title(f"L-Curve: {alpha}")
 
         return source_mat, optimum_idx
         
@@ -351,7 +362,7 @@ class BaseSolver:
 
         return curvature_val
 
-    def regularise_gcv(self, M):
+    def regularise_gcv(self, M, plot=False):
         """ Find optimally regularized inverse solution using the generalized
         cross-validation method [1].
         
@@ -382,7 +393,7 @@ class BaseSolver:
         I = np.identity(n_chans)
         gcv_values = []
         for inverse_operator in self.inverse_operators:
-            x = inverse_operator.data @ M
+            x = inverse_operator.apply( M )
             M_hat = self.leadfield @ x 
             # M_hat -= M_hat.mean(axis=0)
             residual_norm = np.linalg.norm(M_hat- M)
@@ -392,31 +403,31 @@ class BaseSolver:
             gcv_values.append(gcv_value)
             # print(np.linalg.norm(x), gcv_value)
         # Filter gcv_values that first increase
-        if len(np.where((np.diff(gcv_values)<0))[0]) == 0:
-            if not np.isnan(gcv_values[0]):
-                keep_idx = 0
-            else:
-                print("can you read this")
-                keep_idx = 1
-        else:
-            keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
+        keep_idx = 0
+        # if len(np.where((np.diff(gcv_values)<0))[0]) == 0:
+        #     if not np.isnan(gcv_values[0]):
+        #         keep_idx = 0
+        #     else:
+        #         keep_idx = 1
+        # else:
+        #     keep_idx = np.where((np.diff(gcv_values)<0))[0][0]
             
         optimum_idx = np.argmin(gcv_values[keep_idx:])+keep_idx
 
         # optimum_idx = np.argmin(gcv_values[1:])+1
-
-        # plt.figure()
-        # plt.loglog(self.alphas, gcv_values, 'ok')
-        # plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # print("alpha: ", alpha)
-        # plt.title(f"GCV: {alpha}")
+        if plot:
+            plt.figure()
+            plt.loglog(self.alphas, gcv_values, 'ok')
+            plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
+            alpha = self.alphas[optimum_idx]
+            print("alpha: ", alpha)
+            plt.title(f"GCV: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0], optimum_idx
+
     
-    
-    def regularise_product(self, M):
+    def regularise_product(self, M, plot=False):
         """ Find optimally regularized inverse solution using the product method [1].
         
         Parameters
@@ -452,12 +463,13 @@ class BaseSolver:
             product_values.append(product_value)
 
         optimum_idx = np.argmin(product_values)
-
-        # plt.figure()
-        # plt.plot(self.alphas, product_values)
-        # plt.plot(self.alphas[optimum_idx], product_values[optimum_idx], 'r*')
-        # alpha = self.alphas[optimum_idx]
-        # plt.title(f"Product: {alpha}")
+        
+        if plot:
+            plt.figure()
+            plt.plot(self.alphas, product_values)
+            plt.plot(self.alphas[optimum_idx], product_values[optimum_idx], 'r*')
+            alpha = self.alphas[optimum_idx]
+            plt.title(f"Product: {alpha}")
 
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0], optimum_idx
@@ -506,6 +518,40 @@ class BaseSolver:
         else:
             idx = 0
         return idx
+    
+    @staticmethod
+    def select_signal_subspace(data_matrix, rank="auto"):
+    
+        # Compute the SVD of the data matrix
+        U, S, V = np.linalg.svd(data_matrix, full_matrices=False)
+        
+        if rank == "auto":
+            iters = np.arange(len(S))
+            n_comp_L = find_corner(deepcopy(iters), deepcopy(S))
+            
+            # Based on eigenvalue drop-off
+            S_ = S/S.max()
+            
+            n_comp_drop = np.where( abs(np.diff(S_)) < 0.001 )[0]
+            if len(n_comp_drop) > 0:
+                n_comp_drop = n_comp_drop[0] + 2
+            else:
+                n_comp_drop = n_comp_L
+            
+            # Combine the two:
+            rank = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
+            
+        
+
+        # Select the top `rank` singular values and corresponding singular vectors
+        U_subset = U[:, :rank]
+        S_subset = S[:rank]
+        V_subset = V[:rank, :]
+
+        # Reconstruct a low-rank approximation of the data matrix using the selected singular values and vectors
+        data_matrix_approx = U_subset @ np.diag(S_subset) @ V_subset
+
+        return data_matrix_approx
 
     @staticmethod
     def filter_norms(r_vals, l2_norms):
@@ -532,7 +578,7 @@ class BaseSolver:
             r_vals = np.delete(r_vals, pop_idx)
             l2_norms = np.delete(l2_norms, pop_idx)
             diffs = np.diff(l2_norms)
-            # print(f"filtered out idx {pop_idx}")
+
             bad_idc.append(all_idc[pop_idx])
             all_idc = np.delete(all_idc, pop_idx)
         return bad_idc

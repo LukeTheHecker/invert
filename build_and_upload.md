@@ -6,7 +6,7 @@
 
 ## Activate your dev environment
 ```
-workon esienv
+workon invertenv
 ```
 
 ## Test locally

@@ -1,0 +1,117 @@
+Tutorial
+========
+
+This tutorial shows how to use this package. 
+
+First, we import some modules and functions that come in handy later:
+
+..  code-block:: python
+    
+    import numpy as np
+    from matplotlib import pyplot as plt
+    from scipy.stats import pearsonr
+    import mne
+    
+    from invert import Solver
+    from invert.forward import get_info, create_forward_model
+    from invert.util import pos_from_forward
+    pp = dict(surface='white', hemi='both', verbose=0)
+
+Next, we create a generic forward model using the freesurfer template fsaverage:
+
+..  code-block:: python
+
+    # Use a 64 channel EEG montage
+    info = get_info(kind='biosemi64')
+    # Create generic forward model
+    fwd = create_forward_model(info=info, sampling='ico3')
+    # Get the leadfield matrix for later use
+    leadfield = fwd["sol"]["data"]
+    n_chans, n_dipoles = leadfield.shape
+    # Get vertices (required for plotting later)
+    source_model = fwd['src']
+    vertices = [source_model[0]['vertno'], source_model[1]['vertno']]
+
+Next, we simulate some EEG data. This is accomplished using the data generator function as follows:
+
+..  code-block:: python
+
+    from invert.solvers.esinet import generator
+
+    sim_params = dict(
+        use_cov=False, 
+        return_mask=False, 
+        batch_repetitions=1,
+        batch_size=1,
+        n_sources=7, # This controls the maximum number of sources/ source patches
+        n_orders=(0, 1),  # This controls smoothness
+        snr_range=(10, 12), # This controls signal-to-noise ratio
+        n_timepoints=200,  # This controls the number of time points
+        scale_data=False)
+
+    # initialize data generator
+    gen = generator(fwd, **sim_params)
+    
+    # Generate a new batch:
+    x, y = gen.__next__()
+
+    # Some helper variables
+    tmin = 0
+    tstep = 1/info["sfreq"]
+    subject = "fsaverage"
+    
+    # Create Evoked structure from simulated data
+    evoked = mne.EvokedArray(x[0].T, info, tmin=tmin)
+    
+    # Create source estimate structure from simulated data
+    stc = mne.SourceEstimate(y[0].T, vertices, tmin=tmin, tstep=tstep, 
+                            subject=subject, verbose=0)
+    # Plot source and EEG
+    brain = stc.plot(**pp)
+    brain.add_text(0.1, 0.9, "Ground Truth", 'title',
+                font_size=14)
+    evoked.plot_joint(title="Ground Truth")
+
+Now it is time to calculate an inverse solution of the EEG data (mne.Evoked object):
+
+..  code-block:: python
+
+    # Initialize a solver object:
+    solver = Solver("LCMV")
+    # Pre-compute inverse operator:
+    solver.make_inverse_operator(fwd, evoked, alpha="auto")
+    # Apply the pre-computed inverse operator:
+    stc_ = solver.apply_inverse_operator(evoked)
+    # Plot
+    brain = stc_.plot(**pp)
+    brain.add_text(0.1, 0.9, solver.name, 'title',
+                font_size=14)
+    
+    # Plot the forward-projected EEG data
+    evoked_ = mne.EvokedArray(fwd["sol"]["data"] @ stc_.data, info).set_eeg_reference("average", projection=True)
+    evoked_.plot_joint()
+
+The advantage of the invertmeeg package is that you can use a multitude of
+solvers to calculate inverse solutions and compare them. Let's do this!
+
+..  code-block:: python
+
+    solver_names = ["HOCMCMV", "sLORETA", "MM Champagne", "FLEX-MUSIC"]
+    for solver_name in solver_names:
+        # Initialize a solver object:
+        solver = Solver(solver_name)
+        # Pre-compute inverse operator:
+        solver.make_inverse_operator(fwd, evoked, alpha="auto")
+        # Apply the pre-computed inverse operator:
+        stc_ = solver.apply_inverse_operator(evoked)
+        # Plot
+        brain = stc_.plot(**pp)
+        brain.add_text(0.1, 0.9, solver.name, 'title',
+                    font_size=14)
+        
+        # Plot the forward-projected EEG data
+        evoked_ = mne.EvokedArray(fwd["sol"]["data"] @ stc_.data, info).set_eeg_reference("average", projection=True)
+        evoked_.plot_joint()
+
+You can find the solver_names for all solvers in the :doc:`solvers` page in
+parantheses.

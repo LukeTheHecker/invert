@@ -34,8 +34,8 @@
     <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Base Class" href="base.html" />
-    <link rel="prev" title="invertmeeg - A high-level M/EEG Python library for EEG inverse solutions" href="../index.html" />
+    <link rel="next" title="Minimum Norm-Type" href="minimum_norm.html" />
+    <link rel="prev" title="Base Class" href="base.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -70,7 +70,13 @@
       
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 current active nav-item">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="base.html">
+  Base Class
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
  <a class="current reference internal nav-link" href="#">
   Solvers
  </a>
@@ -85,6 +91,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="gallery.html">
   Gallery
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorial.html">
+  Tutorial
  </a>
 </li>
 
@@ -326,7 +338,7 @@ class</p>
 <li><p>Low-Resolution Tomography (LORETA)</p></li>
 <li><p>Standardized Low-Resolution Tomography (sLORETA)</p></li>
 <li><p>Exact Low-Resolution Tomography (eLORETA)</p></li>
-<li><p>S-MAP</p></li>
+<li><p>S-MAP (S-MAP)</p></li>
 </ul>
 </section>
 <section id="wrop">
@@ -344,10 +356,12 @@ class</p>
 <li><p>Source - Maximum A Posteriori (Source-MAP)</p></li>
 <li><p>Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)</p></li>
 <li><p>Bayesian Compressed Sensing (BCS)</p></li>
-<li><p>Champagne</p></li>
-<li><p>Low SNR Champagne</p></li>
-<li><p>Expectation Maximization Champagne</p></li>
-<li><p>Majorization Maximization Champagne</p></li>
+<li><p>Champagne (Champagne)</p></li>
+<li><p>Low SNR Champagne (Low SNR Champagne)</p></li>
+<li><p>Expectation Maximization Champagne (EM Champagne)</p></li>
+<li><p>Majorization Maximization Champagne (MM Champagne)</p></li>
+<li><p>MacKay Champagne (MacKay-Champagne)</p></li>
+<li><p>Convexity Champagne (Convexity-Champagne)</p></li>
 </ul>
 </section>
 <section id="matching-pursuit">
@@ -375,7 +389,7 @@ class</p>
 <li><p>Multiple Signal Classification (MUSIC)</p></li>
 <li><p>Recursively Applied MUSIC (RAP-MUSIC)</p></li>
 <li><p>Truncated RAP-Music (TRAP-MUSIC)</p></li>
-<li><p>Smooth Truncated RAP-Music (JAZZ-MUSIC)</p></li>
+<li><p>Truncated RAP-Music for flexible extent estimation (FLEX-MUSIC)</p></li>
 </ul>
 </section>
 <section id="artificial-neural-networks">
@@ -384,19 +398,20 @@ class</p>
 <li><p>Convolutional Neural Network for Spatio-Temporal Inverse Solution (CNN)</p></li>
 <li><p>Long-Short Term Memory Network for Spatio-Temporal Inverse Solution (LSTM)</p></li>
 <li><p>Fully-Connected Neural Network for Inverse Solution at single time instances (FC)</p></li>
-<li><p>Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (Cov CNN)</p></li>
+<li><p>Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (CovCNN)</p></li>
 </ul>
 </section>
 <section id="beamformer">
 <h1><a class="reference internal" href="beamformer.html"><span class="doc">Beamformers</span></a><a class="headerlink" href="#beamformer" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
-<li><p>Minimum Variance Adaptive (MVAB) Beamformer</p></li>
-<li><p>Linearly Constrained Minimum Variance (LCMV) Beamformer</p></li>
-<li><p>Standardized Minimum Variance (SMV) Beamformer</p></li>
-<li><p>Weight-normalized Minimum Variance (WNMV) Beamformer</p></li>
-<li><p>Higher-Order Minimum Variance (HOCMV) Beamformer</p></li>
-<li><p>Eigenspace-Based Minimum Variance (ESMV) Beamformer</p></li>
-<li><p>Multiple Constrained Minimum Variance (MCMV) Beamformer</p></li>
+<li><p>Minimum Variance Adaptive Beamformer (MVAB)</p></li>
+<li><p>Linearly Constrained Minimum Variance Beamformer (LCMV)</p></li>
+<li><p>Standardized Minimum Variance Beamformer (SMV)</p></li>
+<li><p>Weight-normalized Minimum Variance Beamformer (WNMV)</p></li>
+<li><p>Higher-Order Covariance Minimum Variance Beamformer (HOCMV)</p></li>
+<li><p>Eigenspace-Based Minimum Variance Beamformer (ESMV)</p></li>
+<li><p>Multiple Constrained Minimum Variance Beamformer (MCMV)</p></li>
+<li><p>Higher-Order Covariance Multiple Constrained Minimum Variance Beamformer (HOCMCMV)</p></li>
 <li><p>Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
 Beamformer</p></li>
 <li><p>Synthetic Aperture Magnetometry (SAM)</p></li>
@@ -431,17 +446,17 @@ Beamformer</p></li>
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="base.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title"><strong>invertmeeg</strong> - A high-level M/EEG Python library for EEG inverse solutions</p>
+            <p class="prev-next-title">Base Class</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="base.html" title="next page">
+    <a class='right-next' id="next-link" href="minimum_norm.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Base Class</p>
+        <p class="prev-next-title">Minimum Norm-Type</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

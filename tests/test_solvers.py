@@ -26,7 +26,7 @@ source_mat = np.random.randn(leadfield.shape[1], n_time)
 stc = mne.SourceEstimate(source_mat, vertices, tmin=0, tstep=0.001)
 evoked_mat = leadfield @ source_mat
 evoked_mat -= evoked_mat.mean(axis=0)
-evoked_mat += np.random.randn(*evoked_mat.shape)*evoked_mat.std()*0.1
+evoked_mat += np.random.randn(*evoked_mat.shape)*evoked_mat.std()*1
 evoked = mne.EvokedArray(evoked_mat, info, verbose=0).set_eeg_reference("average", projection=True, verbose=0).apply_proj()
 
 # Tidy up

@@ -231,6 +231,20 @@ Bayes
 
 ..  code-block:: python
 
+    solver = Solver("MacKay Champagne")
+
+.. image:: figures/solver_gallery/MacKay-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Convexity Champagne")
+
+.. image:: figures/solver_gallery/Convexity-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
     solver = Solver("BCS")
 
 .. image:: figures/solver_gallery/BayesianCompressedSensing.png
@@ -415,6 +429,13 @@ Beamformers
     solver = Solver("MCMV")
 
 .. image:: figures/solver_gallery/MCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("HOCMCMV")
+
+.. image:: figures/solver_gallery/HOCMCMVBeamformer.png
   :width: 700
 
 ..  code-block:: python

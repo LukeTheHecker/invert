@@ -18,7 +18,7 @@ class
 - Low-Resolution Tomography (LORETA)
 - Standardized Low-Resolution Tomography (sLORETA)
 - Exact Low-Resolution Tomography (eLORETA)
-- S-MAP
+- S-MAP (S-MAP)
 
 :doc:`wrop`
 ================================
@@ -32,10 +32,12 @@ class
 - Source - Maximum A Posteriori (Source-MAP)
 - Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
 - Bayesian Compressed Sensing (BCS)
-- Champagne
-- Low SNR Champagne
-- Expectation Maximization Champagne
-- Majorization Maximization Champagne
+- Champagne (Champagne)
+- Low SNR Champagne (Low SNR Champagne)
+- Expectation Maximization Champagne (EM Champagne)
+- Majorization Maximization Champagne (MM Champagne)
+- MacKay Champagne (MacKay-Champagne)
+- Convexity Champagne (Convexity-Champagne)
 
 
 :doc:`matching_pursuit`
@@ -58,24 +60,25 @@ class
 - Multiple Signal Classification (MUSIC)
 - Recursively Applied MUSIC (RAP-MUSIC)
 - Truncated RAP-Music (TRAP-MUSIC)
-- Smooth Truncated RAP-Music (JAZZ-MUSIC)
+- Truncated RAP-Music for flexible extent estimation (FLEX-MUSIC)
 
 :doc:`artificial_neural_networks`
 ==========
 - Convolutional Neural Network for Spatio-Temporal Inverse Solution (CNN)
 - Long-Short Term Memory Network for Spatio-Temporal Inverse Solution (LSTM)
 - Fully-Connected Neural Network for Inverse Solution at single time instances (FC)
-- Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (Cov CNN)
+- Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (CovCNN)
 
 :doc:`beamformer`
 =================
-- Minimum Variance Adaptive (MVAB) Beamformer
-- Linearly Constrained Minimum Variance (LCMV) Beamformer
-- Standardized Minimum Variance (SMV) Beamformer
-- Weight-normalized Minimum Variance (WNMV) Beamformer
-- Higher-Order Minimum Variance (HOCMV) Beamformer
-- Eigenspace-Based Minimum Variance (ESMV) Beamformer
-- Multiple Constrained Minimum Variance (MCMV) Beamformer
+- Minimum Variance Adaptive Beamformer (MVAB)
+- Linearly Constrained Minimum Variance Beamformer (LCMV)
+- Standardized Minimum Variance Beamformer (SMV)
+- Weight-normalized Minimum Variance Beamformer (WNMV)
+- Higher-Order Covariance Minimum Variance Beamformer (HOCMV)
+- Eigenspace-Based Minimum Variance Beamformer (ESMV)
+- Multiple Constrained Minimum Variance Beamformer (MCMV)
+- Higher-Order Covariance Multiple Constrained Minimum Variance Beamformer (HOCMCMV)
 - Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
   Beamformer
 - Synthetic Aperture Magnetometry (SAM)
