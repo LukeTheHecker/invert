@@ -910,7 +910,11 @@ def rms(x):
     
 def add_white_noise(X_clean, snr):
     ''' '''
-    X_noise = np.random.randn(*X_clean.shape)
+    # Inter-channel correlations
+    coeff_mat = (np.random.rand(X_clean.shape[0], X_clean.shape[0])-0.5) * 2
+    
+    # Random partially correlated noise
+    X_noise = coeff_mat @ np.random.randn(*X_clean.shape)
 
     rms_clean = rms(X_clean)
     scaler = rms_clean / snr
@@ -968,17 +972,12 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         start_idx = int(n_dipoles*min_order)
         sources = csr_matrix(sources.toarray()[start_idx:, :])
         
-
-
-
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
     # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)
     time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
-
-
 
     n_candidates = sources.shape[0]
     while True:

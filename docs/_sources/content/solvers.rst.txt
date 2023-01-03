@@ -38,7 +38,8 @@ class
 - Majorization Maximization Champagne (MM Champagne)
 - MacKay Champagne (MacKay-Champagne)
 - Convexity Champagne (Convexity-Champagne)
-
+- Homoscedasticity Champagne (HS-Champagne)
+- Full-Structure Noise Learning (FUN)
 
 :doc:`matching_pursuit`
 ==========

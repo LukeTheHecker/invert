@@ -5,26 +5,56 @@ from copy import deepcopy
 from sklearn.metrics import auc, roc_curve
 import pandas as pd
 
-def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix):
+def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix, distances):
     
-    mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true, y_pred)]
-    nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true, y_pred)]
-    mle = [eval_mean_localization_error(yy_true[:,0], yy_pred[:, 0], pos_1, ghost_thresh=40, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true, y_pred)]
-    auc = [np.mean(eval_auc(yy_true[:, 0], yy_pred[:, 0], pos_1, epsilon=0.05, n_redraw=25)) for yy_true, yy_pred in zip(y_true, y_pred)]
-    sparsity = [eval_sparsity(yy_pred) for yy_pred in y_pred]
+    mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    auc = [np.mean(eval_auc(yy_true, yy_pred, pos_1, epsilon=0.01, n_redraw=10)) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    corr = [pearsonr(yy_true, yy_pred)[0] for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    emd = eval_emd(distances, abs(y_true).mean(axis=-1), abs(y_pred).mean(axis=-1))
+    sparsity_pred = eval_sparsity(y_pred)
+    sparsity_true = eval_sparsity(y_true)
+    active_true = eval_active(y_true)
+    active_pred = eval_active(y_pred)
+    
     d = dict(
         Mean_Squared_Error=np.nanmedian(mse) ,
         Normalized_Mean_Squared_Error=np.nanmedian(nmse),
         Mean_Localization_Error=np.nanmedian(mle),
         AUC=np.nanmedian(auc),
-        Sparsity=sparsity[0],
+        Corr=np.nanmedian(corr),
+        EMD=emd,
+        Sparsity_pred=sparsity_pred,
+        Sparsity_true=sparsity_true,
+        Active_True=active_true,
+        Active_Pred=active_pred,
     )
     
     return d
 
+def eval_active(y, thr=0.01):
+    y_norm = np.linalg.norm(y, axis=-1, ord=1)
+    y_norm[abs(y_norm)<abs(y_norm).max()*thr] = 0
+    return (y_norm!=0).sum() / len(y_norm)
+
 def eval_sparsity(y):
     y_scaled = y / np.linalg.norm(y, axis=0)
     return np.linalg.norm(y_scaled, ord=1)
+
+def eval_emd(distances, distribution1, distribution2):
+    # Convert the data to numpy arrays
+    distribution1 = np.array(distribution1)
+    distribution2 = np.array(distribution2)
+    
+    # Normalize the distributions
+    distribution1 = distribution1 / np.sum(distribution1)
+    distribution2 = distribution2 / np.sum(distribution2)
+    
+    # Compute the EMD
+    emd = np.sum(distances * np.abs(distribution1 - distribution2))
+    
+    return emd
 
 def eval_mse(y_true, y_est):
     '''Returns the mean squared error between predicted and true source. '''

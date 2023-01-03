@@ -1,7 +1,8 @@
 from copy import deepcopy
 from scipy.spatial.distance import cdist
-from scipy.sparse import spdiags
-from scipy.linalg import inv
+from scipy.sparse import spdiags, csr_matrix
+from scipy.linalg import inv, sqrtm
+from scipy.sparse.linalg import inv
 import numpy as np
 import mne
 from scipy.fftpack import dct
@@ -1137,3 +1138,482 @@ class SolverLowSNRChampagne(BaseSolver):
 
         return inverse_operator
 
+class SolverFUN(BaseSolver):
+    ''' Class for the Full-Structure Noise (FUN) inverse solution. 
+
+    References
+    ----------
+    [1] Hashemi, A., Cai, C., Gao, Y., Ghosh, S., Müller, K. R., Nagarajan, S.
+    S., & Haufe, S. (2022). Joint learning of full-structure noise in
+    hierarchical Bayesian regression models. IEEE Transactions on Medical
+    Imaging.
+
+    '''
+
+    def __init__(self, name="FUN", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', 
+                              max_iter=1000, noise_cov=None, prune=True, 
+                              pruning_thresh=1e-3, convergence_criterion=1e-8, 
+                              return_noise_cov=False, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero
+            (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        inverse_operators = []
+        inverse_operator, C_noise = self.make_fun(data, max_iter=max_iter, prune=prune, pruning_thresh=pruning_thresh, convergence_criterion=convergence_criterion)
+        inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        if return_noise_cov:
+            return C_noise
+        else:
+            return self
+    
+    def make_fun(self, Y, max_iter=1000, prune=False, 
+                pruning_thresh=1e-3, convergence_criterion=1e-8):
+        ''' Majority Maximization Champagne method.
+
+        Parameters
+        ----------
+        Y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        Returns
+        -------
+        x : numpy.ndarray
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        L = deepcopy(self.leadfield)
+        
+        # re-reference data
+        Y -= Y.mean(axis=0)
+
+        # Scaling of the data (necessary for convergence criterion and pruning
+        # threshold)
+        Y_scaled = deepcopy(Y)
+        scaler = abs(Y_scaled).mean()
+        Y_scaled /= scaler
+
+        # Random Initialization of Noise Covariance
+        A = np.random.rand(n_chans, n_times)
+        A =  (A@A.T)
+
+        # MNE-based initialization of Gammas
+        # gammas = np.ones(n_dipoles)
+        lin_lstq = np.linalg.pinv(L) @ Y_scaled
+        gammas = np.diagonal(lin_lstq@lin_lstq.T)
+        gammas.setflags(write=True)
+        Gamma = csr_matrix(np.diag(gammas))
+        A.setflags(write=True)
+        
+        
+        for i in range(max_iter):
+            old_gammas = deepcopy(gammas)
+            if i > 0:
+                last_X_hat = deepcopy(X_hat)
+            
+            
+            Sigma_y = A + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            X_hat = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+            C_source = L.T @ Sigma_y_inv @ L
+            M_source = (X_hat @ X_hat.T) / n_times
+            
+            # According to paper:
+            # gammas = np.array([np.sqrt(M_source[n,n] / C_source[n, n]) for n in range(n_dipoles)])
+            # gammas.setflags(write=True)
+
+            # According to Code 1
+            # https://github.com/AliHashemi-ai/FUN-Learning/blob/main/FUN_learning_cov_est.m
+            # C_source_sqrt = np.real(sqrtm(C_source))
+            # C_source_sqrt_inv = np.linalg.inv(C_source_sqrt)
+            # gammas = np.diagonal(C_source_sqrt_inv @ np.real(sqrtm(C_source_sqrt @ M_source @ C_source_sqrt)) @ C_source_sqrt_inv)
+            # gammas.setflags(write=True)
+            # gammas[np.isnan(gammas)] = 0
+            # Gamma = csr_matrix(np.diag(gammas))
+
+            # According to code
+            # https://github.com/AliHashemi-ai/FUN-Learning/blob/main/FUN_learning_cov_est.m
+            Gamma = self.fun_learning_cov_est(C_source, M_source, update_mode="diagonal")
+            gammas = np.diag(Gamma)
+            gammas.setflags(write=True)
+            gammas[np.isnan(gammas)] = 0
+            
+            
+            # print("max gamma: ", gammas.max())
+            if prune:
+                prune_candidates = gammas<pruning_thresh
+                # print(f"pruning {(prune_candidates).sum()}")
+                gammas[prune_candidates] = 0
+            Gamma = csr_matrix(np.diag(gammas))
+
+
+            # Update Noise Part
+            # According to Code:
+            # https://github.com/AliHashemi-ai/FUN-Learning/blob/main/FUN_learning_cov_est.m
+            Sigma_y = A + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            X_hat = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+            E_total = Y_scaled - L @ X_hat
+            M_noise = (E_total@E_total.T) / n_times
+            M_noise.setflags(write=True)
+            
+            C_noise = Sigma_y_inv
+            C_noise.setflags(write=True)
+            
+            A = self.fun_learning_cov_est(C_noise, M_noise, update_mode="diagonal")
+
+            
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+            
+            # if i>0 and np.sum((last_X_hat - X_hat)**2) < convergence_criterion:
+            if i>0:
+                dx = np.max(abs(last_X_hat - X_hat))
+                # dx = np.sum((last_X_hat - X_hat)**2)
+                # print(dx)
+                if dx < convergence_criterion:
+                    # print("converged")
+                    break
+
+            
+        # Final current source estimation
+        # gammas /= gammas.max()
+        Gamma = np.diag(gammas)
+        Sigma_y = scaler*A + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+
+
+        return inverse_operator, scaler*A
+    
+    @staticmethod
+    def fun_learning_cov_est(C, M, update_mode="diagonal"):
+        # update_mode = 'Geodesic'; 
+        # S = inv(sqrtm(C))*sqrtm((sqrtm(C))*M*(sqrtm(C)))*inv(sqrtm(C));
+        if update_mode == "diagonal":
+            h = np.diag(C)
+            g = np.diag(M)    
+            p = np.sqrt(g / h)
+            S = np.diag(p)
+        elif update_mode == "geodesic":
+            # Efficient Implementation 
+            # eps_default = 1e-5
+            eps_default = 1e-8
+            
+            b_vec, b_val = np.linalg.eig(C)
+            b_vec = np.diag(b_vec)
+            root_C_coeff = np.sqrt(np.maximum(np.real(np.diagonal(b_val)), 0));
+
+            inv_root_C_coeff = np.zeros(C.shape[0])
+            inv_root_C_index = np.where(root_C_coeff >= eps_default)[0]
+            
+            inv_root_C_coeff[inv_root_C_index] = 1./root_C_coeff[inv_root_C_index]
+
+            root_C = b_vec @ np.diag(root_C_coeff) @ b_vec.T
+            inv_root_C = b_vec @ np.diag(inv_root_C_coeff) @ b_vec.T
+            
+            # [a_vec,a_val] = np.linalg.eig(root_C @ M @ root_C)
+            [a_vec,a_val] = np.linalg.eig(inv_root_C @ M @ inv_root_C)
+            a_vec = np.diag(a_vec)
+            A_coeff = np.sqrt(np.maximum(np.real(np.diagonal(a_val)),0))
+            A = a_vec @ np.diag(A_coeff) @ a_vec.T
+
+            # S = inv_root_C @ A @ inv_root_C
+            S = root_C @ A @ root_C
+            
+        else:
+            msg = f"update_mode {update_mode} unknown"
+            raise AttributeError(msg)
+
+        return np.real(S)
+
+class SolverHSChampagne(BaseSolver):
+    ''' Class for the Homoscedastic Champagne (HS-Champagne) inverse solution. 
+
+    References
+    ----------
+    [1] Hashemi, A., Cai, C., Gao, Y., Ghosh, S., Müller, K. R., Nagarajan, S.
+    S., & Haufe, S. (2022). Joint learning of full-structure noise in
+    hierarchical Bayesian regression models. IEEE Transactions on Medical
+    Imaging.
+
+    '''
+
+    def __init__(self, name="HS-Champagne", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', 
+                              max_iter=1000, noise_cov=None, prune=False, 
+                              pruning_thresh=1e-3, convergence_criterion=1e-8, 
+                              return_noise_cov=False, update_noise=True, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero
+            (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        inverse_operators = []
+        inverse_operator, C_noise = self.make_hs_champagne(data, update_noise=update_noise, max_iter=max_iter, prune=prune, pruning_thresh=pruning_thresh, convergence_criterion=convergence_criterion)
+        inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        if return_noise_cov:
+            return C_noise
+        else:
+            return self
+    
+    def make_hs_champagne(self, Y, max_iter=1000, prune=False, 
+                pruning_thresh=1e-3, convergence_criterion=1e-8,
+                update_noise=True):
+        ''' Homoscedastic Champagne method.
+
+        Parameters
+        ----------
+        Y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        max_iter : int, optional
+            The maximum number of inner loop iterations
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        Returns
+        -------
+        x : numpy.ndarray
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        
+        '''
+        import sys
+        def is_singular(X):
+            return np.linalg.cond(X) >= 1/sys.float_info.epsilon
+
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        L = deepcopy(self.leadfield)
+        
+        # re-reference data
+        Y -= Y.mean(axis=0)
+
+        # Scaling of the data (necessary for convergence criterion and pruning
+        # threshold)
+        Y_scaled = deepcopy(Y)
+        scaler = abs(Y_scaled).mean()
+        Y_scaled /= scaler
+
+        # Random Initialization of Noise Covariance
+        # A = np.random.rand(n_chans, n_times)
+        # A =  (A@A.T)
+        A = np.identity(n_chans)*0.001
+        A.setflags(write=True)
+
+        # MNE-based initialization of Gammas
+        # gammas = np.ones(n_dipoles)
+        lin_lstq = np.linalg.pinv(L) @ Y_scaled
+        gammas = np.diagonal(lin_lstq@lin_lstq.T)
+        gammas.setflags(write=True)
+        Gamma = csr_matrix(np.diag(gammas))
+        
+        
+        
+        for i in range(max_iter):
+            old_gammas = deepcopy(gammas)
+            if i > 0:
+                last_X_hat = deepcopy(X_hat)
+            
+            
+            Sigma_y = A + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            Sigma_y_inv_L = Sigma_y_inv @ L
+            X_hat = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+            # C_source = L.T @ Sigma_y_inv_L
+            # M_source = (X_hat @ X_hat.T) / n_times
+            S = Sigma_y_inv_L.T @ Y_scaled
+            gammas_old  = deepcopy(gammas)
+            upper = np.mean(S**2,axis=1)
+            lower = np.sum(L * Sigma_y_inv_L, axis=0)
+            gammas *= np.sqrt ( upper / lower)
+
+            # gammas.setflags(write=True)
+            gammas[np.isnan(gammas)] = 0
+            
+
+            # print("max gamma: ", gammas.max())
+            if prune:
+                prune_candidates = gammas<pruning_thresh
+                # print(f"pruning {(prune_candidates).sum()}")
+                gammas[prune_candidates] = 0
+            
+            Gamma_old  = deepcopy(Gamma)
+            Gamma = csr_matrix(np.diag(gammas))
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+
+            # Update Noise Part
+            if update_noise:
+                if is_singular(A) or is_singular(Gamma_old.toarray()):
+                    print(f"singular at {i}")
+                    A = np.zeros((n_chans, n_chans))
+                else:
+                    E_total = Y_scaled - L @ X_hat
+                    M_noise = (E_total@E_total.T) / n_times
+                    Sigma_X = L.T @ np.linalg.inv(A) @ L + inv(Gamma_old)
+                    C_noise = (n_chans - n_dipoles + sum(np.diag(np.linalg.inv(Sigma_X)) /gammas_old))
+                    A = M_noise / C_noise
+                    A = np.identity(M_noise.shape[0]) * A
+        
+            
+            
+            # if i>0 and np.sum((last_X_hat - X_hat)**2) < convergence_criterion:
+            if i>0:
+                dx = np.max(abs(last_X_hat - X_hat))
+                # dx = np.sum((last_X_hat - X_hat)**2)
+                print(dx)
+                if dx < convergence_criterion:
+                    # print("converged")
+                    break
+
+            
+        # Final current source estimation
+        # gammas /= gammas.max()
+        Gamma = np.diag(gammas)
+        Sigma_y = scaler*A + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+
+
+        return inverse_operator, scaler*A
+    
+
+    @staticmethod
+    def fun_learning_cov_est(C, M, update_mode="diagonal"):
+        # update_mode = 'Geodesic'; 
+        # S = inv(sqrtm(C))*sqrtm((sqrtm(C))*M*(sqrtm(C)))*inv(sqrtm(C));
+        if update_mode == "diagonal":
+            h = np.diag(C)
+            g = np.diag(M)    
+            p = np.sqrt(g / h)
+            S = np.diag(p)
+        elif update_mode == "geodesic":
+            # Efficient Implementation 
+            # eps_default = 1e-5
+            eps_default = 1e-8
+            
+            b_vec, b_val = np.linalg.eig(C)
+            b_vec = np.diag(b_vec)
+            root_C_coeff = np.sqrt(np.maximum(np.real(np.diagonal(b_val)), 0));
+
+            inv_root_C_coeff = np.zeros(C.shape[0])
+            inv_root_C_index = np.where(root_C_coeff >= eps_default)[0]
+            
+            inv_root_C_coeff[inv_root_C_index] = 1./root_C_coeff[inv_root_C_index]
+
+            root_C = b_vec @ np.diag(root_C_coeff) @ b_vec.T
+            inv_root_C = b_vec @ np.diag(inv_root_C_coeff) @ b_vec.T
+            
+            # [a_vec,a_val] = np.linalg.eig(root_C @ M @ root_C)
+            [a_vec,a_val] = np.linalg.eig(inv_root_C @ M @ inv_root_C)
+            a_vec = np.diag(a_vec)
+            A_coeff = np.sqrt(np.maximum(np.real(np.diagonal(a_val)),0))
+            A = a_vec @ np.diag(A_coeff) @ a_vec.T
+
+            # S = inv_root_C @ A @ inv_root_C
+            S = root_C @ A @ root_C
+            
+        else:
+            msg = f"update_mode {update_mode} unknown"
+            raise AttributeError(msg)
+
+        return np.real(S)

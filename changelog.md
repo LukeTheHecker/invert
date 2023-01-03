@@ -1,5 +1,11 @@
 # Changelog
 
+# 0.0.6 03.01.2022
+* fixed an error in RAP- and TRAP-MUSIC resulting in a potentially erroneous extra source found
+* standardized the final estimation of the current source density with all recursive MUSIC approaches
+* speeding up calculations of the singular values on multiple occasions
+* Added the FUN and HS Champagne inverse solutions
+
 ## 0.0.5 31.12.2022
 * removed automated regularisation from sloreta due to unexpected behaviors
 * refactored FLEX-MUSIC with minor speed improvements

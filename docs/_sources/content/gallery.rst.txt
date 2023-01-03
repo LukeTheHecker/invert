@@ -245,6 +245,20 @@ Bayes
 
 ..  code-block:: python
 
+    solver = Solver("Homoscedasticity Champagne")
+
+.. image:: figures/solver_gallery/HS-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FUN")
+
+.. image:: figures/solver_gallery/FUN.png
+  :width: 700
+
+..  code-block:: python
+
     solver = Solver("BCS")
 
 .. image:: figures/solver_gallery/BayesianCompressedSensing.png

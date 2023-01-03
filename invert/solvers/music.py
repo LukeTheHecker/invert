@@ -247,12 +247,13 @@ class SolverRAPMUSIC(BaseSolver):
                 norm_2 = np.linalg.norm(Q @ l)
                 
                 mu[p] = norm_1 / norm_2
-            dipole_idx = np.argmax(mu)
-            dipole_idc.append( dipole_idx )
-
+            
             if np.max(mu) < stop_crit:
                 # print("breaking")
                 break
+
+            dipole_idx = np.argmax(mu)
+            dipole_idc.append( dipole_idx )
 
             if i == 0:
                 B = leadfield[:, dipole_idx][:, np.newaxis]
@@ -265,21 +266,28 @@ class SolverRAPMUSIC(BaseSolver):
             U, D, _= np.linalg.svd(C, full_matrices=False)
             Us = U[:, :n_comp]
 
-        dipole_idc = np.array(dipole_idc)
+        dipole_idc = np.array(dipole_idc).astype(int)
         # x_hat = np.zeros((n_dipoles, n_time))
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
         # return x_hat
 
-        # WMNE-based
-        # x_hat = np.zeros((n_dipoles, n_time))
-        inverse_operator = np.zeros((n_dipoles, n_chans))
+        # # WMNE-based
+        # # x_hat = np.zeros((n_dipoles, n_time))
+        # inverse_operator = np.zeros((n_dipoles, n_chans))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
+        # # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
-        L = self.leadfield[:, dipole_idc]
-        W = np.diag(np.linalg.norm(L, axis=0))
-        
-        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
-
-        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+        # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
+        source_covariance = np.zeros(n_dipoles)
+        source_covariance[dipole_idc] = 1
+        source_covariance = csr_matrix(np.diag(source_covariance))
+        L_s = self.leadfield @ source_covariance
+        L = self.leadfield
+        W = np.diag(np.linalg.norm(L, axis=0)) 
+        # print(source_covariance.shape, L.shape, W.shape)
+        inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
 
 
         return inverse_operator
@@ -411,12 +419,13 @@ class SolverTRAPMUSIC(BaseSolver):
                 norm_1 = np.linalg.norm(Ps @ Q @ l)
                 norm_2 = np.linalg.norm(Q @ l)
                 mu[p] = norm_1 / norm_2
-            dipole_idx = np.argmax(mu)
-            dipole_idc.append( dipole_idx )
-
+            
             if np.max(mu) < stop_crit:
                 # print("breaking")
                 break
+
+            dipole_idx = np.argmax(mu)
+            dipole_idc.append( dipole_idx )
 
             if i == 0:
                 B = leadfield[:, dipole_idx][:, np.newaxis]
@@ -427,23 +436,31 @@ class SolverTRAPMUSIC(BaseSolver):
             C = Q @ Us
             U, D, _= np.linalg.svd(C, full_matrices=False)
             Us = U[:, :n_comp-i]
-        dipole_idc = np.array(dipole_idc)
+        dipole_idc = np.array(dipole_idc).astype(int)
         
         # x_hat = np.zeros((n_dipoles, n_time))
 
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
         # return x_hat
 
-        # WMNE-based
+        # # WMNE-based
         # x_hat = np.zeros((n_dipoles, n_time))
-        inverse_operator = np.zeros((n_dipoles, n_chans))
-
-        L = self.leadfield[:, dipole_idc]
-        W = np.diag(np.linalg.norm(L, axis=0))
-        
+        # inverse_operator = np.zeros((n_dipoles, n_chans))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
         # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
-        inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
+        # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
+        source_covariance = np.zeros(n_dipoles)
+        source_covariance[dipole_idc] = 1
+        source_covariance = csr_matrix(np.diag(source_covariance))
+        L_s = self.leadfield @ source_covariance
+        L = self.leadfield
+        W = np.diag(np.linalg.norm(L, axis=0)) 
+        # print(source_covariance.shape, L.shape, W.shape)
+        inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+
 
 
         return inverse_operator
@@ -632,13 +649,13 @@ class SolverFLEXMUSIC(BaseSolver):
             else:
                 Us = U[:, :n_comp]
             
-        # dipole_idc = np.array(dipole_idc)
-        # n_time = y.shape[1]
-        # Simple minimum norm inversion using found dipoles
+        dipole_idc = np.array(dipole_idc).astype(int)
+        n_time = y.shape[1]
+        # # Simple minimum norm inversion using found dipoles
         # x_hat = np.zeros((n_dipoles, n_time))
         # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
 
-        # WMNE-based - use the selected dipole indices and calc WMNE solution
+        # # WMNE-based - use the selected dipole indices and calc WMNE solution
         # # x_hat = np.zeros((n_dipoles, n_time))
         # inverse_operator = np.zeros((n_dipoles, n_chans))
         # L = self.leadfield[:, dipole_idc]
@@ -646,7 +663,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
         # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
 
-        # Prior-Cov based: Use the selected smooth patches as source covariance priors
+        # # Prior-Cov based: Use the selected smooth patches as source covariance priors
         # print("non-zero dipoles in source cov: ", (source_covariance!=0).sum())
         # source_covariance = np.diag(source_covariance)
         # L = self.leadfield
@@ -662,7 +679,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # print(source_covariance.shape, L.shape, W.shape)
         inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
 
-        # Prior-Cov dSPM-based:
+        # # Prior-Cov dSPM-based:
         # source_covariance = np.diag(source_covariance)
         # leadfield_source_cov = source_covariance @ self.leadfield.T
         # LLS = self.leadfield @ leadfield_source_cov
@@ -671,7 +688,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # W_dSPM =  1 / np.sqrt( np.diagonal(K @ np.identity(n_chans) @ K.T) )
         # inverse_operator = (K.T * W_dSPM).T
 
-        # sLORETA based
+        # # sLORETA based
         # source_covariance = np.diag(source_covariance)
         # L_s = self.leadfield @ source_covariance
         # LLT = L_s @ L_s.T
@@ -679,7 +696,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # W_diag = np.sqrt(np.diag(K_MNE @ L_s))
         # inverse_operator = (K_MNE.T / W_diag).T
 
-        # GAMMA based:
+        # # GAMMA based:
         # Gamma = np.diag(source_covariance)
         # Sigma_y = leadfield @ Gamma @ leadfield.T
         # Sigma_y_inv = np.linalg.inv(Sigma_y)
