@@ -81,7 +81,7 @@ class BaseSolver:
         Plot the regularization parameters.
 
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=24, 
+    def __init__(self, regularisation_method="GCV", n_reg_params=7, 
         prep_leadfield=True, use_last_alpha=False, rank="auto",
         reduce_rank=False, plot_reg=False, verbose=0):
         self.verbose = verbose
@@ -417,7 +417,7 @@ class BaseSolver:
         # optimum_idx = np.argmin(gcv_values[1:])+1
         if plot:
             plt.figure()
-            plt.loglog(self.alphas, gcv_values, 'ok')
+            plt.plot(self.alphas, gcv_values, 'ok')
             plt.plot(self.alphas[optimum_idx], gcv_values[optimum_idx], 'r*')
             alpha = self.alphas[optimum_idx]
             print("alpha: ", alpha)

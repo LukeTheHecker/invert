@@ -379,7 +379,7 @@ class SolverCovCNN(BaseSolver):
 
         y = deepcopy(data)
         y -= y.mean(axis=0)
-        y_norm = y / np.linalg.norm(y, axis=0)
+        # y_norm = y / np.linalg.norm(y, axis=0)
         n_channels, n_times = y.shape
 
         # Compute Data Covariance Matrix
@@ -389,20 +389,31 @@ class SolverCovCNN(BaseSolver):
 
         # Add empty batch and (color-) channel dimension
         C = C[np.newaxis, :, :, np.newaxis]
+
+        # Get prior source covariance from model
         gammas = self.model.predict(C, verbose=self.verbose)[0]
+        # gammas = np.maximum(gammas, 0)
         gammas /= gammas.max()
+        gammas[gammas<0.25] = 0
+        source_covariance = np.diag(gammas)
 
-        # Select dipole indices
-        gammas[gammas<self.epsilon] = 0
-        dipole_idc = np.where(gammas!=0)[0]
-        print("Active dipoles: ", len(dipole_idc))
+        # Perform inversion
+        L_s = self.leadfield @ source_covariance
+        L = self.leadfield
+        W = np.diag(np.linalg.norm(L, axis=0)) 
+        x_hat = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T @ y
 
-        # 1) Calculate weighted minimum norm solution at active dipoles
-        n_dipoles = len(gammas)
-        x_hat = np.zeros((n_dipoles, n_times))
-        L = self.leadfield[:, dipole_idc]
-        W = np.diag(np.linalg.norm(L, axis=0))
-        x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        # # Select dipole indices
+        # gammas[gammas<self.epsilon] = 0
+        # dipole_idc = np.where(gammas!=0)[0]
+        # print("Active dipoles: ", len(dipole_idc))
+
+        # # 1) Calculate weighted minimum norm solution at active dipoles
+        # n_dipoles = len(gammas)
+        # x_hat = np.zeros((n_dipoles, n_times))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 
         return x_hat        
         
@@ -414,8 +425,8 @@ class SolverCovCNN(BaseSolver):
         
         # Get Validation data from generator
         x_val, y_val = self.generator.__next__()
-        x_val = x_val[:256]
-        y_val = y_val[:256]
+        x_val = x_val#[:256]
+        y_val = y_val#[:256]
         
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
@@ -433,11 +444,11 @@ class SolverCovCNN(BaseSolver):
 
         flat = Flatten()(cnn1)
         
-        fc1 = Dense(300, 
+        fc1 = Dense(1000, 
             activation=self.activation_function, 
             name='FC1')(flat)
         out = Dense(n_dipoles, 
-            activation="sigmoid", 
+            activation="tanh", 
             name='Output')(fc1)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
@@ -912,6 +923,8 @@ def add_white_noise(X_clean, snr):
     ''' '''
     # Inter-channel correlations
     coeff_mat = (np.random.rand(X_clean.shape[0], X_clean.shape[0])-0.5) * 2
+    # Make matrix symmetric
+    coeff_mat = (coeff_mat + coeff_mat.T)/2
     
     # Random partially correlated noise
     X_noise = coeff_mat @ np.random.randn(*X_clean.shape)
@@ -971,7 +984,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     if min_order>0:
         start_idx = int(n_dipoles*min_order)
         sources = csr_matrix(sources.toarray()[start_idx:, :])
-        
+    sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
     # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)
@@ -989,10 +1002,9 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Assign each source (or source patch) a time course
         amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
         amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
-        # y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
-        y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
-        
-        
+        # y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+        y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
+
         # Project simulated sources through leadfield
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
 
@@ -1122,3 +1134,19 @@ def correlation_criterion(scaler, leadfield, y_est, x_true):
     error = np.abs(pearsonr(x_true-x_est, x_true)[0])
     return error
 
+def emd_loss(distances):
+    def loss(y_true, y_pred):
+        y_true = y_true / K.sum(y_true)
+        y_pred = y_pred / K.sum(y_pred)
+        
+        y_shape = tf.shape(y_true)
+        if len(y_shape)==3:
+            # y_true = tf.reshape(y_true, [tf.reduce_prod([y_shape[0],y_shape[1]]), y_shape[2]])
+            # y_pred = tf.reshape(y_pred, [tf.reduce_prod([y_shape[0],y_shape[1]]), y_shape[2]])
+            y_true = tf.reshape(y_true, [y_shape[0]*y_shape[1], y_shape[2]])
+            y_pred = tf.reshape(y_pred, [y_shape[0]*y_shape[1], y_shape[2]])
+
+        emd_score = tf.linalg.matmul( distances, tf.transpose(K.square(y_true-y_pred)))
+        emd_score = K.sum(emd_score)
+        return emd_score
+    return loss

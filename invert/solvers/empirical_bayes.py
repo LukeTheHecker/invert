@@ -264,7 +264,7 @@ class SolverEMChampagne(BaseSolver):
 
         I = np.identity(n_chans)
         gammas = np.ones(n_dipoles)
-        Gamma = np.diag(gammas)
+        Gamma = csr_matrix(np.diag(gammas))
         Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
         Sigma_y_inv = np.linalg.inv(Sigma_y)
         Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
@@ -273,19 +273,16 @@ class SolverEMChampagne(BaseSolver):
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)
 
-            for n in range(len(gammas)):
-                gammas[n] = Sigma_x[n,n] + (1/n_times) * (mu_x[n]**2).sum()
-
+            gammas = np.diag(Sigma_x) +  np.mean(mu_x**2, axis=1)
             gammas[np.isnan(gammas)] = 0
-            # print("max gamma: ", gammas.max())
+
             if prune:
                 prune_candidates = gammas<pruning_thresh
                 gammas[prune_candidates] = 0
                 # print("Pruned: ", prune_candidates.sum())
-            # print((gammas==0).sum())
             
             # update rest
-            Gamma = np.diag(gammas)
+            Gamma = csr_matrix(np.diag(gammas))
             Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
             Sigma_y_inv = np.linalg.inv(Sigma_y)
             Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
@@ -427,16 +424,8 @@ class SolverMMChampagne(BaseSolver):
         loss_list = [1e99,]
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)
-            z = []
-            for n in range(len(gammas)):
-                Ln = L[:, n][:,np.newaxis]
-                z_n = Ln.T @ Sigma_y_inv @ Ln
-                upper_term = (1/n_times) *(mu_x[n]**2).sum()
-
-                gammas[n] = np.sqrt( upper_term / z_n )
-                z.append(z_n)
-                # gammas[n] = Sigma_x[n,n] + (1/n_times) * (mu_x[n]**2).sum()
-            # z = np.diag(z)
+            
+            gammas = np.sqrt(np.mean(mu_x**2, axis=1) / np.diag(L.T @ Sigma_y_inv @ L))
             
             gammas[np.isnan(gammas)] = 0
             # print("max gamma: ", gammas.max())
@@ -591,18 +580,11 @@ class SolverMacKayChampagne(BaseSolver):
         loss_list = [1e99,]
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)
-            z = []
-            for n in range(len(gammas)):
-                Ln = L[:, n][:,np.newaxis]
-                z_n = gammas[n] * Ln.T @ Sigma_y_inv @ Ln
-                upper_term = (1/n_times) *(mu_x[n]**2).sum()
-
-                gammas[n] = upper_term / z_n
-                z.append(z_n)
-                # gammas[n] = Sigma_x[n,n] + (1/n_times) * (mu_x[n]**2).sum()
-            # z = np.diag(z)
+            
+            gammas = np.mean(mu_x**2, axis=1) / (gammas * np.diag(L.T @ Sigma_y_inv @ L))
             
             gammas[np.isnan(gammas)] = 0
+            
             # print("max gamma: ", gammas.max())
             if prune:
                 prune_candidates = gammas<pruning_thresh
@@ -615,8 +597,7 @@ class SolverMacKayChampagne(BaseSolver):
             # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
             mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
             loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
-            # first_term = z.T @ gammas
-            # loss = first_term + second_term
+
             loss_list.append(loss)
 
             # Check if gammas went to zero
@@ -1487,9 +1468,9 @@ class SolverHSChampagne(BaseSolver):
         Y_scaled /= scaler
 
         # Random Initialization of Noise Covariance
-        # A = np.random.rand(n_chans, n_times)
-        # A =  (A@A.T)
-        A = np.identity(n_chans)*0.001
+        A = np.random.rand(n_chans, n_times)
+        A =  (A@A.T)
+        # A = np.identity(n_chans)*0.001
         A.setflags(write=True)
 
         # MNE-based initialization of Gammas
@@ -1511,12 +1492,13 @@ class SolverHSChampagne(BaseSolver):
             Sigma_y_inv = np.linalg.inv(Sigma_y)
             Sigma_y_inv_L = Sigma_y_inv @ L
             X_hat = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
-            # C_source = L.T @ Sigma_y_inv_L
-            # M_source = (X_hat @ X_hat.T) / n_times
-            S = Sigma_y_inv_L.T @ Y_scaled
             gammas_old  = deepcopy(gammas)
+
+            S = Sigma_y_inv_L.T @ Y_scaled
+            
             upper = np.mean(S**2,axis=1)
-            lower = np.sum(L * Sigma_y_inv_L, axis=0)
+            lower = np.diag(L.T @ Sigma_y_inv_L)
+            # print(upper.shape, lower.shape)
             gammas *= np.sqrt ( upper / lower)
 
             # gammas.setflags(write=True)
@@ -1546,9 +1528,14 @@ class SolverHSChampagne(BaseSolver):
                 else:
                     E_total = Y_scaled - L @ X_hat
                     M_noise = (E_total@E_total.T) / n_times
-                    Sigma_X = L.T @ np.linalg.inv(A) @ L + inv(Gamma_old)
-                    C_noise = (n_chans - n_dipoles + sum(np.diag(np.linalg.inv(Sigma_X)) /gammas_old))
-                    A = M_noise / C_noise
+                    # Expensive:
+                    # Sigma_X = L.T @ np.linalg.inv(A) @ L + inv(Gamma_old)
+                    # C_noise = (n_chans - n_dipoles + sum(np.diag(np.linalg.inv(Sigma_X)) /gammas_old))
+                    # A = M_noise / C_noise
+                    # Faster but less accurate:
+                    Sigma_X_diag = gammas_old * (1 - gammas_old * np.diag(L.T @ Sigma_y_inv_L))
+                    A = ( np.sum((Y_scaled - L @ X_hat)**2)**2 / n_times) / (n_chans - n_dipoles + sum(Sigma_X_diag / gammas_old))
+
                     A = np.identity(M_noise.shape[0]) * A
         
             

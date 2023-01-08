@@ -132,9 +132,17 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
     elif solver.lower() == "rap-music" or solver.lower() == "rap music" or solver.lower() == "rap":
-        solver_object = solvers.SolverRAPMUSIC(**kwargs)
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        if not "truncate" in kwargs:
+            truncate = False
+        solver_object = solvers.SolverFLEXMUSIC(name="RAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
     elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
-        solver_object = solvers.SolverTRAPMUSIC(**kwargs)
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        if not "truncate" in kwargs:
+            truncate = True
+        solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
     elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
         solver_object = solvers.SolverFLEXMUSIC(**kwargs)
     
