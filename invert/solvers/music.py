@@ -381,8 +381,8 @@ class SolverFLEXMUSIC(BaseSolver):
         for _ in range(self.n_orders):
             # new_leadfield = new_leadfield @ gradient
             new_leadfield = self.leadfield @ gradient
-            new_leadfield -= new_leadfield.mean(axis=0)
-            new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
+            # new_leadfield -= new_leadfield.mean(axis=0)
+            # new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
             
             # neighbors = [np.where(ad!=0)[0] for ad in gradient.toarray()]
             
