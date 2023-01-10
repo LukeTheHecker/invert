@@ -273,7 +273,7 @@ class SolverFLEXMUSIC(BaseSolver):
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
             
             if i>0 and np.max(mu) < stop_crit:
-                print("stopping at ", np.max(mu))
+                # print("stopping at ", np.max(mu))
                 break
 
             # source_covariance += np.squeeze(self.gradients[best_order][best_dipole] * (1/np.sqrt(i+1)))
@@ -591,7 +591,7 @@ class SolverFLEXMUSIC_2(BaseSolver):
             # Find the dipole/ patch with highest correlation with the residual
             
             if i>0 and current_max < stop_crit:
-                print("stopping at ", current_max)
+                # print("stopping at ", current_max)
                 break
 
             source_covariance += np.squeeze(self.identity[np.array(selected_idc)].sum(axis=0))
