@@ -373,7 +373,9 @@ class SolverFLEXMUSIC(BaseSolver):
 
         new_leadfield = deepcopy(self.leadfield)
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
-        gradient = abs(laplacian(deepcopy(self.adjacency)))
+        # gradient = abs(laplacian(deepcopy(self.adjacency)))
+        gradient = laplacian(deepcopy(self.adjacency))
+        
         gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
         # Convert to sparse matrix for speedup
         gradient = csr_matrix(gradient)

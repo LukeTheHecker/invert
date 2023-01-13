@@ -97,17 +97,22 @@ class SolverChampagne(BaseSolver):
             function formula).
         
         '''
-        _, n_sources = self.leadfield.shape
+        n_chans, n_sources = self.leadfield.shape
         _, n_times = y.shape
+        
+        y -= y.mean(axis=0)
+        scaler = abs(y).mean()#np.mean(np.diag(y@y.T/n_times))
+        
+        y_scaled = y / scaler
         leadfield = deepcopy(self.leadfield)
-        gammas = np.ones(n_sources)
-        eps = np.finfo(float).eps
-        threshold = 0.2 * np.mean(np.diag(self.noise_cov))
-        # x = np.zeros((n_sources, n_times))
         n_active = n_sources
         active_set = np.arange(n_sources)
-        # H = np.concatenate(L, np.eyes(n_sensors), axis = 1)
-        self.noise_cov = alpha*self.noise_cov
+        gammas = np.ones(n_sources)
+        # eps = np.finfo(float).eps
+        I = np.identity(n_chans)
+        noise_cov = I*(alpha**2)
+        threshold = 1e-3#0.2 * np.mean(np.diag(noise_cov))
+        
         x_bars = []
         for i in range(max_iter):
             gammas[np.isnan(gammas)] = 0.0
@@ -122,29 +127,22 @@ class SolverChampagne(BaseSolver):
 
             Gamma = spdiags(gammas, 0, len(active_set), len(active_set))
             # Calculate Source Covariance Matrix based on currently selected gammas
-            Sigma_y = (leadfield @ Gamma @ leadfield.T) + self.noise_cov
-            U, S, _ = np.linalg.svd(Sigma_y, full_matrices=False)
-            S = S[np.newaxis, :]
-            del Sigma_y
-            Sigma_y_inv = np.dot(U / (S + eps), U.T)
+            Sigma_y = (leadfield @ Gamma @ leadfield.T) + noise_cov
+            # Sigma_y_inv = self.alt_inv(Sigma_y, eps)
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            
             # Sigma_y_inv = linalg.inv(Sigma_y)
-            x_bar = Gamma @ leadfield.T @ Sigma_y_inv @ y
+            x_bar = Gamma @ leadfield.T @ Sigma_y_inv @ y_scaled
 
             # old gamma calculation throws warning
-            # gammas = np.sqrt(
-            #     np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
-            # )
-            # Calculate gammas 
-            gammas = np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
-            # set negative gammas to nan to avoid bad sqrt
-            gammas.astype(np.float64)  # this is required for numpy to accept nan
-            gammas[gammas<0] = np.nan
-            gammas = np.sqrt(gammas)
+            gammas = np.sqrt(
+                np.diag(x_bar @ x_bar.T / n_times) / np.diag(leadfield.T @ Sigma_y_inv @ leadfield)
+            )
 
             # Calculate Residual to the data
-            e_bar = y - (leadfield @ x_bar)
-            self.noise_cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
-            threshold = 0.2 * np.mean(np.diag(self.noise_cov))
+            # e_bar = y_scaled - (leadfield @ x_bar)
+            # noise_cov = np.sqrt(np.diag(e_bar @ e_bar.T / n_times) / np.diag(Sigma_y_inv))
+            # threshold = 0.2 * np.mean(np.diag(noise_cov))
             x_bars.append(x_bar)
 
             if i>0 and np.linalg.norm(x_bars[-1]) == 0:
@@ -154,14 +152,22 @@ class SolverChampagne(BaseSolver):
         gammas_full = np.zeros(n_sources)
         gammas_full[active_set] = gammas
         Gamma_full = spdiags(gammas_full, 0, n_sources, n_sources)
-        Sigma_y = (self.leadfield @ Gamma_full @ self.leadfield.T) + self.noise_cov
+        Sigma_y = (self.leadfield @ Gamma_full @ self.leadfield.T) + noise_cov*scaler #I*scaler
+        # Sigma_y_inv = self.alt_inv(Sigma_y, eps)
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+            
+
+
+        inverse_operator = Gamma_full @ self.leadfield.T @ Sigma_y_inv
+
+        return inverse_operator
+
+    def alt_inv(self, Sigma_y, eps):
         U, S, _ = np.linalg.svd(Sigma_y, full_matrices=False)
         S = S[np.newaxis, :]
         del Sigma_y
-        Sigma_y_inv_full = np.dot(U / (S + eps), U.T)
-        inverse_operator = Gamma_full @ self.leadfield.T @ Sigma_y_inv_full
-
-        return inverse_operator
+        Sigma_y_inv = np.dot(U / (S + eps), U.T)
+        return Sigma_y_inv
 
 class SolverEMChampagne(BaseSolver):
     ''' Class for the Expectation Maximization Champagne inverse solution. 
@@ -419,7 +425,7 @@ class SolverMMChampagne(BaseSolver):
         Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
         Sigma_y_inv = np.linalg.inv(Sigma_y)
         # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
-        z_0 = L.T @ Sigma_y_inv @ L
+        # z_0 = L.T @ Sigma_y_inv @ L
         mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
         loss_list = [1e99,]
         for i in range(max_iter):
@@ -1469,7 +1475,7 @@ class SolverHSChampagne(BaseSolver):
 
         # Random Initialization of Noise Covariance
         A = np.random.rand(n_chans, n_times)
-        A =  (A@A.T)
+        A =  (A@A.T/n_times)
         # A = np.identity(n_chans)*0.001
         A.setflags(write=True)
 
