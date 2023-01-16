@@ -188,7 +188,7 @@ class BaseSolver:
 
         '''
 
-        type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray]
+        type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray, mne.io.brainvision.brainvision.RawBrainVision]
         if pick_types is None:
             pick_types = dict(meg=True, eeg=True, fnirs=True)
         
@@ -226,7 +226,7 @@ class BaseSolver:
             data = mne_obj_meeg.average().data
         
         # check if the object is a raw object
-        elif isinstance(mne_obj, (mne.io.Raw, mne.io.RawArray)):
+        elif isinstance(mne_obj, (mne.io.Raw, mne.io.RawArray, mne.io.brainvision.brainvision.RawBrainVision)):
             # handle raw object
             data = mne_obj_meeg._data
             # data = mne_obj_meeg.get_data()
