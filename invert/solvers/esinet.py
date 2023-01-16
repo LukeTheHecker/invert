@@ -394,14 +394,14 @@ class SolverCovCNN(BaseSolver):
         gammas = self.model.predict(C, verbose=self.verbose)[0]
         # gammas = np.maximum(gammas, 0)
         gammas /= gammas.max()
-        gammas[gammas<0.25] = 0
+        gammas[gammas<self.epsilon] = 0
         source_covariance = np.diag(gammas)
 
         # Perform inversion
-        L_s = self.leadfield @ source_covariance
-        L = self.leadfield
-        W = np.diag(np.linalg.norm(L, axis=0)) 
-        x_hat = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T @ y
+        # L_s = self.leadfield @ source_covariance
+        # L = self.leadfield
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+        # x_hat = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T @ y
 
         # # Select dipole indices
         # gammas[gammas<self.epsilon] = 0
@@ -415,6 +415,12 @@ class SolverCovCNN(BaseSolver):
         # W = np.diag(np.linalg.norm(L, axis=0))
         # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 
+        # Bayes-like inversion
+        Gamma = source_covariance
+        Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
+        x_hat = inverse_operator @ y
         return x_hat        
         
         
@@ -423,10 +429,9 @@ class SolverCovCNN(BaseSolver):
         '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         
-        # Get Validation data from generator
-        x_val, y_val = self.generator.__next__()
-        x_val = x_val#[:256]
-        y_val = y_val#[:256]
+        # Get Validation data from generator (and clear all repetitions with loop)
+        for _ in range(self.batch_repetitions):
+            x_val, y_val = self.generator.__next__()
         
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
@@ -443,15 +448,17 @@ class SolverCovCNN(BaseSolver):
                     name='CNN1')(inputs)
 
         flat = Flatten()(cnn1)
-        
-        fc1 = Dense(1000, 
+
+        fc1 = Dense(300, 
             activation=self.activation_function, 
             name='FC1')(flat)
+
         out = Dense(n_dipoles, 
-            activation="tanh", 
+            activation="elu", 
             name='Output')(fc1)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
+
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
         if self.verbose > 0:
             model.summary()
@@ -915,7 +922,6 @@ class SolverLSTM(BaseSolver):
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
-
 def rms(x):
         return np.sqrt(np.mean(x**2))
     
@@ -1038,9 +1044,12 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
         if return_mask:    
             # Calculate mean source activity
-            y = abs(y).mean(axis=1)
-            # Masking the source vector (1-> active, 0-> inactive)
-            y = (y>0).astype(float)
+            # y = abs(y).mean(axis=1)
+            # # Masking the source vector (1-> active, 0-> inactive)
+            # y = (y>0).astype(float)
+            # y = np.stack([np.diagonal(yy.T@yy) for yy in y], axis=0)
+            y = np.mean(y**2, axis=1)
+        
         else:
             if scale_data:
                 y = np.stack([ (yy.T / np.max(abs(yy), axis=1)).T for yy in y], axis=0)

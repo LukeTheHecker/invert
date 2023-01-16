@@ -146,6 +146,14 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
         solver_object = solvers.SolverFLEXMUSIC(**kwargs)
     
+    # Alternative Projections
+    elif solver.lower() == "flex-ap" or solver.lower() == "flex ap":
+        solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternative Projections", **kwargs)
+    elif solver.lower() == "ap":
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        solver_object = solvers.SolverAlternatingProjections(name="Alternative Projections", n_orders=n_orders, **kwargs)
+    
     # Other
     elif solver.lower() == "epifocus":
         solver_object = solvers.SolverEPIFOCUS(**kwargs)
