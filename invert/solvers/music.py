@@ -374,7 +374,9 @@ class SolverFLEXMUSIC(BaseSolver):
 
         new_leadfield = deepcopy(self.leadfield)
         self.adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
-        gradient = abs(laplacian(deepcopy(self.adjacency)))
+        # gradient = abs(laplacian(deepcopy(self.adjacency)))
+        gradient = laplacian(deepcopy(self.adjacency))
+        
         gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
         # Convert to sparse matrix for speedup
         gradient = csr_matrix(gradient)
@@ -467,7 +469,6 @@ class SolverFLEXMUSIC_2(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        from time import time
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         
         data = self.unpack_data_obj(mne_obj)
@@ -538,7 +539,7 @@ class SolverFLEXMUSIC_2(BaseSolver):
                 n_comp = np.ceil((n_comp_drop + n_comp_L)/2).astype(int)
         else:
             n_comp = deepcopy(n)
-
+        self.n_comp = n_comp
         Us = U[:, :n_comp]
 
         source_covariance = np.zeros(n_dipoles)
@@ -553,8 +554,8 @@ class SolverFLEXMUSIC_2(BaseSolver):
             mu = norm_1 / norm_2
             selected_idc.append( np.argmax(mu) )
             current_max = np.max(mu)
-            current_b = leadfield[:, selected_idc[0]]
             current_leadfield = leadfield[:, selected_idc[0]]
+            component_strength = [1,]
             # print("initial idx: ", selected_idc[0])
             # print("initial max: ", current_max)
 
@@ -564,38 +565,47 @@ class SolverFLEXMUSIC_2(BaseSolver):
                 # Filter out candidates from neighbors
                 for idx, n in reversed(list(enumerate(neighbors))):
                     if n in selected_idc:
+                        # print("del")
                         neighbors = np.delete(neighbors, idx)
-                
-                # dist = np.array([self.distances[n, np.array(selected_idc)].mean() for n in neighbors])
-                # if len(dist.shape) == 2:
-                #     dist = dist.mean(axis=-1)
+
                 dist = self.distances[neighbors, selected_idc[0]]
 
                 # construct new candidate leadfields:
                 b = np.stack([ leadfield[:, n]/d + current_leadfield for d, n in zip(dist, neighbors)], axis=1)
                 # b /= np.linalg.norm(b, axis=0)
-                norm_1 = np.linalg.norm(Ps @ Q @ b, axis=0)
-                norm_2 = np.linalg.norm(Q @ b, axis=0) 
+                # norm_1 = np.linalg.norm(Ps @ Q @ b, axis=0)
+                # norm_2 = np.linalg.norm(Q @ b, axis=0) 
+                norm_1 = np.linalg.norm(abs(Ps) @ abs(Q) @ abs(b), axis=0)
+                norm_2 = np.linalg.norm(abs(Q) @ abs(b), axis=0) 
+                
                 mu_b = norm_1 / norm_2
+                # print(mu_b)
                 max_mu_b = np.max(mu_b)
-                new_idx = neighbors[np.argmax(mu_b)]
-                b_best = b[:, np.argmax(mu_b)]
-                if (max_mu_b - current_max) < 0.001:
+                
+                if (max_mu_b - current_max) < 0.00:
+                # if max_mu_b / current_max < 1.0001:
+                    # print("stop, change is ", max_mu_b - current_max)
                     break
                 else:
+                    new_idx = neighbors[np.argmax(mu_b)]
+                    b_best = b[:, np.argmax(mu_b)]
                     # print("added index ", new_idx)
                     # print("current max: ", max_mu_b)
                     current_max = max_mu_b
-                    current_leadfield = b_best / np.linalg.norm(b_best)
-                selected_idc.append( new_idx )
+                    current_leadfield = b_best #/ np.linalg.norm(b_best)
+                    component_strength.append( 1/dist[np.argmax(mu_b)])
+                    selected_idc.append( new_idx )
                             
             # Find the dipole/ patch with highest correlation with the residual
             
             if i>0 and current_max < stop_crit:
                 # print("stopping at ", current_max)
                 break
-
-            source_covariance += np.squeeze(self.identity[np.array(selected_idc)].sum(axis=0))
+            selected_idc = np.array(selected_idc)
+            current_cov = np.zeros(n_dipoles)
+            current_cov[selected_idc] = np.array(component_strength)
+            source_covariance += current_cov
+            # source_covariance += np.squeeze(self.identity[selected_idc].sum(axis=0))
             current_leadfield /= np.linalg.norm(current_leadfield)
             if i == 0:
                 B = current_leadfield[:, np.newaxis]
