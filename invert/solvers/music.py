@@ -181,7 +181,6 @@ class SolverFLEXMUSIC(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        from time import time
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         
         data = self.unpack_data_obj(mne_obj)
