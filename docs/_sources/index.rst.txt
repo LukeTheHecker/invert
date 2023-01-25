@@ -1,0 +1,53 @@
+**invertmeeg** - A high-level M/EEG Python library for EEG inverse solutions
+======
+
+Welcome to the documentation of the invertmeeg package for python! You can find
+the documentation of **over 50** inverse solutions here: :doc:`content/solvers`.
+In the future, there will be some tutorials.
+
+Installation
+============
+
+You can simply install the package using pip:
+
+..  code-block::
+    
+    pip install invertmeeg
+
+Quickstart
+==========
+
+Given that you have a mne.Forward model and some mne.Evoked data, you can simply
+calculate an inverse solution as such:
+
+..  code-block:: python
+    
+    # fwd = ...
+    # evoked = ...
+
+    # Create a Solver instance
+    solver_name = "MNE"
+    solver = Solver(solver_name)
+
+    # Calculate the inverse operator
+    solver.make_inverse_operator(fwd)
+
+    # Apply the inverse operator to your data
+    stc = solver.apply_inverse_operator(evoked)
+
+    # Plot the resulting source estimate
+    stc.plot()
+
+There are many solvers implemented in the package. You can find them in the
+:doc:`content/solvers` page and the :doc:`content/gallery`! Check out our
+:doc:`content/tutorial` for a more comprehensive step-by-step tutorial!
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   
+   content/base
+   content/solvers
+   content/adapters
+   content/gallery
+   content/tutorial

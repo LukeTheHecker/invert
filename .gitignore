@@ -1,2 +1,10 @@
 *.pkl
 *.pyc
+.pytest_cache
+.vscode
+inverse.egg-info
+sphinx
+build
+dist
+invertmeeg.egg-info
+figures

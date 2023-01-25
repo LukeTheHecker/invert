@@ -55,9 +55,6 @@ class SolverLORETA(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverSLORETA(BaseSolver):
     ''' Class for the standardized Low Resolution Tomography (sLORETA) inverse
         solution [1].
@@ -75,7 +72,7 @@ class SolverSLORETA(BaseSolver):
         self.name = name
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, *args, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, *args, alpha=0.01, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -89,36 +86,44 @@ class SolverSLORETA(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        if alpha == "auto":
+            msg = "sLORETA does not work well for automated regularization. Please use a floating points number (e.g., alpha=0.01)."
+            raise AttributeError(msg)
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
         leadfield = self.leadfield
         n_chans = leadfield.shape[0]
         
         LLT = leadfield @ leadfield.T
-        I = np.identity(n_chans)
-        one = np.ones((n_chans, 1))
-        H = I - (one @ one.T) / (one.T @ one)
         
+        I = np.identity(n_chans)
+        # one = np.ones((n_chans, 1))
+        # H = I - (one @ one.T) / (one.T @ one)
 
         inverse_operators = []
         for alpha in self.alphas:
             # according to Grech et al 2008
-            # K_MNE = leadfield.T @ np.linalg.inv(LLT + alpha * np.identity(n_chans))
-            # W_diag = 1 / np.diag(K_MNE @ leadfield)
-            # W_slor = np.diag(W_diag)
-            # W_slor = np.sqrt(W_slor)
-            
+            K_MNE = leadfield.T @ np.linalg.pinv(LLT + alpha *I)
+            W_diag = np.sqrt(np.diag(K_MNE @ leadfield))
+            W_slor = (K_MNE.T / W_diag).T
+
             # according to pascual-marqui 2002
-            T = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
+            # W_slor = leadfield.T @ H @ np.linalg.pinv(H @ LLT @ H + alpha * H)
+            # J = leadfield.T @ np.linalg.pinv(LLT + alpha * H)
+            # S = leadfield.T @ np.linalg.pinv(LLT + alpha * H) @ leadfield
+            # W_slor = J.T @ np.linalg.inv(S) @ J
+            # print(J.shape, S.shape, W_slor.shape)
+
+            # According to pascual-marqui 2009 (?)
+            # C = LLT + alpha*I
+            # LTC = leadfield.T @ C
+            # W_slor = np.linalg.pinv(LTC @ leadfield) @ LTC
             
-            inverse_operator = T
+            inverse_operator = W_slor
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 
 class SolverELORETA(BaseSolver):
     ''' Class for the exact Low Resolution Tomography (eLORETA) inverse
@@ -188,9 +193,7 @@ class SolverELORETA(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-    
+
     def calc_W(self, H, W_MNE, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
         n_chans, n_dipoles = self.leadfield.shape
         

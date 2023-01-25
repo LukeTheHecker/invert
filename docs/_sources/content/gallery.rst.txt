@@ -1,0 +1,507 @@
+Gallery
+=======
+
+
+The Gallery showcases all solvers with an example inverse solution for a small
+source patch projected to 64 EEG channels with high signal-to-noise ratio. The
+code that generated the data, the inverse solutions and saved the results is
+given as follows:
+
+Import functions and create a generic Forward Model:
+
+..  code-block:: python
+
+    %matplotlib inline
+    %load_ext autoreload
+    %autoreload 2
+    import sys; sys.path.insert(0, '../')
+    import numpy as np
+    from matplotlib import pyplot as plt
+    from scipy.stats import pearsonr
+    import mne
+
+    from invert.forward import get_info, create_forward_model
+    from invert.util import pos_from_forward
+    pp = dict(surface='inflated', hemi='both', clim=dict(kind="percent", pos_lims=(0, 99, 100)), colorbar=False, verbose=0)
+
+    info = get_info(kind='biosemi64')
+    fwd = create_forward_model(info=info, sampling='ico3')
+
+    pos = pos_from_forward(fwd)
+    leadfield = fwd["sol"]["data"]
+    n_chans, n_dipoles = leadfield.shape
+    source_model = fwd['src']
+    vertices = [source_model[0]['vertno'], source_model[1]['vertno']]
+
+Next we simulate a sample using the invert data generator:
+
+..  code-block:: python
+
+    from invert.solvers.esinet import generator
+
+    sim_params = dict(
+        use_cov=False, 
+        return_mask=False, 
+        batch_repetitions=1,
+        batch_size=1,
+        n_sources=1, 
+        n_orders=(2, 3), 
+        snr_range=(100, 101), 
+        n_timecourses=1,
+        scale_data=False)
+        
+
+    gen = generator(fwd, **sim_params)
+    x, y = gen.__next__()
+
+    tmin = 0
+    tstep = 1/info["sfreq"]
+    subject = "fsaverage"
+    evoked = mne.EvokedArray(x[0].T, info, tmin=tmin)
+    stc = mne.SourceEstimate(y[0].T, vertices, tmin=tmin, tstep=tstep, 
+                            subject=subject, verbose=0)
+
+
+Here we calculate all inverse solutions and plot them:
+
+..  code-block:: python
+    
+    %matplotlib inline
+    from invert import Solver
+    from invert.config import all_solvers
+
+    # Plot Ground Truth
+    stc.data /= abs(stc.data[:, 0]).max()
+    clim = dict(kind="values", pos_lims=(0., 0.5, 1))
+    pp["clim"] = clim
+    brain = stc.plot(**pp, brain_kwargs=dict(title="Ground Truth"))
+    brain.add_text(0.1, 0.9, "Ground Truth", 'title', font_size=16)
+    img = brain.screenshot()
+    brain.close()
+
+    plt.figure()
+    plt.imshow(img)
+    plt.axis("off")
+    fname = f"../figures/solver_gallery/GroundTruth"
+    plt.savefig(fname, dpi=150)
+    plt.close()
+
+    # Plot Source Estimates
+    for solver_name in all_solvers[15:][::-1]:
+        solver = Solver(solver_name)
+        solver.make_inverse_operator(fwd, evoked)
+        stc_ = solver.apply_inverse_operator(evoked)
+        stc_.data /= abs(stc_.data[:, 0]).max()
+        clim = dict(kind="values", pos_lims=(0., 0.5, 1))
+        pp["clim"] = clim
+        brain = stc_.plot(**pp, brain_kwargs=dict(title=solver.name))
+        brain.add_text(0.1, 0.9, solver.name, 'title', font_size=16)
+        img = brain.screenshot()
+        brain.close()
+        
+        fig = plt.figure()
+        plt.imshow(img)
+        plt.axis("off")
+
+        fname = f"../figures/solver_gallery/{solver.name}"
+        plt.savefig(fname, dpi=150)
+        plt.close()
+
+Ground Truth
+############
+
+.. image:: figures/solver_gallery/GroundTruth.png
+  :width: 700
+
+Minimum Norm/Current Estimates
+##############################
+
+..  code-block:: python
+
+    solver = Solver("MNE")
+
+.. image:: figures/solver_gallery/MinimumNormEstimate.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("wMNE")
+
+.. image:: figures/solver_gallery/WeightedMinimumNormEstimate.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("dSPM")
+
+.. image:: figures/solver_gallery/DynamicStatisticalParametricMapping.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FISTA")
+
+.. image:: figures/solver_gallery/MinimumCurrentEstimate.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("L1L2")
+
+.. image:: figures/solver_gallery/MinimumL1-L2Norm.png
+  :width: 700
+
+
+LORETA
+######
+
+..  code-block:: python
+
+    solver = Solver("LORETA")
+
+.. image:: figures/solver_gallery/LowResolutionTomography.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("sLORETA")
+
+.. image:: figures/solver_gallery/StandardizedLowResolutionTomography.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("eLORETA")
+
+.. image:: figures/solver_gallery/ExactLowResolutionTomography.png
+  :width: 700
+
+
+Bayes
+#####
+
+..  code-block:: python
+
+    solver = Solver("Source-MAP")
+
+.. image:: figures/solver_gallery/Source-MAP.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Gamma-MAP")
+
+.. image:: figures/solver_gallery/Gamma-MAP.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Source-MAP-MSP")
+
+.. image:: figures/solver_gallery/Source-MAP-MSP.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Gamma-MAP-MSP")
+
+.. image:: figures/solver_gallery/GAMMA-MAP-MSP.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Champagne")
+
+.. image:: figures/solver_gallery/Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("MM Champagne")
+
+.. image:: figures/solver_gallery/MM-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("LowSNR Champagne")
+
+.. image:: figures/solver_gallery/LowSNR-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("MacKay Champagne")
+
+.. image:: figures/solver_gallery/MacKay-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Convexity Champagne")
+
+.. image:: figures/solver_gallery/Convexity-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Homoscedasticity Champagne")
+
+.. image:: figures/solver_gallery/HS-Champagne.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FUN")
+
+.. image:: figures/solver_gallery/FUN.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("BCS")
+
+.. image:: figures/solver_gallery/BayesianCompressedSensing.png
+  :width: 700
+
+
+Matching Pursuit
+################
+
+..  code-block:: python
+
+    solver = Solver("OMP")
+
+.. image:: figures/solver_gallery/OrthogonalMatchingPursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SOMP")
+
+.. image:: figures/solver_gallery/SimultaneousOrthogonalMatchingPursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("CoSaMP")
+
+.. image:: figures/solver_gallery/CompressedSamplingMatchingPursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SSP")
+
+.. image:: figures/solver_gallery/SimultaneousSubspacePursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SP")
+
+.. image:: figures/solver_gallery/SubspacePursuit.png
+  :width: 700
+
+
+Smooth Matching Pursuit
+#######################
+
+..  code-block:: python
+
+    solver = Solver("SOMP")
+
+.. image:: figures/solver_gallery/SmoothMatchingPursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SSMP")
+
+.. image:: figures/solver_gallery/SmoothSimultaneousMatchingPursuit.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SubSMP")
+
+.. image:: figures/solver_gallery/SubspaceSmoothMatchingPursuit.png
+  :width: 700
+
+
+Artificial Neural Networks
+##########################
+
+..  code-block:: python
+
+    solver = Solver("FC")
+
+.. image:: figures/solver_gallery/Fully-Connected.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("CNN")
+
+.. image:: figures/solver_gallery/CNN.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("Cov-CNN")
+
+.. image:: figures/solver_gallery/Cov-CNN.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("LSTM")
+
+.. image:: figures/solver_gallery/LSTM.png
+  :width: 700
+
+
+MUSIC
+#####
+
+..  code-block:: python
+
+    solver = Solver("MUSIC")
+
+.. image:: figures/solver_gallery/MUSIC.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("RAP-MUSIC")
+
+.. image:: figures/solver_gallery/RAP-MUSIC.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("TRAP-MUSIC")
+
+.. image:: figures/solver_gallery/TRAP-MUSIC.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("FLEX-MUSIC")
+
+.. image:: figures/solver_gallery/FLEX-MUSIC.png
+  :width: 700
+
+
+Beamformers
+###########
+
+..  code-block:: python
+
+    solver = Solver("MVAB")
+
+.. image:: figures/solver_gallery/MinimumVarianceAdaptiveBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("LCMV")
+
+.. image:: figures/solver_gallery/LCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SMV")
+
+.. image:: figures/solver_gallery/SMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("WNMV")
+
+.. image:: figures/solver_gallery/WNMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("HOCMV")
+
+.. image:: figures/solver_gallery/HOCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("ESMV")
+
+.. image:: figures/solver_gallery/ESMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("MCMV")
+
+.. image:: figures/solver_gallery/MCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("HOCMCMV")
+
+.. image:: figures/solver_gallery/HOCMCMVBeamformer.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("ReciPSIICOS")
+
+.. image:: figures/solver_gallery/ReciPSIICOS.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("SAM")
+
+.. image:: figures/solver_gallery/SAMBeamformer.png
+  :width: 700
+
+
+MISC
+####
+
+
+..  code-block:: python
+
+    solver = Solver("Backus-Gilbert")
+
+.. image:: figures/solver_gallery/Backus-Gilbert.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("GPT")
+
+.. image:: figures/solver_gallery/GPTSolver.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("EPIFOCUS")
+
+.. image:: figures/solver_gallery/EPIFOCUS.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("LAURA")
+
+.. image:: figures/solver_gallery/LocalAuto-RegressiveAverage.png
+  :width: 700
+
+..  code-block:: python
+
+    solver = Solver("S-MAP")
+
+.. image:: figures/solver_gallery/S-MAP.png
+  :width: 700

@@ -18,8 +18,10 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverWMNE(**kwargs)
     elif solver.lower() == "dspm":
         solver_object = solvers.SolverDSPM(**kwargs)
-    elif solver.lower() == "l1" or solver.lower() == "fista":
+    elif solver.lower() == "l1" or solver.lower() == "fista" or solver.lower() == "mce" or solver.lower() == "minimum current estimate":
         solver_object = solvers.SolverMinimumL1Norm(**kwargs)
+    elif solver.lower() == "gpt" or solver.lower() == "l1 gpt" or solver.lower() == "l1gpt":
+        solver_object = solvers.SolverMinimumL1NormGPT(**kwargs)
     elif solver.lower() == "l1l2":
         solver_object = solvers.SolverMinimumL1L2Norm(**kwargs)
     
@@ -45,6 +47,20 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverChampagne(**kwargs)
     elif solver.lower() == "lowsnrchampagne" or solver.lower() == "low snr champagne" or solver.lower() == "lsc":
         solver_object = solvers.SolverLowSNRChampagne(**kwargs)
+    elif solver.lower() == "emchampagne" or solver.lower() == "em champagne" or solver.lower() == "emc":
+        solver_object = solvers.SolverEMChampagne(**kwargs)
+    elif solver.lower() == "mmchampagne" or solver.lower() == "mm champagne" or solver.lower() == "mmc":
+        solver_object = solvers.SolverMMChampagne(**kwargs)
+    elif solver.lower() == "mackaychampagne" or solver.lower() == "mackay champagne" or solver.lower() == "mackay-champagne" or solver.lower() == "mcc":
+        solver_object = solvers.SolverMacKayChampagne(**kwargs)
+    elif solver.lower() == "convexitychampagne" or solver.lower() == "convexity champagne" or solver.lower() == "convexity-champagne" or solver.lower() == "coc":
+        solver_object = solvers.SolverConvexityChampagne(**kwargs)
+    elif solver.lower() == "fun":
+        solver_object = solvers.SolverFUN(**kwargs)
+    elif solver.lower() == "heteroscedastic champagne" or solver.lower() == "hs champagne" or solver.lower() == "hs-champagne" or solver.lower() == "hsc":
+        solver_object = solvers.SolverHSChampagne(**kwargs)
+    # elif solver.lower() == "temchampagne" or solver.lower() == "tem champagne" or solver.lower() == "temc":
+    #     solver_object = solvers.SolverTEMChampagne(**kwargs)
     elif solver.lower() == "gamma-map" or solver.lower() == "gamma map" or solver.lower() == "gmap":
         solver_object = solvers.SolverGammaMAP(**kwargs)
     elif solver.lower() == "source-map" or solver.lower() == "source map":
@@ -69,6 +85,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverESMV(**kwargs)
     elif solver.lower() == "mcmv":
         solver_object = solvers.SolverMCMV(**kwargs)
+    elif solver.lower() == "hocmcmv":
+        solver_object = solvers.SolverHOCMCMV(**kwargs)
     # elif solver.lower() == "esmcmv":
     #     solver_object = solvers.SolverESMCMV(**kwargs)
     elif solver.lower() == "recipsiicos":
@@ -79,7 +97,7 @@ def Solver(solver="mne", **kwargs):
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
         solver_object = solvers.SolverFC(**kwargs)
-    elif solver.lower() == "covcnn" or solver.lower() == "cov cnn" or solver.lower() == "covnet":
+    elif solver.lower() == "covcnn" or solver.lower() == "cov cnn" or solver.lower() == "covnet" or solver.lower() == "cov-cnn":
         solver_object = solvers.SolverCovCNN(**kwargs)
     elif solver.lower() == "lstm":
         solver_object = solvers.SolverLSTM(**kwargs)
@@ -114,11 +132,27 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
     elif solver.lower() == "rap-music" or solver.lower() == "rap music" or solver.lower() == "rap":
-        solver_object = solvers.SolverRAPMUSIC(**kwargs)
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        if not "truncate" in kwargs:
+            truncate = False
+        solver_object = solvers.SolverFLEXMUSIC(name="RAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
     elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
-        solver_object = solvers.SolverTRAPMUSIC(**kwargs)
-    elif solver.lower() == "jazz-music" or solver.lower() == "jazz music" or solver.lower() == "jazz":
-        solver_object = solvers.SolverJAZZMUSIC(**kwargs)
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        if not "truncate" in kwargs:
+            truncate = True
+        solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
+    elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
+        solver_object = solvers.SolverFLEXMUSIC(**kwargs)
+    
+    # Alternative Projections
+    elif solver.lower() == "flex-ap" or solver.lower() == "flex ap":
+        solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternative Projections", **kwargs)
+    elif solver.lower() == "ap":
+        if not "n_orders" in kwargs:
+            n_orders = 0
+        solver_object = solvers.SolverAlternatingProjections(name="Alternative Projections", n_orders=n_orders, **kwargs)
     
     # Other
     elif solver.lower() == "epifocus":

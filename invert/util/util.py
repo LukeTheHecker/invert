@@ -5,6 +5,7 @@ import tensorflow as tf
 import dill as pkl
 import os
 
+
 def read_solver(path, name='instance', custom_objects={}):
     instance_path = os.path.join(path, name+".pkl")
     with open(instance_path, "rb") as f:

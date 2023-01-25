@@ -1,0 +1,105 @@
+Solvers
+=======
+
+This is the comprehensive list of all available solvers. Each solver has its own
+class
+
+:doc:`minimum_norm`
+===================
+- Minimum Norm Estimates (MNE)
+- Weighted Minimum Norm Estimates (wMNE)
+- Dynamic Statistical Parametric Mapping (dSPM)
+- Minimum Current Estimates (FISTA)
+- L1-L2 Optimization (L1L2)
+- Chat GPT's FISTA (GPT)
+
+:doc:`loreta`
+=============
+- Low-Resolution Tomography (LORETA)
+- Standardized Low-Resolution Tomography (sLORETA)
+- Exact Low-Resolution Tomography (eLORETA)
+- S-MAP (S-MAP)
+
+:doc:`wrop`
+================================
+- Backus-Gilbert (BG)
+- Local Autoregressive Average (LAURA)
+
+:doc:`bayes`
+===============
+- Gamma - Maximum A Posteriori (Gamma-MAP)
+- Gamma - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
+- Source - Maximum A Posteriori (Source-MAP)
+- Source - Maximum A Posteriori using Multiple Sparse Priors (Source-MAP-MSP)
+- Bayesian Compressed Sensing (BCS)
+- Champagne (Champagne)
+- Low SNR Champagne (Low SNR Champagne)
+- Expectation Maximization Champagne (EM Champagne)
+- Majorization Maximization Champagne (MM Champagne)
+- MacKay Champagne (MacKay-Champagne)
+- Convexity Champagne (Convexity-Champagne)
+- Homoscedasticity Champagne (HS-Champagne)
+- Full-Structure Noise Learning (FUN)
+
+:doc:`matching_pursuit`
+==========
+- Orthogonal Matching Pursuit (OMP)
+- Simultaneous Orthogonal Matching Pursuit (SOMP)
+- Compressed Sampling Matching Pursuit (CoSaMP)
+- Reduce Multi-Measurement-Vector and Boost (ReMBo)
+- Subspace Pursuit (SP)
+- Simultaneous Subspace Pursuit (SSP)
+
+:doc:`smooth_matching_pursuit`
+=========
+- Smooth Orthogonal Matching Pursuit (SMP)
+- Smooth Simultaneous Orthogonal Matching Pursuit (SSMP)
+- Smooth Subspace Simultaneous Orthogonal Matching Pursuit (SubSMP)
+
+:doc:`music`
+==========
+- Multiple Signal Classification (MUSIC)
+- Recursively Applied MUSIC (RAP-MUSIC)
+- Truncated RAP-Music (TRAP-MUSIC)
+- Truncated RAP-Music for flexible extent estimation (FLEX-MUSIC)
+
+:doc:`artificial_neural_networks`
+==========
+- Convolutional Neural Network for Spatio-Temporal Inverse Solution (CNN)
+- Long-Short Term Memory Network for Spatio-Temporal Inverse Solution (LSTM)
+- Fully-Connected Neural Network for Inverse Solution at single time instances (FC)
+- Covariance-based Convolutional Neural Network for Spatio-Temporal Inverse Solution (CovCNN)
+
+:doc:`beamformer`
+=================
+- Minimum Variance Adaptive Beamformer (MVAB)
+- Linearly Constrained Minimum Variance Beamformer (LCMV)
+- Standardized Minimum Variance Beamformer (SMV)
+- Weight-normalized Minimum Variance Beamformer (WNMV)
+- Higher-Order Covariance Minimum Variance Beamformer (HOCMV)
+- Eigenspace-Based Minimum Variance Beamformer (ESMV)
+- Multiple Constrained Minimum Variance Beamformer (MCMV)
+- Higher-Order Covariance Multiple Constrained Minimum Variance Beamformer (HOCMCMV)
+- Reciprocal Phase Shift Invariant Imaging of Coherent Sources (ReciPSIICOS)
+  Beamformer
+- Synthetic Aperture Magnetometry (SAM)
+
+Other
+=====
+- :doc:`epifocus`
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Full List of Solvers
+    
+    base
+    minimum_norm
+    loreta
+    wrop
+    bayes
+    matching_pursuit
+    smooth_matching_pursuit
+    music
+    artificial_neural_networks
+    beamformer
+    epifocus

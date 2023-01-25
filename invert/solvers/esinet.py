@@ -4,6 +4,8 @@ from .base import BaseSolver, InverseOperator
 import colorednoise as cn
 from scipy.sparse.csgraph import laplacian
 from scipy.stats import pearsonr
+from scipy.sparse import csr_matrix, vstack
+from time import time
 import mne
 import numpy as np
 import pandas as pd
@@ -35,6 +37,7 @@ class SolverCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=300,
+                            add_forward_error=False, forward_error=0.1,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
@@ -109,6 +112,8 @@ class SolverCNN(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # Inference
         self.epsilon = epsilon
 
@@ -119,19 +124,33 @@ class SolverCNN(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -139,7 +158,7 @@ class SolverCNN(BaseSolver):
             The source esimate.
 
         '''
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         n_channels, n_times = y.shape
         
@@ -161,14 +180,13 @@ class SolverCNN(BaseSolver):
 
         # 1) Calculate weighted minimum norm solution at active dipoles
         n_dipoles = len(gammas)
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         x_hat = np.zeros((n_dipoles, n_times))
         L = self.leadfield[:, dipole_idc]
         W = np.diag(np.linalg.norm(L, axis=0))
         x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
 
-        
         return x_hat        
             
     def train_model(self,):
@@ -177,7 +195,6 @@ class SolverCNN(BaseSolver):
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=self.generator.__next__(), callbacks=callbacks)
-
 
     def build_model(self,):
         ''' Build the neural network model.
@@ -219,9 +236,9 @@ class SolverCNN(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
-        
+
 class SolverCovCNN(BaseSolver):
     ''' Class for the Covariance-based Convolutional Neural Network (CovCNN) for EEG inverse solutions.
     
@@ -241,7 +258,8 @@ class SolverCovCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=100,
-                            alpha="auto", verbose=0, **kwargs):
+                            add_forward_error=False, forward_error=0.1,
+                            alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -316,6 +334,8 @@ class SolverCovCNN(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error=forward_error
         # Inference
         self.epsilon = epsilon
         print("Create Generator:..")
@@ -328,19 +348,33 @@ class SolverCovCNN(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -349,9 +383,9 @@ class SolverCovCNN(BaseSolver):
 
         '''
 
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
-        y_norm = y / np.linalg.norm(y, axis=0)
+        # y_norm = y / np.linalg.norm(y, axis=0)
         n_channels, n_times = y.shape
 
         # Compute Data Covariance Matrix
@@ -361,33 +395,48 @@ class SolverCovCNN(BaseSolver):
 
         # Add empty batch and (color-) channel dimension
         C = C[np.newaxis, :, :, np.newaxis]
+
+        # Get prior source covariance from model
         gammas = self.model.predict(C, verbose=self.verbose)[0]
+        # gammas = np.maximum(gammas, 0)
         gammas /= gammas.max()
-
-        # Select dipole indices
         gammas[gammas<self.epsilon] = 0
-        dipole_idc = np.where(gammas!=0)[0]
-        print("Active dipoles: ", len(dipole_idc))
+        source_covariance = np.diag(gammas)
 
-        # 1) Calculate weighted minimum norm solution at active dipoles
-        n_dipoles = len(gammas)
-        x_hat = np.zeros((n_dipoles, n_times))
-        L = self.leadfield[:, dipole_idc]
-        W = np.diag(np.linalg.norm(L, axis=0))
-        x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+        # Perform inversion
+        # L_s = self.leadfield @ source_covariance
+        # L = self.leadfield
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+        # x_hat = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T @ y
 
+        # # Select dipole indices
+        # gammas[gammas<self.epsilon] = 0
+        # dipole_idc = np.where(gammas!=0)[0]
+        # print("Active dipoles: ", len(dipole_idc))
+
+        # # 1) Calculate weighted minimum norm solution at active dipoles
+        # n_dipoles = len(gammas)
+        # x_hat = np.zeros((n_dipoles, n_times))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+
+        # Bayes-like inversion
+        Gamma = source_covariance
+        Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
+        x_hat = inverse_operator @ y
         return x_hat        
-        
-        
+         
     def train_model(self,):
         ''' Train the neural network model.
         '''
         callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
         
-        # Get Validation data from generator
-        x_val, y_val = self.generator.__next__()
-        x_val = x_val[:256]
-        y_val = y_val[:256]
+        # Get Validation data from generator (and clear all repetitions with loop)
+        for _ in range(self.batch_repetitions):
+            x_val, y_val = self.generator.__next__()
         
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
@@ -404,15 +453,17 @@ class SolverCovCNN(BaseSolver):
                     name='CNN1')(inputs)
 
         flat = Flatten()(cnn1)
-        
+
         fc1 = Dense(300, 
             activation=self.activation_function, 
             name='FC1')(flat)
+
         out = Dense(n_dipoles, 
-            activation="relu", 
+            activation="elu", 
             name='Output')(fc1)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
+
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
         if self.verbose > 0:
             model.summary()
@@ -424,7 +475,7 @@ class SolverCovCNN(BaseSolver):
         '''
         gen_args = dict(use_cov=True, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error)
         self.generator = generator(self.forward, **gen_args)
         
 class SolverFC(BaseSolver):
@@ -447,6 +498,7 @@ class SolverFC(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
+                            add_forward_error=False, forward_error=0.1,
                             verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -515,6 +567,8 @@ class SolverFC(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # MISC
         self.verbose = verbose
         # Inference
@@ -528,19 +582,33 @@ class SolverFC(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -549,7 +617,7 @@ class SolverFC(BaseSolver):
 
         '''
 
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
         y /= abs(y).max()
@@ -565,7 +633,7 @@ class SolverFC(BaseSolver):
         source_pred = np.swapaxes(source_pred, 1, 2)
 
         # Rescale sources
-        y_original = deepcopy(evoked.data)
+        y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
@@ -599,10 +667,10 @@ class SolverFC(BaseSolver):
                 activation=self.activation_function), name=f'FC2')(dense)
 
         out = Dense(n_dipoles, 
-            activation="linear", 
+            activation="sigmoid", 
             name='Output')(dense)
 
-        model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
+        model = tf.keras.Model(inputs=inputs, outputs=out, name='FC')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
         if self.verbose > 0:
             model.summary()
@@ -614,12 +682,10 @@ class SolverFC(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
-    
-    
-        
+
 class SolverLSTM(BaseSolver):
     ''' Class for the Long-Short Term Memory Neural Network (LSTM) for 
         EEG inverse solutions.
@@ -642,6 +708,7 @@ class SolverLSTM(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
+                            add_forward_error=False, forward_error=0.1,
                             verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -714,6 +781,8 @@ class SolverLSTM(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # MISC
         self.verbose = verbose
         # Inference
@@ -728,19 +797,33 @@ class SolverLSTM(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        source_mat = self.apply_model(evoked)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
 
         return stc
 
-    def apply_model(self, evoked) -> np.ndarray:
+    def apply_model(self, data) -> np.ndarray:
         ''' Compute the inverse solution of the M/EEG data.
 
         Parameters
         ----------
-        evoked : mne.Evoked
-            The evoked M/EEG data object.
+        data : numpy.ndarray
+            The M/EEG data matrix.
 
         Return
         ------
@@ -748,7 +831,7 @@ class SolverLSTM(BaseSolver):
             The source esimate.
 
         '''
-        y = deepcopy(evoked.data)
+        y = deepcopy(data)
         y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
         y /= abs(y).max()
@@ -764,7 +847,7 @@ class SolverLSTM(BaseSolver):
         source_pred = np.swapaxes(source_pred, 1, 2)
 
         # Rescale sources
-        y_original = deepcopy(evoked.data)
+        y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
         source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
         
@@ -782,7 +865,6 @@ class SolverLSTM(BaseSolver):
 
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
-
 
     def build_model2(self,):
         ''' Build the neural network model.
@@ -846,111 +928,22 @@ class SolverLSTM(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
-
-# class SolverFullyConnected(BaseSolver):
-#     ''' Class for the Fully-Connected (FC) neural network's inverse solution.
-    
-#     Attributes
-#     ----------
-#     forward : mne.Forward
-#         The mne-python Forward model instance.
-#     '''
-#     def __init__(self, name="Fully-Connected", **kwargs):
-#         self.name = name
-#         return super().__init__(**kwargs)
-
-#     def make_inverse_operator(self, forward, evoked, *args, alpha='auto', 
-#                             n_simulations=5000, settings=None, activation_function="tanh", 
-#                             verbose=0, **kwargs):
-#         ''' Calculate inverse operator.
-
-#         Parameters
-#         ----------
-#         forward : mne.Forward
-#             The mne-python Forward model instance.
-#         alpha : float
-#             The regularization parameter.
-        
-#         Return
-#         ------
-#         self : object returns itself for convenience
-#         '''
-#         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-#         info = evoked.info
-#         if settings is None:
-#             settings = dict(duration_of_trial=0., )
-#         sim = Simulation(forward, info, settings=settings, verbose=verbose).simulate(n_simulations)
-
-#         model_args = dict(model_type="FC", activation_function=activation_function, )
-#         inverse_operator = InverseOperator(Net(forward, **model_args, verbose=verbose).fit(sim), self.name)
-#         self.inverse_operators = [inverse_operator,]
-        
-#         return self
-
-#     def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-#         return super().apply_inverse_operator(evoked)
-
-# def make_fullyconnected_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-#     """ Calculate the inverse operator using the Fully-Connected artificial neural network model.
-
-#     Parameters
-#     ----------
-#     leadfield : mne.Foward
-#         The forward model object.
-#     info : mne.Info
-#         The mne info object.
-
-#     Return
-#     ------
-#     inverse_operator : esinet.Net
-#         The neural network model object from the esinet package.
-
-#     """
-#     if settings is None:
-#         settings = dict(duration_of_trial=0.)
-#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
-
-#     model_args = dict(model_type="FC", activation_function="tanh")
-#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
-
-#     return inverse_operator
-
-
-# def make_lstm_inverse_operator(fwd, info, n_samples=5000, settings=None, verbose=0):
-#     """ Calculate the inverse operator using the Long-Short Term Memory
-#     artificial neural network model.
-
-#     Parameters
-#     ----------
-#     leadfield : mne.Foward
-#         The forward model object.
-#     info : mne.Info
-#         The mne info object.
-
-#     Return
-#     ------
-#     inverse_operator : esinet.Net
-#         The neural network model object from the esinet package.
-
-#     """
-#     if settings is None:
-#         settings = dict(duration_of_trial=0.)
-#     sim = Simulation(fwd, info, settings=settings, verbose=verbose).simulate(n_samples)
-
-#     model_args = dict(model_type="LSTM")
-#     inverse_operator = Net(fwd, **model_args, verbose=verbose).fit(sim)
-
-#     return inverse_operator
 
 def rms(x):
         return np.sqrt(np.mean(x**2))
     
 def add_white_noise(X_clean, snr):
     ''' '''
-    X_noise = np.random.randn(*X_clean.shape)
+    # Inter-channel correlations
+    coeff_mat = (np.random.rand(X_clean.shape[0], X_clean.shape[0])-0.5) * 2
+    # Make matrix symmetric
+    coeff_mat = (coeff_mat + coeff_mat.T)/2
+    
+    # Random partially correlated noise
+    X_noise = coeff_mat @ np.random.randn(*X_clean.shape)
 
     rms_clean = rms(X_clean)
     scaler = rms_clean / snr
@@ -958,16 +951,32 @@ def add_white_noise(X_clean, snr):
     X_full = X_clean + X_noise*scaler
     X_full -= X_full.mean(axis=0)
     return X_full
-    
+
+def add_error(leadfield, forward_error, gradient):
+    n_chans, n_dipoles = leadfield.shape
+    noise = np.random.uniform(-1, 1, (n_chans, n_dipoles)) @ gradient
+    leadfield_mix = leadfield / np.linalg.norm(leadfield) + forward_error * noise / np.linalg.norm(noise)
+    return leadfield_mix
+
 def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
-              return_mask=True, scale_data=True, return_info=False, verbose=0):
+              return_mask=True, scale_data=True, return_info=False,
+              add_forward_error=False, forward_error=0.1, verbose=0):
     
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
+    # Convert to sparse matrix for speedup
+    adjacency = csr_matrix(adjacency)
     gradient = abs(laplacian(adjacency))
-    leadfield = fwd["sol"]["data"]
+    leadfield = deepcopy(fwd["sol"]["data"])
+    leadfield_original = deepcopy(fwd["sol"]["data"])
+    
+    del adjacency
+    
+    # Convert to sparse matrix for speedup
+    gradient = csr_matrix(gradient)
+
     leadfield -= leadfield.mean()
     # Normalize columns of the leadfield
     leadfield /= np.linalg.norm(leadfield, axis=0)
@@ -975,23 +984,43 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     n_chans, n_dipoles = leadfield.shape
 
 
-    sources = np.identity(n_dipoles)
-    for _ in range(n_orders-1):
-        new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
-        new_sources /= new_sources.max(axis=0)
-        sources = np.concatenate( [sources, new_sources], axis=0 )
+    sources = csr_matrix(np.identity(n_dipoles))
+    if isinstance(n_orders, (tuple, list)):
+        min_order, max_order = n_orders
+    else:
+        min_order = 0
+        max_order = n_orders
 
+    for i in range(max_order-1):
+        # new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
+        # new_sources /= new_sources.max(axis=0)
+        # sources = np.concatenate( [sources, new_sources], axis=0 )
+    
+        new_sources = csr_matrix(sources.toarray()[-n_dipoles:, -n_dipoles:]) @ gradient
+        row_maxes = new_sources.max(axis=0).toarray().flatten()
+        new_sources = new_sources / row_maxes[np.newaxis]
+
+        # new_sources /= new_sources.max(axis=0)
+        if i >= min_order-1:
+            # sources = np.concatenate( [sources, new_sources], axis=0 )
+            sources = vstack([sources, new_sources])
+
+    
+    if min_order>0:
+        start_idx = int(n_dipoles*min_order)
+        sources = csr_matrix(sources.toarray()[start_idx:, :])
+    sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
-    # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)
     time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
+
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
-
-
     n_candidates = sources.shape[0]
     while True:
+        if add_forward_error:
+            leadfield = add_error(leadfield_original, forward_error, gradient)
         # print("yeet")
         # select sources or source patches
         n_sources_batch = np.random.randint(1, n_sources+1, batch_size)
@@ -1000,8 +1029,9 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Assign each source (or source patch) a time course
         amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
         amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
+        # y = np.stack([(amplitudes[i] @ sources.toarray()[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
         y = np.stack([(amplitudes[i] @ sources[selection[i]]) / len(amplitudes[i]) for i in range(batch_size)], axis=0)
-        
+
         # Project simulated sources through leadfield
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
 
@@ -1013,8 +1043,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # Apply common average reference
         x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
         # Scale eeg
-        if scale_data:
-            x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+        # if scale_data:
+        #     x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
         
         if use_cov:
             # Calculate Covariance
@@ -1035,9 +1065,12 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
         if return_mask:    
             # Calculate mean source activity
-            y = abs(y).mean(axis=1)
-            # Masking the source vector (1-> active, 0-> inactive)
-            y = (y>0).astype(float)
+            # y = abs(y).mean(axis=1)
+            # # Masking the source vector (1-> active, 0-> inactive)
+            # y = (y>0).astype(float)
+            # y = np.stack([np.diagonal(yy.T@yy) for yy in y], axis=0)
+            y = np.mean(y**2, axis=1)
+        
         else:
             if scale_data:
                 y = np.stack([ (yy.T / np.max(abs(yy), axis=1)).T for yy in y], axis=0)
@@ -1130,3 +1163,20 @@ def correlation_criterion(scaler, leadfield, y_est, x_true):
     x_est = np.matmul(leadfield, y_est) 
     error = np.abs(pearsonr(x_true-x_est, x_true)[0])
     return error
+
+def emd_loss(distances):
+    def loss(y_true, y_pred):
+        y_true = y_true / K.sum(y_true)
+        y_pred = y_pred / K.sum(y_pred)
+        
+        y_shape = tf.shape(y_true)
+        if len(y_shape)==3:
+            # y_true = tf.reshape(y_true, [tf.reduce_prod([y_shape[0],y_shape[1]]), y_shape[2]])
+            # y_pred = tf.reshape(y_pred, [tf.reduce_prod([y_shape[0],y_shape[1]]), y_shape[2]])
+            y_true = tf.reshape(y_true, [y_shape[0]*y_shape[1], y_shape[2]])
+            y_pred = tf.reshape(y_pred, [y_shape[0]*y_shape[1], y_shape[2]])
+
+        emd_score = tf.linalg.matmul( distances, tf.transpose(K.square(y_true-y_pred)))
+        emd_score = K.sum(emd_score)
+        return emd_score
+    return loss

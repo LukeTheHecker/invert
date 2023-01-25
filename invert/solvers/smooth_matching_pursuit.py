@@ -61,9 +61,22 @@ class SolverSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
-        source_mat = np.stack([self.calc_smp_solution(y, include_singletons=include_singletons) for y in evoked.data.T], axis=1)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, K=1, include_singletons=True) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = np.stack([self.calc_smp_solution(y, include_singletons=include_singletons) for y in data.T], axis=1)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -187,9 +200,23 @@ class SolverSSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
-        source_mat = self.calc_ssmp_solution(evoked.data, include_singletons=include_singletons)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, include_singletons=True) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        include_singletons : bool
+            If True -> Include not only smooth patches but also single dipoles.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_ssmp_solution(data, include_singletons=include_singletons)
+        stc = self.source_to_object(source_mat)
         return stc
     
 
@@ -319,9 +346,21 @@ class SolverSubSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
-        source_mat = self.calc_subsmp_solution(evoked.data, include_singletons=include_singletons)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj,include_singletons=True) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_subsmp_solution(data, include_singletons=include_singletons)
+        stc = self.source_to_object(source_mat)
         return stc
 
     def calc_subsmp_solution(self, y, include_singletons=True, var_thresh=1):
@@ -439,7 +478,6 @@ class SolverSubSMP(BaseSolver):
         # x_hat = x_hats[corner_idx]
         return x_hat
     
-
 class SolverISubSMP(BaseSolver):
     ''' Class for the Subspace Smooth Matching Pursuit (SubSMP) inverse solution. Developed
         by Lukas Hecker as a smooth extension of the orthogonal matching pursuit
@@ -492,9 +530,21 @@ class SolverISubSMP(BaseSolver):
         
         return self
 
-    def apply_inverse_operator(self, evoked, K=1, include_singletons=True) -> mne.SourceEstimate:
-        source_mat = self.calc_subsmp_solution(evoked.data, include_singletons=include_singletons)
-        stc = self.source_to_object(source_mat, evoked)
+    def apply_inverse_operator(self, mne_obj, include_singletons=True) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object
+        '''
+        data = self.unpack_data_obj(mne_obj)
+        source_mat = self.calc_subsmp_solution(data, include_singletons=include_singletons)
+        stc = self.source_to_object(source_mat)
         return stc
 
     def calc_subsmp_solution(self, y, include_singletons=True, var_thresh=0.1):

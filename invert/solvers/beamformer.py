@@ -17,19 +17,19 @@ class SolverMVAB(BaseSolver):
     beamforming design. Signal Processing, 93(12), 3264-3277.
 
     '''
-    def __init__(self, name="Minimum Variance Adaptive Beamformer", **kwargs):
+    def __init__(self, name="Minimum Variance Adaptive Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
         
@@ -40,13 +40,13 @@ class SolverMVAB(BaseSolver):
         '''
 
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-
+        data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
 
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         R_inv = np.linalg.inv(y@y.T)
         leadfield -= leadfield.mean(axis=0)
@@ -62,9 +62,6 @@ class SolverMVAB(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverLCMV(BaseSolver):
     ''' Class for the Linearly Constrained Minimum Variance Beamformer (LCMV)
         inverse solution [1].
@@ -78,19 +75,19 @@ class SolverLCMV(BaseSolver):
     approach to spatial filtering. IEEE assp magazine, 5(2), 4-24.
     
     '''
-    def __init__(self, name="LCMV Beamformer", **kwargs):
+    def __init__(self, name="LCMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', weight_norm=True, verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', weight_norm=True, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -103,25 +100,26 @@ class SolverLCMV(BaseSolver):
         '''
         self.weight_norm = weight_norm
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
-
+        data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
         
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
-
+        
         I = np.identity(n_chans)
-
+        C = y@y.T
+        
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
         self.alphas = np.logspace(-4, 1, self.n_reg_params) * np.diagonal(y@y.T).mean()
 
         inverse_operators = []
         for alpha in self.alphas:
-            C = y@y.T + alpha*I
-            C_inv = np.linalg.inv(C)
+            
+            C_inv = np.linalg.inv(C + alpha*I)
 
             W = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
 
@@ -133,8 +131,10 @@ class SolverLCMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
+
+
+    
+        
 
 class SolverSMV(BaseSolver):
     ''' Class for the Standardized Minimum Variance (SMV) Beamformer inverse
@@ -150,19 +150,19 @@ class SolverSMV(BaseSolver):
     Biomedical Signal Processing and Control, 14, 175-188.
 
     '''
-    def __init__(self, name="SMV Beamformer", **kwargs):
+    def __init__(self, name="SMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -174,6 +174,7 @@ class SolverSMV(BaseSolver):
 
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
@@ -182,7 +183,7 @@ class SolverSMV(BaseSolver):
 
         self.weight_norm = weight_norm
 
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         I = np.identity(n_chans)
         
@@ -194,7 +195,7 @@ class SolverSMV(BaseSolver):
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
-            W = (C_inv @ leadfield) / np.diagonal(np.sqrt(leadfield.T @ C_inv @ leadfield))
+            W = (C_inv @ leadfield) / np.sqrt(np.diagonal(leadfield.T @ C_inv @ leadfield))
             
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
@@ -203,9 +204,6 @@ class SolverSMV(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
 
 class SolverWNMV(BaseSolver):
     ''' Class for the Weight-normalized Minimum Variance (WNMV) Beamformer
@@ -223,17 +221,19 @@ class SolverWNMV(BaseSolver):
     Biomedical Signal Processing and Control, 14, 175-188.
 
     '''
-    def __init__(self, name="WNMV Beamformer", **kwargs):
+    def __init__(self, name="WNMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -244,6 +244,7 @@ class SolverWNMV(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
@@ -251,7 +252,7 @@ class SolverWNMV(BaseSolver):
         n_chans, n_dipoles = self.leadfield.shape
 
         self.weight_norm = weight_norm
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         I = np.identity(n_chans)
 
@@ -275,9 +276,6 @@ class SolverWNMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverHOCMV(BaseSolver):
     ''' Class for the Higher-Order Covariance Minimum Variance (HOCMV)
         Beamformer inverse solution [1].
@@ -294,19 +292,19 @@ class SolverHOCMV(BaseSolver):
     Biomedical Signal Processing and Control, 14, 175-188.
 
     '''
-    def __init__(self, name="HOCMV Beamformer", **kwargs):
+    def __init__(self, name="HOCMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', order=3, verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', order=3, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -320,6 +318,7 @@ class SolverHOCMV(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
@@ -328,7 +327,7 @@ class SolverHOCMV(BaseSolver):
         
         self.weight_norm = weight_norm
         
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         I = np.identity(n_chans)
 
@@ -354,9 +353,6 @@ class SolverHOCMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
 class SolverESMV(BaseSolver):
     ''' Class for the Eigenspace-based Minimum Variance (ESMV) Beamformer
         inverse solution [1].
@@ -373,19 +369,19 @@ class SolverESMV(BaseSolver):
     Biomedical Signal Processing and Control, 14, 175-188.
     
     '''
-    def __init__(self, name="ESMV Beamformer", **kwargs):
+    def __init__(self, name="ESMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, alpha='auto', **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         alpha : float
             The regularization parameter.
         
@@ -395,6 +391,7 @@ class SolverESMV(BaseSolver):
         
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
@@ -402,7 +399,7 @@ class SolverESMV(BaseSolver):
         n_chans, n_dipoles = leadfield.shape
         
 
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
@@ -411,22 +408,15 @@ class SolverESMV(BaseSolver):
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
         self.alphas = self.get_alphas(reference=C)
+        subspace = self.reduce_rank_matrix(C)
 
-        U, s, _ = np.linalg.svd(C)
-        # j = find_corner(np.arange(len(s)), s)
         
-        # Find number of Signal Subspaces:
-        j = np.where(((s**2)*len((s**2)) / (s**2).sum()) < np.exp(-16))[0][0]
-
-        Us = U[:, :j]
-        # Un = U[:, j:]
-
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
 
             W_mv = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
-            W = Us @ Us.T @ W_mv
+            W = subspace @ W_mv
 
             inverse_operator = W.T
             inverse_operators.append(inverse_operator)
@@ -434,8 +424,31 @@ class SolverESMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
+    def reduce_rank_matrix(self, C):
+        # Calculte eigenvectors and eigenvalues
+        U, s, _ = np.linalg.svd(C, full_matrices=False)
+        
+        # Find optimal rank using L-curve Corner approach:
+        n_comp_l = find_corner(np.arange(len(s)), s)
+        
+        # Find optimal rank using drop-off approach:
+        s_ = s / s.max()
+        n_comp_d = np.where( abs(np.diff(s_)) < 0.001 )[0]
+        if len(n_comp_d) > 0:
+            n_comp_d = n_comp_d[0] + 2
+        else:
+            n_comp_d = n_comp_l
+        
+        # Kaiser Rule
+        n_comp_k = np.where(s < np.mean(s))[0][0]
+        print(n_comp_k, n_comp_l, n_comp_d)
+        
+        # Combine the approaches
+        n_comp = np.ceil((n_comp_d + n_comp_l + n_comp_k)/3).astype(int)
+        
+        # Transform data
+        subspace = U[:, :n_comp] @ U[:, :n_comp].T
+        return subspace
 
 class SolverMCMV(BaseSolver):
     ''' Class for the Multiple Constrained Minimum Variance (MCMV) Beamformer
@@ -452,19 +465,19 @@ class SolverMCMV(BaseSolver):
     (MCMV) performance in connectivity analyses. NeuroImage, 208, 116386.
 
     '''
-    def __init__(self, name="MCMV Beamformer", **kwargs):
+    def __init__(self, name="MCMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, noise_cov=None, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -475,15 +488,19 @@ class SolverMCMV(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
 
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+            
         self.weight_norm = weight_norm
 
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
@@ -498,6 +515,11 @@ class SolverMCMV(BaseSolver):
             C_inv = np.linalg.inv(C + alpha * I)
 
             W = C_inv @ leadfield * np.diagonal(np.linalg.inv(leadfield.T @ C_inv @ leadfield))
+            # W = C_inv @ leadfield @ np.linalg.inv(leadfield.T @ C_inv @ leadfield)
+            
+            # W = np.dot(leadfield.T, np.dot(C_inv, leadfield))
+            # W = np.dot(np.linalg.inv(W + leadfield.T @ noise_cov @ leadfield), np.dot(leadfield.T, C_inv)).T
+    
 
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
@@ -508,10 +530,84 @@ class SolverMCMV(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
+    
 
+class SolverHOCMCMV(BaseSolver):
+    ''' Class for the Higher-Order Covariance Multiple Constrained Minimum Variance (HOCMCMV)
+        Beamformer inverse solution [1].
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    
+    References
+    ----------
+    [1] Jonmohamadi, Y., Poudel, G., Innes, C., Weiss, D., Krueger, R., & Jones,
+    R. (2014). Comparison of beamformers for EEG source signal reconstruction.
+    Biomedical Signal Processing and Control, 14, 175-188.
 
+    '''
+    def __init__(self, name="HOCMCMV Beamformer", reduce_rank=True, rank="auto", **kwargs):
+        self.name = name
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', order=3, verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        weight_norm : bool
+            Normalize the filter weight matrix W to unit length of the columns.
+        alpha : float
+            The regularization parameter.
+        order : int
+            The order of the covariance matrix. Should be a positive integer not
+            evenly divisible by two {3, 5, 7, ...}
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        leadfield = self.leadfield
+        leadfield -= leadfield.mean(axis=0)
+        leadfield /= np.linalg.norm(leadfield, axis=0)
+        n_chans, n_dipoles = self.leadfield.shape
+        
+        self.weight_norm = weight_norm
+        
+        y = data
+        y -= y.mean(axis=0)
+        I = np.identity(n_chans)
+
+        # Recompute regularization based on the max eigenvalue of the Covariance
+        # Matrix (opposed to that of the leadfield)
+        C = y@y.T
+        self.alphas = self.get_alphas(reference=C)
+        
+        inverse_operators = []
+        for alpha in self.alphas:
+            C_inv = np.linalg.inv(C + alpha * I)
+            C_inv_n = deepcopy(C_inv)
+            for _ in range(order-1):
+                C_inv_n = np.linalg.inv(C_inv_n)
+            W = C_inv @ leadfield * np.diagonal(np.linalg.inv(leadfield.T @ C_inv_n @ leadfield))
+            
+            if self.weight_norm:
+                W /= np.linalg.norm(W, axis=0)
+
+            inverse_operator = W.T
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
 
 class SolverReciPSIICOS(BaseSolver):
     ''' Class for the Reciprocal Phase Shift Invariant Imaging of Coherent
@@ -528,19 +624,19 @@ class SolverReciPSIICOS(BaseSolver):
     with correlated sources. Neuroimage, 228, 117677.
 
     '''
-    def __init__(self, name="ReciPSIICOS", **kwargs):
+    def __init__(self, name="ReciPSIICOS", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -552,6 +648,7 @@ class SolverReciPSIICOS(BaseSolver):
 
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
@@ -560,7 +657,7 @@ class SolverReciPSIICOS(BaseSolver):
         
         self.weight_norm = weight_norm
         
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
 
         
@@ -605,10 +702,6 @@ class SolverReciPSIICOS(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-
-
 class SolverSAM(BaseSolver):
     ''' Class for the Synthetic Aperture Magnetometry Beamformer (SAM) inverse
     solution [1].
@@ -622,19 +715,19 @@ class SolverSAM(BaseSolver):
     aperture magnetometry (SAM). Recent advances in biomagnetism.
 
     '''
-    def __init__(self, name="SAM Beamformer", **kwargs):
+    def __init__(self, name="SAM Beamformer", reduce_rank=True, rank="auto", **kwargs):
         self.name = name
-        return super().__init__(**kwargs)
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, evoked, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
         ----------
         forward : mne.Forward
             The mne-python Forward model instance.
-        evoked : mne.Evoked
-            The evoked data object.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
         weight_norm : bool
             Normalize the filter weight matrix W to unit length of the columns.
         alpha : float
@@ -645,13 +738,15 @@ class SolverSAM(BaseSolver):
         self : object returns itself for convenience
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
         self.weight_norm = weight_norm
         leadfield = self.leadfield
         leadfield -= leadfield.mean(axis=0)
         n_chans, n_dipoles = leadfield.shape
         
 
-        y = evoked.data
+        y = data
         y -= y.mean(axis=0)
         leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
@@ -673,7 +768,3 @@ class SolverSAM(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-
-    def apply_inverse_operator(self, evoked) -> mne.SourceEstimate:
-        return super().apply_inverse_operator(evoked)
-

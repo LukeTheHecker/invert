@@ -1,0 +1,9 @@
+Installation
+============
+
+This will show how to install it:
+
+..  code-block::
+    :caption: installation
+    
+    pip install invert

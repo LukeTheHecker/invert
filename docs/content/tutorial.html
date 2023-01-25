@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Tutorial &#8212; invert 01.01.2023 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Gallery" href="gallery.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">invert</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="solvers.html">
+  Solvers
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="adapters.html">
+  Adapters
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="gallery.html">
+  Gallery
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Tutorial
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/lukethehecker/invert" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://pypi.org/project/invertmeeg" rel="noopener" target="_blank" title="PyPI"><span><i class="fa-solid fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">#</a></h1>
+<p>This tutorial shows how to use this package.</p>
+<p>First, we import some modules and functions that come in handy later:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span>
+<span class="kn">import</span> <span class="nn">mne</span>
+
+<span class="kn">from</span> <span class="nn">invert</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">from</span> <span class="nn">invert.forward</span> <span class="kn">import</span> <span class="n">get_info</span><span class="p">,</span> <span class="n">create_forward_model</span>
+<span class="kn">from</span> <span class="nn">invert.util</span> <span class="kn">import</span> <span class="n">pos_from_forward</span>
+<span class="n">pp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">surface</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, we create a generic forward model using the freesurfer template fsaverage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use a 64 channel EEG montage</span>
+<span class="n">info</span> <span class="o">=</span> <span class="n">get_info</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;biosemi64&#39;</span><span class="p">)</span>
+<span class="c1"># Create generic forward model</span>
+<span class="n">fwd</span> <span class="o">=</span> <span class="n">create_forward_model</span><span class="p">(</span><span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="s1">&#39;ico3&#39;</span><span class="p">)</span>
+<span class="c1"># Get the leadfield matrix for later use</span>
+<span class="n">leadfield</span> <span class="o">=</span> <span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+<span class="n">n_chans</span><span class="p">,</span> <span class="n">n_dipoles</span> <span class="o">=</span> <span class="n">leadfield</span><span class="o">.</span><span class="n">shape</span>
+<span class="c1"># Get vertices (required for plotting later)</span>
+<span class="n">source_model</span> <span class="o">=</span> <span class="n">fwd</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_model</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;vertno&#39;</span><span class="p">],</span> <span class="n">source_model</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;vertno&#39;</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Next, we simulate some EEG data. This is accomplished using the data generator function as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">invert.solvers.esinet</span> <span class="kn">import</span> <span class="n">generator</span>
+
+<span class="n">sim_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">use_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">batch_repetitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">n_sources</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="c1"># This controls the maximum number of sources/ source patches</span>
+    <span class="n">n_orders</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># This controls smoothness</span>
+    <span class="n">snr_range</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="c1"># This controls signal-to-noise ratio</span>
+    <span class="n">n_timepoints</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>  <span class="c1"># This controls the number of time points</span>
+    <span class="n">scale_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># initialize data generator</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">generator</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_params</span><span class="p">)</span>
+
+<span class="c1"># Generate a new batch:</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
+
+<span class="c1"># Some helper variables</span>
+<span class="n">tmin</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tstep</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;sfreq&quot;</span><span class="p">]</span>
+<span class="n">subject</span> <span class="o">=</span> <span class="s2">&quot;fsaverage&quot;</span>
+
+<span class="c1"># Create Evoked structure from simulated data</span>
+<span class="n">evoked</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EvokedArray</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">)</span>
+
+<span class="c1"># Create source estimate structure from simulated data</span>
+<span class="n">stc</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">SourceEstimate</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tstep</span><span class="o">=</span><span class="n">tstep</span><span class="p">,</span>
+                        <span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># Plot source and EEG</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">pp</span><span class="p">)</span>
+<span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">&quot;Ground Truth&quot;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">evoked</span><span class="o">.</span><span class="n">plot_joint</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Ground Truth&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now it is time to calculate an inverse solution of the EEG data (mne.Evoked object):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize a solver object:</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="s2">&quot;LCMV&quot;</span><span class="p">)</span>
+<span class="c1"># Pre-compute inverse operator:</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">make_inverse_operator</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="n">evoked</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+<span class="c1"># Apply the pre-computed inverse operator:</span>
+<span class="n">stc_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">apply_inverse_operator</span><span class="p">(</span><span class="n">evoked</span><span class="p">)</span>
+<span class="c1"># Plot</span>
+<span class="n">brain</span> <span class="o">=</span> <span class="n">stc_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">pp</span><span class="p">)</span>
+<span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+<span class="c1"># Plot the forward-projected EEG data</span>
+<span class="n">evoked_</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EvokedArray</span><span class="p">(</span><span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">@</span> <span class="n">stc_</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">set_eeg_reference</span><span class="p">(</span><span class="s2">&quot;average&quot;</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">evoked_</span><span class="o">.</span><span class="n">plot_joint</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The advantage of the invertmeeg package is that you can use a multitude of
+solvers to calculate inverse solutions and compare them. Let’s do this!</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;HOCMCMV&quot;</span><span class="p">,</span> <span class="s2">&quot;sLORETA&quot;</span><span class="p">,</span> <span class="s2">&quot;MM Champagne&quot;</span><span class="p">,</span> <span class="s2">&quot;FLEX-MUSIC&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">solver_name</span> <span class="ow">in</span> <span class="n">solver_names</span><span class="p">:</span>
+    <span class="c1"># Initialize a solver object:</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">solver_name</span><span class="p">)</span>
+    <span class="c1"># Pre-compute inverse operator:</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">make_inverse_operator</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="n">evoked</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+    <span class="c1"># Apply the pre-computed inverse operator:</span>
+    <span class="n">stc_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">apply_inverse_operator</span><span class="p">(</span><span class="n">evoked</span><span class="p">)</span>
+    <span class="c1"># Plot</span>
+    <span class="n">brain</span> <span class="o">=</span> <span class="n">stc_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">pp</span><span class="p">)</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+                <span class="n">font_size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+    <span class="c1"># Plot the forward-projected EEG data</span>
+    <span class="n">evoked_</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">EvokedArray</span><span class="p">(</span><span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">@</span> <span class="n">stc_</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span><span class="o">.</span><span class="n">set_eeg_reference</span><span class="p">(</span><span class="s2">&quot;average&quot;</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">evoked_</span><span class="o">.</span><span class="n">plot_joint</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can find the solver_names for all solvers in the <a class="reference internal" href="solvers.html"><span class="doc">Solvers</span></a> page in
+parantheses.</p>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="gallery.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Gallery</p>
+        </div>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Lukas Hecker.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
