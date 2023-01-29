@@ -253,9 +253,10 @@ class SolverCovCNN(BaseSolver):
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, n_filters="auto", 
-                            activation_function="tanh", batch_size="auto", 
-                            n_timepoints=20, batch_repetitions=10, epochs=300,
-                            learning_rate=1e-3, loss="cosine_similarity",
+                            n_dense_units=300, n_dense_layers=1, 
+                            activation_function="tanh", output_activation="linear",
+                            batch_size="auto", n_timepoints=20, batch_repetitions=10, 
+                            epochs=300, learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=100,
                             add_forward_error=False, forward_error=0.1,
@@ -321,6 +322,9 @@ class SolverCovCNN(BaseSolver):
         # Architecture
         self.n_filters = n_filters
         self.activation_function = activation_function
+        self.output_activation = output_activation
+        self.n_dense_layers = n_dense_layers
+        self.n_dense_units = n_dense_units
         # Training
         self.batch_size = batch_size
         self.epochs = epochs
@@ -438,7 +442,7 @@ class SolverCovCNN(BaseSolver):
         for _ in range(self.batch_repetitions):
             x_val, y_val = self.generator.__next__()
         
-        self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+        self.history = self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model(self,):
@@ -455,17 +459,17 @@ class SolverCovCNN(BaseSolver):
 
         flat = Flatten()(cnn1)
 
-        fc1 = Dense(300, 
-            activation=self.activation_function, 
-            name='FC1')(flat)
+        for _ in range(self.n_dense_layers):
+            flat = Dense(self.n_dense_units, 
+                activation=self.activation_function, 
+                name='FC1')(flat)
 
         out = Dense(n_dipoles, 
-            activation="elu", 
-            name='Output')(fc1)
+            activation=self.output_activation, # softmax
+            name='Output')(flat)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
-
-        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))#, metrics=["cosine_similarity",])
         if self.verbose > 0:
             model.summary()
         
@@ -667,8 +671,11 @@ class SolverFC(BaseSolver):
         dense = TimeDistributed(Dense(self.n_dense_units, 
                 activation=self.activation_function), name=f'FC2')(dense)
 
+        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(inputs)
+        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(dense)
+
         out = Dense(n_dipoles, 
-            activation="sigmoid", 
+            activation="linear", 
             name='Output')(dense)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='FC')
@@ -1104,7 +1111,7 @@ class SolverLSTM(BaseSolver):
         x_val = x_val[:self.size_validation_set]
         y_val = y_val[:self.size_validation_set]
 
-        self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+        self.history = self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model2(self,):
