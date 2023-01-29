@@ -1,0 +1,21 @@
+
+- Implement data whitening
+- Allow usage of different sensors (MEG/EEG/OPM...)/ leadfield normalization
+
+Subspace Techniques:
+
+- FINE/ FINES: Xu, X. L., Xu, B., & He, B. (2004). An alternative subspace
+approach to EEG dipole source localization. Physics in Medicine & Biology,
+49(2), 327.  -> abandoned because super complicated
+
+
+
+Bayesian Formulations
+- check out these fellas: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8038037
+- or AR-EM Champagne here: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8553004 Improving EEG Source Localization through
+Spatio-temporal Sparse Bayesian Learning
+  - need to be refined, then integrated
+- https://arxiv.org/pdf/1409.8109.pdf
+
+Covariance Stuff. Read it!
+- https://www.sciencedirect.com/science/article/pii/S1053811914010325?via%3Dihub#f0010
