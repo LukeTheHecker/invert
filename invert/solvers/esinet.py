@@ -253,9 +253,10 @@ class SolverCovCNN(BaseSolver):
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, *args, n_filters="auto", 
-                            activation_function="tanh", batch_size="auto", 
-                            n_timepoints=20, batch_repetitions=10, epochs=300,
-                            learning_rate=1e-3, loss="cosine_similarity",
+                            n_dense_units=300, n_dense_layers=1, 
+                            activation_function="tanh", output_activation="linear",
+                            batch_size="auto", n_timepoints=20, batch_repetitions=10, 
+                            epochs=300, learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=100,
                             add_forward_error=False, forward_error=0.1,
@@ -321,6 +322,9 @@ class SolverCovCNN(BaseSolver):
         # Architecture
         self.n_filters = n_filters
         self.activation_function = activation_function
+        self.output_activation = output_activation
+        self.n_dense_layers = n_dense_layers
+        self.n_dense_units = n_dense_units
         # Training
         self.batch_size = batch_size
         self.epochs = epochs
@@ -438,7 +442,7 @@ class SolverCovCNN(BaseSolver):
         for _ in range(self.batch_repetitions):
             x_val, y_val = self.generator.__next__()
         
-        self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+        self.history = self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model(self,):
@@ -451,20 +455,21 @@ class SolverCovCNN(BaseSolver):
         cnn1 = Conv2D(self.n_filters, (1, n_channels),
                     activation=self.activation_function, padding="valid",
                     name='CNN1')(inputs)
+        
 
         flat = Flatten()(cnn1)
 
-        fc1 = Dense(300, 
-            activation=self.activation_function, 
-            name='FC1')(flat)
+        for _ in range(self.n_dense_layers):
+            flat = Dense(self.n_dense_units, 
+                activation=self.activation_function, 
+                name='FC1')(flat)
 
         out = Dense(n_dipoles, 
-            activation="elu", 
-            name='Output')(fc1)
+            activation=self.output_activation, # softmax
+            name='Output')(flat)
 
         model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
-
-        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))#, metrics=["cosine_similarity",])
         if self.verbose > 0:
             model.summary()
         
@@ -666,6 +671,9 @@ class SolverFC(BaseSolver):
         dense = TimeDistributed(Dense(self.n_dense_units, 
                 activation=self.activation_function), name=f'FC2')(dense)
 
+        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(inputs)
+        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(dense)
+
         out = Dense(n_dipoles, 
             activation="linear", 
             name='Output')(dense)
@@ -683,6 +691,246 @@ class SolverFC(BaseSolver):
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
+        self.generator = generator(self.forward, **gen_args)
+        self.generator.__next__()
+
+class SolverCovLSTM(BaseSolver):
+    ''' Class for the Covariance-based Long-Short Term Memory Neural Network (LSTM) for 
+        EEG inverse solutions.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+
+    def __init__(self, name="Cov-LSTM", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, *args, n_dense_units=300,
+                            n_lstm_units=275,  
+                            activation_function="tanh", 
+                            batch_size="auto", n_timepoints=20, 
+                            batch_repetitions=10, epochs=300,
+                            learning_rate=1e-3, loss="cosine_similarity",
+                            n_sources=10, n_orders=2, size_validation_set=256,
+                            snr_range=(1,100), patience=100, alpha="auto", 
+                            add_forward_error=False, forward_error=0.1,
+                            verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        n_dense_units : int
+            The number of neurons in the fully-connected hidden layers.
+        n_lstm_units : int
+            The number of neurons in the LSTM hidden layers.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data. (1,
+            10) -> Samples have varying SNR from 1 to 10.
+        patience : int
+            Stopping criterion for the training.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, verbose=self.verbose, **kwargs)
+        n_channels, n_dipoles = self.leadfield.shape
+        
+        if batch_size == "auto":
+            batch_size = n_dipoles
+            
+        # Store Parameters
+        # Architecture
+        self.n_lstm_units = n_lstm_units
+        self.n_dense_units = n_dense_units
+        self.activation_function = activation_function
+        # Training
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        self.loss = loss
+        self.size_validation_set = size_validation_set
+        self.patience = patience
+        # Training Data
+        self.n_timepoints = n_timepoints
+        self.n_sources = n_sources
+        self.n_orders = n_orders
+        self.batch_repetitions = batch_repetitions
+        self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
+        # MISC
+        self.verbose = verbose
+        # Inference
+        print("Create Generator:..")
+        self.create_generator()
+        print("Build Model:..")
+        self.build_model()
+        # self.build_model2()
+        print("Train Model:..")
+        self.train_model()
+
+        self.inverse_operators = []
+        return self
+
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
+
+        return stc
+
+    def apply_model(self, data) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            The M/EEG data matrix.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
+
+        y = deepcopy(data)
+        y -= y.mean(axis=0)
+        # y_norm = y / np.linalg.norm(y, axis=0)
+        n_channels, n_times = y.shape
+        self.epsilon = 0.1
+        # Compute Data Covariance Matrix
+        C = y@y.T
+        # Scale
+        C /= abs(C).max()
+
+        # Add empty batch and (color-) channel dimension
+        C = C[np.newaxis, :, :, np.newaxis]
+
+        # Get prior source covariance from model
+        gammas = self.model.predict(C, verbose=self.verbose)[0]
+        # gammas = np.maximum(gammas, 0)
+        gammas /= gammas.max()
+        gammas[gammas<self.epsilon] = 0
+        source_covariance = np.diag(gammas)
+
+        # Perform inversion
+        # L_s = self.leadfield @ source_covariance
+        # L = self.leadfield
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+        # x_hat = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T @ y
+
+        # # Select dipole indices
+        # gammas[gammas<self.epsilon] = 0
+        # dipole_idc = np.where(gammas!=0)[0]
+        # print("Active dipoles: ", len(dipole_idc))
+
+        # # 1) Calculate weighted minimum norm solution at active dipoles
+        # n_dipoles = len(gammas)
+        # x_hat = np.zeros((n_dipoles, n_times))
+        # L = self.leadfield[:, dipole_idc]
+        # W = np.diag(np.linalg.norm(L, axis=0))
+        # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
+
+        # Bayes-like inversion
+        Gamma = source_covariance
+        Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
+        x_hat = inverse_operator @ y
+        return x_hat      
+               
+    def train_model(self,):
+        ''' Train the neural network model.
+        '''
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
+        
+        # Get Validation data from generator
+        x_val, y_val = self.generator.__next__()
+        x_val = x_val[:self.size_validation_set]
+        y_val = y_val[:self.size_validation_set]
+        print(x_val.shape, y_val.shape)
+        self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+                validation_data=(x_val, y_val), callbacks=callbacks)
+
+    def build_model(self,):
+        ''' Build the neural network model.
+        '''
+        n_channels, n_dipoles = self.leadfield.shape
+
+        inputs = tf.keras.Input(shape=(None, n_channels), name='Input')
+
+        lstm1 = Bidirectional(LSTM(self.n_lstm_units, return_sequences=False, 
+            input_shape=(None, n_channels)), 
+            name='LSTM1')(inputs)
+
+        fc1 = Dense(300, 
+            activation=self.activation_function, 
+            name='FC1')(lstm1)
+
+        out = Dense(n_dipoles, 
+            activation="elu", 
+            name='Output')(fc1)
+
+        model = tf.keras.Model(inputs=inputs, outputs=out, name='LSTM')
+        model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        if self.verbose > 0:
+            model.summary()
+        
+        self.model = model
+
+    def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
+        gen_args = dict(use_cov=True, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
+                n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error, remove_channel_dim=True)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
@@ -863,7 +1111,7 @@ class SolverLSTM(BaseSolver):
         x_val = x_val[:self.size_validation_set]
         y_val = y_val[:self.size_validation_set]
 
-        self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+        self.history = self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
     def build_model2(self,):
@@ -962,7 +1210,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
               return_mask=True, scale_data=True, return_info=False,
-              add_forward_error=False, forward_error=0.1, verbose=0):
+              add_forward_error=False, forward_error=0.1, remove_channel_dim=False, 
+              verbose=0):
     
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
@@ -1052,7 +1301,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
             # Normalize Covariance to abs. max. of 1
             x = np.stack([C / np.max(abs(C)) for C in x], axis=0)
-            x = np.expand_dims(x, axis=-1)
+            if not remove_channel_dim:
+                x = np.expand_dims(x, axis=-1)
         
         else:
             if scale_data:
@@ -1068,8 +1318,14 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
             # y = abs(y).mean(axis=1)
             # # Masking the source vector (1-> active, 0-> inactive)
             # y = (y>0).astype(float)
+            
+            # The diagonal of the source covariance matrix:
             # y = np.stack([np.diagonal(yy.T@yy) for yy in y], axis=0)
+
+            # This translates to the diagonal of the source covariance matrix,
+            # but more efficient:
             y = np.mean(y**2, axis=1)
+            y = np.stack([yy / np.max(abs(yy)) for yy in y], axis=0)
         
         else:
             if scale_data:
@@ -1142,7 +1398,6 @@ def solve_p(leadfield, y_est, x_true):
     scaler = opt.x
     y_scaled = y_est * scaler * base_scaler
     return y_scaled
-
 
 def correlation_criterion(scaler, leadfield, y_est, x_true):
     ''' Perform forward projections of a source using the leadfield.

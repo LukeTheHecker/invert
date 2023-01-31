@@ -661,9 +661,7 @@ class BaseSolver:
         ------
         self : BaseSolver
             Function returns itself.
-
         '''
-        
     
         name = self.name
 
