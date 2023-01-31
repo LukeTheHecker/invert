@@ -132,10 +132,6 @@ class SolverLCMV(BaseSolver):
         return self
 
 
-
-    
-        
-
 class SolverSMV(BaseSolver):
     ''' Class for the Standardized Minimum Variance (SMV) Beamformer inverse
         solution [1].

@@ -37,6 +37,7 @@ class SolverCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=300,
+                            add_forward_error=False, forward_error=0.1,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
@@ -111,6 +112,8 @@ class SolverCNN(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # Inference
         self.epsilon = epsilon
 
@@ -233,7 +236,7 @@ class SolverCNN(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
 
 class SolverCovCNN(BaseSolver):
@@ -255,6 +258,7 @@ class SolverCovCNN(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             epsilon=0.25, snr_range=(1,100), patience=100,
+                            add_forward_error=False, forward_error=0.1,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
 
@@ -330,6 +334,8 @@ class SolverCovCNN(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error=forward_error
         # Inference
         self.epsilon = epsilon
         print("Create Generator:..")
@@ -422,8 +428,7 @@ class SolverCovCNN(BaseSolver):
         inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
         x_hat = inverse_operator @ y
         return x_hat        
-        
-        
+         
     def train_model(self,):
         ''' Train the neural network model.
         '''
@@ -470,7 +475,7 @@ class SolverCovCNN(BaseSolver):
         '''
         gen_args = dict(use_cov=True, return_mask=True, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error)
         self.generator = generator(self.forward, **gen_args)
         
 class SolverFC(BaseSolver):
@@ -493,6 +498,7 @@ class SolverFC(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
+                            add_forward_error=False, forward_error=0.1,
                             verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -561,6 +567,8 @@ class SolverFC(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # MISC
         self.verbose = verbose
         # Inference
@@ -662,7 +670,7 @@ class SolverFC(BaseSolver):
             activation="linear", 
             name='Output')(dense)
 
-        model = tf.keras.Model(inputs=inputs, outputs=out, name='CovCNN')
+        model = tf.keras.Model(inputs=inputs, outputs=out, name='FC')
         model.compile(loss=self.loss, optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
         if self.verbose > 0:
             model.summary()
@@ -674,7 +682,7 @@ class SolverFC(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
@@ -700,6 +708,7 @@ class SolverLSTM(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
+                            add_forward_error=False, forward_error=0.1,
                             verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -772,6 +781,8 @@ class SolverLSTM(BaseSolver):
         self.n_orders = n_orders
         self.batch_repetitions = batch_repetitions
         self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error = forward_error
         # MISC
         self.verbose = verbose
         # Inference
@@ -855,7 +866,6 @@ class SolverLSTM(BaseSolver):
         self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
                 validation_data=(x_val, y_val), callbacks=callbacks)
 
-
     def build_model2(self,):
         ''' Build the neural network model.
         '''
@@ -918,7 +928,7 @@ class SolverLSTM(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
@@ -942,10 +952,17 @@ def add_white_noise(X_clean, snr):
     X_full -= X_full.mean(axis=0)
     return X_full
 
+def add_error(leadfield, forward_error, gradient):
+    n_chans, n_dipoles = leadfield.shape
+    noise = np.random.uniform(-1, 1, (n_chans, n_dipoles)) @ gradient
+    leadfield_mix = leadfield / np.linalg.norm(leadfield) + forward_error * noise / np.linalg.norm(noise)
+    return leadfield_mix
+
 def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
-              return_mask=True, scale_data=True, return_info=False, verbose=0):
+              return_mask=True, scale_data=True, return_info=False,
+              add_forward_error=False, forward_error=0.1, verbose=0):
     
 
     adjacency = mne.spatial_src_adjacency(fwd["src"], verbose=verbose)
@@ -953,6 +970,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     adjacency = csr_matrix(adjacency)
     gradient = abs(laplacian(adjacency))
     leadfield = deepcopy(fwd["sol"]["data"])
+    leadfield_original = deepcopy(fwd["sol"]["data"])
+    
     del adjacency
     
     # Convert to sparse matrix for speedup
@@ -993,13 +1012,15 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
-    # time_courses = np.stack([np.random.randn(n_timepoints) for _ in range(n_timecourses)], axis=0)
     time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
+
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
     n_candidates = sources.shape[0]
     while True:
+        if add_forward_error:
+            leadfield = add_error(leadfield_original, forward_error, gradient)
         # print("yeet")
         # select sources or source patches
         n_sources_batch = np.random.randint(1, n_sources+1, batch_size)
@@ -1159,3 +1180,57 @@ def emd_loss(distances):
         emd_score = K.sum(emd_score)
         return emd_score
     return loss
+
+
+class Compressor:
+    ''' Compression using Graph Fourier Transform
+    '''
+    def __init__(self):
+        pass
+    def fit(self, fwd, k=600):
+        A = mne.spatial_src_adjacency(fwd["src"], verbose=0).toarray()
+        # D = np.diag(A.sum(axis=0))
+        # L = D-A
+        L = laplacian(A)
+        U, s, V = np.linalg.svd(L)
+
+        self.U = U[:, -k:]
+        self.s = s[-k:]
+        self.V = V[:, -k:]
+        # self.U = U[:, :k]
+        # self.s = s[:k]
+        # self.V = V[:, :k]
+        return self
+        
+    def encode(self, X):
+        ''' Encodes a true signal X
+        Parameters
+        ----------
+        X : numpy.ndarray
+            True signal
+        
+        Return
+        ------
+        X_comp : numpy.ndarray
+            Compressed signal
+        '''
+        X_comp = self.U.T @ X
+
+        return X_comp
+
+    def decode(self, X_comp):
+        ''' Decodes a compressed signal X
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Compressed signal
+        
+        Return
+        ------
+        X_unfold : numpy.ndarray
+            Decoded signal
+        '''
+        X_unfold = self.U @ X_comp
+
+        return X_unfold

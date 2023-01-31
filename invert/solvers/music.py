@@ -148,7 +148,10 @@ class SolverFLEXMUSIC(BaseSolver):
         self.is_prepared = False
         return super().__init__(**kwargs)
 
-    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", n="auto", k="auto", stop_crit=0.95, verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha="auto", 
+                            n="auto", k="auto", stop_crit=0.95, 
+                            refine_solution=False, max_iter=1000,
+                            **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -178,19 +181,20 @@ class SolverFLEXMUSIC(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        from time import time
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         
         data = self.unpack_data_obj(mne_obj)
         if not self.is_prepared:
             self.prepare_flex()
         
-        inverse_operator = self.make_flex(data, n, k, stop_crit, self.truncate)
+        inverse_operator = self.make_flex(data, n, k, stop_crit, 
+                                          self.truncate, refine_solution=refine_solution, 
+                                          max_iter=max_iter)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_flex(self, y, n, k, stop_crit, truncate):
+    def make_flex(self, y, n, k, stop_crit, truncate, refine_solution=False, max_iter=1000):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -254,13 +258,14 @@ class SolverFLEXMUSIC(BaseSolver):
             n_comp = deepcopy(n)
         print("n_comp: ", n_comp)
         Us = U[:, :n_comp]
+        C_initial = Us @ Us.T
 
         dipole_idc = []
         source_covariance = np.zeros(n_dipoles)
-        
+        S_AP = []
         for i in range(k):
             # print(Us.shape)
-            Ps = Us@Us.T
+            Ps = Us @ Us.T
 
             mu = np.zeros((n_orders, n_dipoles))
             for nn in range(n_orders):
@@ -276,9 +281,10 @@ class SolverFLEXMUSIC(BaseSolver):
             if i>0 and np.max(mu) < stop_crit:
                 # print("stopping at ", np.max(mu))
                 break
+            S_AP.append([best_order, best_dipole])
 
             # source_covariance += np.squeeze(self.gradients[best_order][best_dipole] * (1/np.sqrt(i+1)))
-            source_covariance += np.squeeze(self.gradients[best_order][best_dipole])
+            # source_covariance += np.squeeze(self.gradients[best_order][best_dipole])
 
             if i == 0:
                 B = leadfields[best_order][:, best_dipole][:, np.newaxis]
@@ -299,7 +305,50 @@ class SolverFLEXMUSIC(BaseSolver):
                 Us = U[:, :n_comp-i]
             else:
                 Us = U[:, :n_comp]
-            
+        
+        # Phase 2: refinement
+        C = C_initial
+        S_AP_2 = deepcopy(S_AP)
+        if len(S_AP) > 1 and refine_solution:
+            # best_vals = np.zeros(n_comp)
+            for iter in range(max_iter):
+                S_AP_2_Prev = deepcopy(S_AP_2)
+                for q in range(len(S_AP)):
+                    S_AP_TMP = S_AP_2.copy()
+                    S_AP_TMP.pop(q)
+                    
+                    B = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
+
+                    # Q = I - B @ np.linalg.pinv(B)
+                    # Ps = C_initial
+
+                    P_A = B @ np.linalg.pinv(B.T @ B) @ B.T
+                    Q = np.identity(P_A.shape[0]) - P_A
+
+                    ap_val2 = np.zeros((n_orders, n_dipoles))
+                    for nn in range(n_orders):
+                        L = leadfields[nn]
+                        upper = np.diag(L.T @ Q @ C @ Q @ L)
+                        lower = np.diag(L.T @ Q @ L)
+                        # upper = np.linalg.norm(Ps @ Q @ L, axis=0)
+                        # lower = np.linalg.norm(Q @ L, axis=0) 
+                        ap_val2[nn] = upper / lower
+                    
+                    best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
+                    # best_val = ap_val2.max()
+                    S_AP_2[q] = [best_order, best_dipole]
+                    # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
+                    # best_vals[q] = best_val
+
+                if iter > 0 and S_AP_2 == S_AP_2_Prev:
+                    break
+
+
+        source_covariance = np.sum([self.gradients[order][dipole] for order, dipole in S_AP_2], axis=0)
+        
+        # print("before refinement: ", S_AP)
+        # print("after refinement: ", S_AP_2)
+
         dipole_idc = np.array(dipole_idc).astype(int)
         n_time = y.shape[1]
         # # Simple minimum norm inversion using found dipoles
@@ -550,45 +599,6 @@ class SolverAlternatingProjections(BaseSolver):
         # Standard MUSIC subspace-based Covariance
         C = Us @ Us.T
         # C = C + 1e-3 * np.trace(C)*np.identity(n_chans)
-
-        # # Energy-preserving DMD
-        # X_ = Us.T @ y
-        # X_1 = X_[:, :-1]
-        # X_2 = X_[:, 1:]
-
-        # # low rank-way
-        # A = X_2 @ np.linalg.pinv(X_1)
-
-        # # Symmetric Assumption
-        # U_, _, V_ = np.linalg.svd(A, full_matrices=False)
-        # A = U_ @ V_.T
-        # C = (Us @ A) @ (Us @ A).T
-        
-        # Causal EMD
-
-        # def get_cov_causal(X):
-        #     from scipy.linalg import rq
-
-        #     # U, s, V = np.linalg.svd(X, full_matrices=False)
-        #     # n_comps = np.where(s < s.mean())[0][0]
-        #     # Us = U[:, :n_comps]
-            
-        #     # X_ = Us.T @ X
-
-        #     X_1 = X[:, :-1]
-        #     X_2 = X[:, 1:]
-
-        #     R, Q = rq(X_1, mode="economic")
-        #     X_2_QT = X_2 @ Q.T
-        #     R_pinv = np.linalg.pinv(R)
-        #     A = np.zeros((X.shape[0], X.shape[0]))
-        #     for i in range(X.shape[0]):
-        #         A[i,i:] = X_2_QT[i, i:][np.newaxis, :] @ R_pinv[i:, i:]
-        #     # C = (U[:, :n_comps] @ A[:, :]) @ (U[:, :n_comps] @ A[:, :]).T
-        #     T = A @ X
-            
-        #     return A@A.T, T
-        # C = get_cov_causal(y)[0]
 
         S_AP = []
         
