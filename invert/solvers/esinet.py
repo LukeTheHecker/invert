@@ -1313,19 +1313,20 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
             # Reshape
             x = np.swapaxes(x, 1,2)
 
-        if return_mask:    
+        if return_mask:
+            # (1) binary
             # Calculate mean source activity
-            # y = abs(y).mean(axis=1)
-            # # Masking the source vector (1-> active, 0-> inactive)
-            # y = (y>0).astype(float)
+            y = abs(y).mean(axis=1)
+            # Masking the source vector (1-> active, 0-> inactive)
+            y = (y>0).astype(float)
             
+            # (2.1) Source Covariance
             # The diagonal of the source covariance matrix:
             # y = np.stack([np.diagonal(yy.T@yy) for yy in y], axis=0)
 
-            # This translates to the diagonal of the source covariance matrix,
-            # but more efficient:
-            y = np.mean(y**2, axis=1)
-            y = np.stack([yy / np.max(abs(yy)) for yy in y], axis=0)
+            # (2.2) Source Covariance (efficient)
+            # y = np.mean(y**2, axis=1)
+            # y = np.stack([yy / np.max(abs(yy)) for yy in y], axis=0)
         
         else:
             if scale_data:

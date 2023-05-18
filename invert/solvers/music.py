@@ -122,7 +122,6 @@ class SolverMUSIC(BaseSolver):
 
         return inverse_operator
 
-
 class SolverFLEXMUSIC(BaseSolver):
     ''' Class for the RAP Multiple Signal Classification with flexible extent
         estimation (FLEX-MUSIC).
@@ -309,39 +308,39 @@ class SolverFLEXMUSIC(BaseSolver):
         # Phase 2: refinement
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
-        if len(S_AP) > 1 and refine_solution:
-            # best_vals = np.zeros(n_comp)
-            for iter in range(max_iter):
-                S_AP_2_Prev = deepcopy(S_AP_2)
-                for q in range(len(S_AP)):
-                    S_AP_TMP = S_AP_2.copy()
-                    S_AP_TMP.pop(q)
+        # if len(S_AP) > 1 and refine_solution:
+        #     # best_vals = np.zeros(n_comp)
+        #     for iter in range(max_iter):
+        #         S_AP_2_Prev = deepcopy(S_AP_2)
+        #         for q in range(len(S_AP)):
+        #             S_AP_TMP = S_AP_2.copy()
+        #             S_AP_TMP.pop(q)
                     
-                    B = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
+        #             B = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
 
-                    # Q = I - B @ np.linalg.pinv(B)
-                    # Ps = C_initial
+        #             # Q = I - B @ np.linalg.pinv(B)
+        #             # Ps = C_initial
 
-                    P_A = B @ np.linalg.pinv(B.T @ B) @ B.T
-                    Q = np.identity(P_A.shape[0]) - P_A
+        #             P_A = B @ np.linalg.pinv(B.T @ B) @ B.T
+        #             Q = np.identity(P_A.shape[0]) - P_A
 
-                    ap_val2 = np.zeros((n_orders, n_dipoles))
-                    for nn in range(n_orders):
-                        L = leadfields[nn]
-                        upper = np.diag(L.T @ Q @ C @ Q @ L)
-                        lower = np.diag(L.T @ Q @ L)
-                        # upper = np.linalg.norm(Ps @ Q @ L, axis=0)
-                        # lower = np.linalg.norm(Q @ L, axis=0) 
-                        ap_val2[nn] = upper / lower
+        #             ap_val2 = np.zeros((n_orders, n_dipoles))
+        #             for nn in range(n_orders):
+        #                 L = leadfields[nn]
+        #                 upper = np.diag(L.T @ Q @ C @ Q @ L)
+        #                 lower = np.diag(L.T @ Q @ L)
+        #                 # upper = np.linalg.norm(Ps @ Q @ L, axis=0)
+        #                 # lower = np.linalg.norm(Q @ L, axis=0) 
+        #                 ap_val2[nn] = upper / lower
                     
-                    best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
-                    # best_val = ap_val2.max()
-                    S_AP_2[q] = [best_order, best_dipole]
-                    # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
-                    # best_vals[q] = best_val
+        #             best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
+        #             # best_val = ap_val2.max()
+        #             S_AP_2[q] = [best_order, best_dipole]
+        #             # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
+        #             # best_vals[q] = best_val
 
-                if iter > 0 and S_AP_2 == S_AP_2_Prev:
-                    break
+        #         if iter > 0 and S_AP_2 == S_AP_2_Prev:
+        #             break
 
 
         source_covariance = np.sum([self.gradients[order][dipole] for order, dipole in S_AP_2], axis=0)
