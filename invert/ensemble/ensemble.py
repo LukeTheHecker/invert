@@ -36,7 +36,6 @@ class Ensemble:
         [print(f"{solver_name}: {neg_log_likelihood}") for solver_name, neg_log_likelihood in zip(self.solver_names, self.neg_log_likelihoods)]
         print(f"Final likelihood: {final_neg_log_likelihood}\n")
         
-
         return stc
 
     def summarize_predictions(self, stc_list, mne_obj):

@@ -1436,3 +1436,57 @@ def emd_loss(distances):
         emd_score = K.sum(emd_score)
         return emd_score
     return loss
+
+
+class Compressor:
+    ''' Compression using Graph Fourier Transform
+    '''
+    def __init__(self):
+        pass
+    def fit(self, fwd, k=600):
+        A = mne.spatial_src_adjacency(fwd["src"], verbose=0).toarray()
+        # D = np.diag(A.sum(axis=0))
+        # L = D-A
+        L = laplacian(A)
+        U, s, V = np.linalg.svd(L)
+
+        self.U = U[:, -k:]
+        self.s = s[-k:]
+        self.V = V[:, -k:]
+        # self.U = U[:, :k]
+        # self.s = s[:k]
+        # self.V = V[:, :k]
+        return self
+        
+    def encode(self, X):
+        ''' Encodes a true signal X
+        Parameters
+        ----------
+        X : numpy.ndarray
+            True signal
+        
+        Return
+        ------
+        X_comp : numpy.ndarray
+            Compressed signal
+        '''
+        X_comp = self.U.T @ X
+
+        return X_comp
+
+    def decode(self, X_comp):
+        ''' Decodes a compressed signal X
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Compressed signal
+        
+        Return
+        ------
+        X_unfold : numpy.ndarray
+            Decoded signal
+        '''
+        X_unfold = self.U @ X_comp
+
+        return X_unfold

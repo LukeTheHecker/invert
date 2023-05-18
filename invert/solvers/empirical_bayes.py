@@ -739,6 +739,7 @@ class SolverConvexityChampagne(BaseSolver):
         # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
         # z_0 = L.T @ Sigma_y_inv @ L
         mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+        
         loss_list = [1e99,]
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)

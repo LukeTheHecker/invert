@@ -255,7 +255,7 @@ class SolverFLEXMUSIC(BaseSolver):
                 n_comp = np.ceil(1.1*np.mean([n_comp_L, n_comp_drop, n_comp_mean])).astype(int)
         else:
             n_comp = deepcopy(n)
-
+        print("n_comp: ", n_comp)
         Us = U[:, :n_comp]
         C_initial = Us @ Us.T
 
@@ -396,10 +396,11 @@ class SolverFLEXMUSIC(BaseSolver):
         # inverse_operator = (K_MNE.T / W_diag).T
 
         # # GAMMA based:
-        # Gamma = np.diag(source_covariance)
-        # Sigma_y = leadfield @ Gamma @ leadfield.T
+        # Gamma = csr_matrix(np.diag(source_covariance))
+        # Gamma_LT = Gamma @ leadfield.T
+        # Sigma_y = leadfield @ Gamma_LT
         # Sigma_y_inv = np.linalg.inv(Sigma_y)
-        # inverse_operator = Gamma @ leadfield.T @ Sigma_y_inv
+        # inverse_operator = Gamma_LT @ Sigma_y_inv
 
         return inverse_operator
 
@@ -967,12 +968,18 @@ class SolverFLEXMUSIC_2(BaseSolver):
             
 
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
-        source_covariance = csr_matrix(np.diag(source_covariance))
-        L_s = self.leadfield @ source_covariance
-        L = self.leadfield
-        W = np.diag(np.linalg.norm(L, axis=0)) 
-        # print(source_covariance.shape, L.shape, W.shape)
-        inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        # source_covariance = csr_matrix(np.diag(source_covariance))
+        # L_s = self.leadfield @ source_covariance
+        # L = self.leadfield
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+        # # print(source_covariance.shape, L.shape, W.shape)
+        # inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        
+        Gamma = csr_matrix(np.diag(source_covariance))
+        Gamma_LT = Gamma @ leadfield.T
+        Sigma_y = leadfield @ Gamma_LT
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma_LT @ Sigma_y_inv
 
         return inverse_operator
 
