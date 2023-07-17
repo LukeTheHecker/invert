@@ -1,6 +1,4 @@
-from time import monotonic
 import numpy as np
-import mne
 from .util import pos_from_forward
 import matplotlib.pyplot as plt
 
@@ -132,28 +130,17 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
     elif solver.lower() == "rap-music" or solver.lower() == "rap music" or solver.lower() == "rap":
-        if not "n_orders" in kwargs:
-            n_orders = 0
-        if not "truncate" in kwargs:
-            truncate = False
-        solver_object = solvers.SolverFLEXMUSIC(name="RAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
+        solver_object = solvers.SolverFLEXMUSIC(name="RAP-MUSIC", **kwargs)
     elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
-        if not "n_orders" in kwargs:
-            n_orders = 0
-        if not "truncate" in kwargs:
-            truncate = True
-        solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", n_orders=n_orders, truncate=False, **kwargs)
+        solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", **kwargs)
     elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
         solver_object = solvers.SolverFLEXMUSIC(**kwargs)
     
     # Alternative Projections
     elif solver.lower() == "flex-ap" or solver.lower() == "flex ap":
-        solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternative Projections", **kwargs)
+        solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternating Projections", **kwargs)
     elif solver.lower() == "ap":
-        if not "n_orders" in kwargs:
-            n_orders = 0
-        solver_object = solvers.SolverAlternatingProjections(name="Alternative Projections", n_orders=n_orders, **kwargs)
-    
+        solver_object = solvers.SolverAlternatingProjections(name="Alternating Projections", **kwargs)
     # Other
     elif solver.lower() == "epifocus":
         solver_object = solvers.SolverEPIFOCUS(**kwargs)
