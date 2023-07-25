@@ -311,6 +311,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # Phase 2: refinement
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
+        
         # if len(S_AP) > 1 and refine_solution:
         #     # best_vals = np.zeros(n_comp)
         #     for iter in range(max_iter):
@@ -349,25 +350,6 @@ class SolverFLEXMUSIC(BaseSolver):
 
         dipole_idc = np.array(dipole_idc).astype(int)
         n_time = y.shape[1]
-        # # Simple minimum norm inversion using found dipoles
-        # x_hat = np.zeros((n_dipoles, n_time))
-        # x_hat[dipole_idc, :] = np.linalg.pinv(leadfield[:, dipole_idc]) @ y
-
-        # # WMNE-based - use the selected dipole indices and calc WMNE solution
-        # # x_hat = np.zeros((n_dipoles, n_time))
-        # inverse_operator = np.zeros((n_dipoles, n_chans))
-        # L = self.leadfield[:, dipole_idc]
-        # W = np.diag(np.linalg.norm(L, axis=0))
-        # # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
-        # inverse_operator[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T
-
-        # # Prior-Cov based: Use the selected smooth patches as source covariance priors
-        # print("non-zero dipoles in source cov: ", (source_covariance!=0).sum())
-        # source_covariance = np.diag(source_covariance)
-        # L = self.leadfield
-        # W = np.diag(np.linalg.norm(L, axis=0)) 
-        # # print(source_covariance.shape, L.shape, W.shape)
-        # inverse_operator = source_covariance @ np.linalg.inv(source_covariance @ L.T @ L + W.T @ W) @ source_covariance @ L.T
         
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
         source_covariance = csr_matrix(np.diag(source_covariance))
@@ -376,30 +358,6 @@ class SolverFLEXMUSIC(BaseSolver):
         W = np.diag(np.linalg.norm(L, axis=0)) 
         # print(source_covariance.shape, L.shape, W.shape)
         inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
-
-        # # Prior-Cov dSPM-based:
-        # source_covariance = np.diag(source_covariance)
-        # leadfield_source_cov = source_covariance @ self.leadfield.T
-        # LLS = self.leadfield @ leadfield_source_cov
-        # K = leadfield_source_cov @ np.linalg.inv(LLS + 0.0001*np.identity(n_chans))
-        # # W_dSPM = np.diag( 1 / np.sqrt( np.diagonal(K @ np.identity(n_chans) @ K.T) ) )
-        # W_dSPM =  1 / np.sqrt( np.diagonal(K @ np.identity(n_chans) @ K.T) )
-        # inverse_operator = (K.T * W_dSPM).T
-
-        # # sLORETA based
-        # source_covariance = np.diag(source_covariance)
-        # L_s = self.leadfield @ source_covariance
-        # LLT = L_s @ L_s.T
-        # K_MNE = leadfield.T @ np.linalg.pinv(LLT)
-        # W_diag = np.sqrt(np.diag(K_MNE @ L_s))
-        # inverse_operator = (K_MNE.T / W_diag).T
-
-        # # GAMMA based:
-        # Gamma = csr_matrix(np.diag(source_covariance))
-        # Gamma_LT = Gamma @ leadfield.T
-        # Sigma_y = leadfield @ Gamma_LT
-        # Sigma_y_inv = np.linalg.inv(Sigma_y)
-        # inverse_operator = Gamma_LT @ Sigma_y_inv
 
         return inverse_operator
 

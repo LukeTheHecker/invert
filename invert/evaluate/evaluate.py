@@ -1,17 +1,18 @@
 import numpy as np
+import ot
 from scipy.stats import pearsonr
 from scipy.spatial.distance import cdist
 from copy import deepcopy
 from sklearn.metrics import auc, roc_curve
 import pandas as pd
 
-def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix, distances):
+def evaluate_all(y_true, y_pred, pos_1, pos_2, argsorted_distance_matrix, distances):
     
-    mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    auc = [np.mean(eval_auc(yy_true, yy_pred, pos_1, epsilon=0.01, n_redraw=10)) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    corr = [pearsonr(yy_true, yy_pred)[0] for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    # mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    # nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, pos_2, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    # auc = [np.mean(eval_auc(yy_true, yy_pred, pos_1, epsilon=0.01, n_redraw=10)) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    # corr = [pearsonr(yy_true, yy_pred)[0] for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     emd = eval_emd(distances, abs(y_true).mean(axis=-1), abs(y_pred).mean(axis=-1))
     sparsity_pred = eval_sparsity(y_pred)
     sparsity_true = eval_sparsity(y_true)
@@ -19,11 +20,11 @@ def evaluate_all(y_true, y_pred, pos_1, argsorted_distance_matrix, distances):
     active_pred = eval_active(y_pred)
     
     d = dict(
-        Mean_Squared_Error=np.nanmedian(mse) ,
-        Normalized_Mean_Squared_Error=np.nanmedian(nmse),
+        # Mean_Squared_Error=np.nanmedian(mse),
+        # Normalized_Mean_Squared_Error=np.nanmedian(nmse),
         Mean_Localization_Error=np.nanmedian(mle),
-        AUC=np.nanmedian(auc),
-        Corr=np.nanmedian(corr),
+        # AUC=np.nanmedian(auc),
+        # Corr=np.nanmedian(corr),
         EMD=emd,
         Sparsity_pred=sparsity_pred,
         Sparsity_true=sparsity_true,
@@ -42,19 +43,47 @@ def eval_sparsity(y):
     y_scaled = y / np.linalg.norm(y, axis=0)
     return np.linalg.norm(y_scaled, ord=1)
 
-def eval_emd(distances, distribution1, distribution2):
-    # Convert the data to numpy arrays
-    distribution1 = np.array(distribution1)
-    distribution2 = np.array(distribution2)
+def eval_emd(M, values_1, values_2):
+    values_1 = values_1 / np.sum(values_1)
+    values_2 = values_2 / np.sum(values_2)
+    emd_value = ot.emd2(values_1, values_2, M)
+
+    return emd_value
+
+def emd(positions_1: np.ndarray, values_1: np.ndarray, positions_2: np.ndarray, values_2: np.ndarray) -> float:
+    ''' 
+    Compute the Earth Movers Distance between two vectors without a shared grid.
+    Parameters:
+    - positions_1, positions_2: Lists of vertices' positions for each distribution.
+    - values_1, values_2: Magnitudes associated with each vertex position for each distribution.
+    '''
     
-    # Normalize the distributions
-    distribution1 = distribution1 / np.sum(distribution1)
-    distribution2 = distribution2 / np.sum(distribution2)
+    # Ensure the sum of the magnitudes for both vectors are equal (normalize if necessary)
+    values_1 = values_1 / np.sum(values_1)
+    values_2 = values_2 / np.sum(values_2)
+
+    # Calculate pairwise distance between positions
+    # M = ot.dist(np.array(positions_1).reshape(-1, 1), np.array(positions_2).reshape(-1, 1))
+    M = ot.dist(positions_1, positions_2)
     
     # Compute the EMD
-    emd = np.sum(distances * np.abs(distribution1 - distribution2))
+    emd_value = ot.emd2(values_1, values_2, M)
     
-    return emd
+    return emd_value
+
+# def eval_emd(distances, distribution1, distribution2):
+#     # Convert the data to numpy arrays
+#     distribution1 = np.array(distribution1)
+#     distribution2 = np.array(distribution2)
+    
+#     # Normalize the distributions
+#     distribution1 = distribution1 / np.sum(distribution1)
+#     distribution2 = distribution2 / np.sum(distribution2)
+    
+#     # Compute the EMD
+#     emd = np.sum(distances * np.abs(distribution1 - distribution2))
+    
+#     return emd
 
 def eval_mse(y_true, y_est):
     '''Returns the mean squared error between predicted and true source. '''
@@ -100,7 +129,7 @@ def true_variance_explained(y_true, y_pred, leadfield):
 def calc_residual_variance(M_hat, M):
     return 100 *  np.sum( (M-M_hat)**2 ) / np.sum(M**2)
 
-def eval_mean_localization_error(y_true, y_est, pos, k_neighbors=5, 
+def eval_mean_localization_error(y_true, y_est, pos_1, pos_2, k_neighbors=5, 
     min_dist=30, threshold=0.1, ghost_thresh=40, argsorted_distance_matrix=None):
     ''' Calculate the mean localization error for an arbitrary number of 
     sources.
@@ -140,13 +169,13 @@ def eval_mean_localization_error(y_true, y_est, pos, k_neighbors=5,
 
     
     maxima_true = get_maxima_pos(
-        get_maxima_mask(y_true, pos, k_neighbors=k_neighbors, 
+        get_maxima_mask(y_true, pos_1, k_neighbors=k_neighbors, 
         threshold=threshold, min_dist=min_dist, 
-        argsorted_distance_matrix=argsorted_distance_matrix), pos)
+        argsorted_distance_matrix=argsorted_distance_matrix), pos_1)
     maxima_est = get_maxima_pos(
-        get_maxima_mask(y_est, pos, k_neighbors=k_neighbors,
+        get_maxima_mask(y_est, pos_2, k_neighbors=k_neighbors,
         threshold=threshold, min_dist=min_dist, 
-        argsorted_distance_matrix=argsorted_distance_matrix), pos)
+        argsorted_distance_matrix=argsorted_distance_matrix), pos_2)
 
     # Distance matrix between every true and estimated maximum
     distance_matrix = cdist(maxima_true, maxima_est)
