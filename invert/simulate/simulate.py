@@ -97,12 +97,11 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     # Normalize columns of the leadfield
     leadfield /= np.linalg.norm(leadfield, axis=0)
 
-    
-
-
     sources = csr_matrix(np.identity(n_dipoles))
     if isinstance(n_orders, (tuple, list)):
         min_order, max_order = n_orders
+        if min_order == max_order:
+            max_order += 1
     else:
         min_order = 0
         max_order = n_orders
@@ -112,24 +111,24 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     else:
         get_inter_source_correlation = lambda n=1: np.random.uniform(inter_source_correlation, inter_source_correlation, n)
 
-    for i in range(max_order-1):
+    for i in range(1, max_order):
         # new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
         # new_sources /= new_sources.max(axis=0)
         # sources = np.concatenate( [sources, new_sources], axis=0 )
-    
+        
+        # New Smoothness order
         new_sources = csr_matrix(sources.toarray()[-n_dipoles:, -n_dipoles:]) @ gradient
+        
+        # Scaling
         row_maxes = new_sources.max(axis=0).toarray().flatten()
         new_sources = new_sources / row_maxes[np.newaxis]
 
-        # new_sources /= new_sources.max(axis=0)
-        if i >= min_order-1:
-            # sources = np.concatenate( [sources, new_sources], axis=0 )
-            sources = vstack([sources, new_sources])
-
+        sources = vstack([sources, new_sources])
+    print(sources.shape)
+    if min_order > 0:
+        start = int(min_order*n_dipoles)
+        sources = sources.toarray()[start:, :]
     
-    if min_order>0:
-        start_idx = int(n_dipoles*min_order)
-        sources = csr_matrix(sources.toarray()[start_idx:, :])
     sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = np.random.uniform(*beta_range,n_timecourses)
@@ -139,6 +138,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
     n_candidates = sources.shape[0]
+    print(sources.shape, n_orders)
     while True:
         if add_forward_error:
             leadfield = add_error(leadfield_original, forward_error, gradient)
@@ -216,12 +216,19 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         else:
             if scale_data:
                 y = np.stack([ (yy.T / np.max(abs(yy), axis=1)).T for yy in y], axis=0)
-            
-
         
-        # Return same batch multiple times:
         if return_info:
-            info = pd.DataFrame(dict(n_sources=n_sources_batch, amplitudes=amplitude_values, snr=snr_levels, inter_source_correlations=inter_source_correlations))
+            info = pd.DataFrame(dict(
+                n_sources=n_sources_batch, 
+                amplitudes=amplitude_values, 
+                snr=snr_levels, 
+                inter_source_correlations=inter_source_correlations, 
+                n_orders=[[min_order, max_order],]*batch_size,
+                diffusion_parameter=[diffusion_parameter,] * batch_size,
+                n_timepoints=[n_timepoints,] * batch_size,
+                n_timecourses=[n_timecourses,] * batch_size,
+                iid_noise=[iid_noise,] * batch_size
+                ))
             output = (x, y, info)
         else:
             output = (x, y)

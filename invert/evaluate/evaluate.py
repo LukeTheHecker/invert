@@ -180,7 +180,9 @@ def eval_mean_localization_error(y_true, y_est, pos_1, pos_2, k_neighbors=5,
     # Distance matrix between every true and estimated maximum
     distance_matrix = cdist(maxima_true, maxima_est)
     # For each true source find the closest predicted source:
-    closest_matches = distance_matrix.min(axis=1)
+    # closest_matches = distance_matrix.min(axis=1)
+    closest_matches = (distance_matrix.min(axis=0) + distance_matrix.min(axis=1)) / 2
+    
     # Filter for ghost sources
     closest_matches = closest_matches[closest_matches<ghost_thresh]
     

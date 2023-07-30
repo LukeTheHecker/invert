@@ -518,14 +518,14 @@ class SolverAlternatingProjections(BaseSolver):
         if not self.is_prepared:
             self.prepare_flex()
         
-        inverse_operator = self.make_ap(data, n, k, stop_crit, 
+        inverse_operator = self.make_ap(data, n, k, 
                                         max_iter=max_iter, 
                                         refine_solution=refine_solution)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_ap(self, y, n, k, stop_crit, refine_solution=True, max_iter=1000, covariance_type="AP"):
+    def make_ap(self, y, n, k, refine_solution=True, max_iter=1000, covariance_type="AP"):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -585,7 +585,6 @@ class SolverAlternatingProjections(BaseSolver):
         # MUSIC TYPE: MAKE THIS AN O
         if covariance_type == "MUSIC":
             C = y@y.T
-            I = np.identity(n_chans)
             Q = np.identity(n_chans)
             U, D, _= np.linalg.svd(C, full_matrices=False)
             
