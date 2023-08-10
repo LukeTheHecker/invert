@@ -3,7 +3,7 @@ import mne
 import pickle as pkl
 import numpy as np
 
-def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
+def create_forward_model(sampling='ico3', info=None, fixed_ori=True, conductivity=None, n_jobs=1, verbose=0):
     ''' Create a forward model using the fsaverage template form freesurfer.
     
     Parameters:
@@ -38,9 +38,19 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
     subject = 'fsaverage'
     trans = os.path.join(fs_dir, 'bem', 'fsaverage-trans.fif')
     src = os.path.join(fs_dir, 'bem', 'fsaverage-ico-5-src.fif')
-    bem = os.path.join(fs_dir, 'bem', 'fsaverage-5120-5120-5120-bem-sol.fif')
+    if conductivity is None:
+        bem = os.path.join(fs_dir, 'bem', 'fsaverage-5120-5120-5120-bem-sol.fif')
+    else:
+        if not "ico" in sampling:
+            msg = f"sampling must be ico# but is {sampling}"
+            raise AttributeError(msg)
+        if not isinstance(conductivity, (tuple,)):
+            msg = f"conductivity must be None or a tuple of three conductivity values but is {conductivity}"
+            raise AttributeError(msg)
+        
+        bem = mne.make_bem_model(subject, ico=int(sampling[-1]), conductivity=conductivity, subjects_dir=subjects_dir, verbose=verbose)
 
- 
+    
 
     # Create our own info object, see e.g.:
     if info is None:
@@ -49,11 +59,11 @@ def create_forward_model(sampling='ico3', info=None, verbose=0, fixed_ori=True):
     # Create and save Source Model
     src = mne.setup_source_space(subject, spacing=sampling, surface='white',
                                         subjects_dir=subjects_dir, add_dist=False,
-                                        n_jobs=-1, verbose=verbose)
+                                        n_jobs=n_jobs, verbose=verbose)
 
     # Forward Model
     fwd = mne.make_forward_solution(info, trans=trans, src=src,
-                                    bem=bem, eeg=True, mindist=5.0, n_jobs=-1,
+                                    bem=bem, eeg=True, mindist=5.0, n_jobs=n_jobs,
                                     verbose=verbose)
     if fixed_ori:
         # Fixed Orientations

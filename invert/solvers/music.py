@@ -1,3 +1,4 @@
+from time import time
 import numpy as np
 import mne
 from copy import deepcopy
@@ -223,6 +224,7 @@ class SolverFLEXMUSIC(BaseSolver):
         x_hat : numpy.ndarray
             Source data matrix (sources, time)
         '''
+
         n_chans, n_dipoles = self.leadfield.shape
         n_time = y.shape[1]
 
@@ -294,14 +296,9 @@ class SolverFLEXMUSIC(BaseSolver):
                 B = np.hstack([B, leadfields[best_order][:, best_dipole][:, np.newaxis]])
 
             Q = I - B @ np.linalg.pinv(B)
-            
-            # Q -= Q.mean(axis=0)
             C = Q @ Us
-
             U, D, _= np.linalg.svd(C, full_matrices=False)
-            # U -= U.mean(axis=0)
             
-        
             # Truncate eigenvectors
             if truncate:
                 Us = U[:, :n_comp-i]
@@ -312,52 +309,51 @@ class SolverFLEXMUSIC(BaseSolver):
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
         
-        # if len(S_AP) > 1 and refine_solution:
-        #     # best_vals = np.zeros(n_comp)
-        #     for iter in range(max_iter):
-        #         S_AP_2_Prev = deepcopy(S_AP_2)
-        #         for q in range(len(S_AP)):
-        #             S_AP_TMP = S_AP_2.copy()
-        #             S_AP_TMP.pop(q)
+        if len(S_AP) > 1 and refine_solution:
+            # best_vals = np.zeros(n_comp)
+            for iter in range(max_iter):
+                S_AP_2_Prev = deepcopy(S_AP_2)
+                for q in range(len(S_AP)):
+                    S_AP_TMP = S_AP_2.copy()
+                    S_AP_TMP.pop(q)
                     
-        #             B = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
+                    B = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
 
-        #             # Q = I - B @ np.linalg.pinv(B)
-        #             # Ps = C_initial
+                    # Q = I - B @ np.linalg.pinv(B)
+                    # Ps = C_initial
 
-        #             P_A = B @ np.linalg.pinv(B.T @ B) @ B.T
-        #             Q = np.identity(P_A.shape[0]) - P_A
+                    P_A = B @ np.linalg.pinv(B.T @ B) @ B.T
+                    Q = np.identity(P_A.shape[0]) - P_A
 
-        #             ap_val2 = np.zeros((n_orders, n_dipoles))
-        #             for nn in range(n_orders):
-        #                 L = leadfields[nn]
-        #                 upper = np.diag(L.T @ Q @ C @ Q @ L)
-        #                 lower = np.diag(L.T @ Q @ L)
-        #                 # upper = np.linalg.norm(Ps @ Q @ L, axis=0)
-        #                 # lower = np.linalg.norm(Q @ L, axis=0) 
-        #                 ap_val2[nn] = upper / lower
+                    ap_val2 = np.zeros((n_orders, n_dipoles))
+                    for nn in range(n_orders):
+                        L = leadfields[nn]
+                        upper = np.diag(L.T @ Q @ C @ Q @ L)
+                        lower = np.diag(L.T @ Q @ L)
+                        # upper = np.linalg.norm(Ps @ Q @ L, axis=0)
+                        # lower = np.linalg.norm(Q @ L, axis=0) 
+                        ap_val2[nn] = upper / lower
                     
-        #             best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
-        #             # best_val = ap_val2.max()
-        #             S_AP_2[q] = [best_order, best_dipole]
-        #             # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
-        #             # best_vals[q] = best_val
+                    best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
+                    # best_val = ap_val2.max()
+                    S_AP_2[q] = [best_order, best_dipole]
+                    # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
+                    # best_vals[q] = best_val
 
-        #         if iter > 0 and S_AP_2 == S_AP_2_Prev:
-        #             break
+                if iter > 0 and S_AP_2 == S_AP_2_Prev:
+                    break
 
-        source_covariance = np.sum([self.gradients[order][dipole] for order, dipole in S_AP_2], axis=0)
-
-        dipole_idc = np.array(dipole_idc).astype(int)
-        n_time = y.shape[1]
-        
+        source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
-        source_covariance = csr_matrix(np.diag(source_covariance))
-        L_s = self.leadfield @ source_covariance
-        L = self.leadfield
+        nonzero = np.where(source_covariance!=0)[0]
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+
+        source_covariance = csr_matrix(np.diag(source_covariance[nonzero]))
+        L = self.leadfield[:, nonzero]
+        L_s = L @ source_covariance
+        
         W = np.diag(np.linalg.norm(L, axis=0)) 
-        # print(source_covariance.shape, L.shape, W.shape)
-        inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
 
         return inverse_operator
 
@@ -392,42 +388,12 @@ class SolverFLEXMUSIC(BaseSolver):
             
         # scale and transform gradients
         for i in range(self.n_orders+1):
-            self.gradients[i] =self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
+            # self.gradients[i] =self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
+            row_max = self.gradients[i].max(axis=1).toarray().ravel()
+            scaling_factors = 1 / row_max
+            self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
             
-        
-
         self.is_prepared = True
-
-            # # self.neighbors = [[np.array([i]) for i in range(n_dipoles)], ]
-            # self.gradients = [np.identity(n_dipoles),]
-
-            # if self.n_orders==0:
-            #     return
-
-            # new_leadfield = deepcopy(self.leadfield)
-            
-            # gradient = abs(laplacian(deepcopy(self.adjacency)))
-            
-            # gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
-            # # Convert to sparse matrix for speedup
-            # gradient = csr_matrix(gradient)
-            
-            # for _ in range(self.n_orders):
-            #     # new_leadfield = new_leadfield @ gradient
-            #     new_leadfield = self.leadfield @ gradient
-            #     # new_leadfield -= new_leadfield.mean(axis=0)
-            #     # new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
-                
-            #     # neighbors = [np.where(ad!=0)[0] for ad in gradient.toarray()]
-                
-            #     self.leadfields.append( deepcopy(new_leadfield) )
-            #     # self.neighbors.append( neighbors )
-            #     self.gradients.append( gradient.toarray() )
-
-            #     gradient = gradient @ deepcopy(self.adjacency)
-            #     gradient = csr_matrix(gradient.toarray() / gradient.toarray().max(axis=0))
-        
-        
 
     @staticmethod
     def get_comps_L(D):
@@ -548,6 +514,7 @@ class SolverAlternatingProjections(BaseSolver):
         x_hat : numpy.ndarray
             Source data matrix (sources, time)
         '''
+        # stime = time()
         n_chans, n_dipoles = self.leadfield.shape
         n_time = y.shape[1]
 
@@ -560,6 +527,7 @@ class SolverAlternatingProjections(BaseSolver):
             k = n_chans
         # Assert common average reference
         y -= y.mean(axis=0)
+        
         # Compute Data Covariance
         if type(n) == str:
             if n == "L":
@@ -582,7 +550,7 @@ class SolverAlternatingProjections(BaseSolver):
         else:
             n_comp = deepcopy(n)
         
-        # MUSIC TYPE: MAKE THIS AN O
+        # MUSIC TYPE
         if covariance_type == "MUSIC":
             C = y@y.T
             Q = np.identity(n_chans)
@@ -598,17 +566,17 @@ class SolverAlternatingProjections(BaseSolver):
         else:
             msg = f"covariance_type must be MUSIC or AP but is {covariance_type}"
             raise AttributeError(msg)
-        
+
+
         S_AP = []
-        
         # Initialization:  search the 1st source location over the entire
         # dipoles topographies space
         ap_val1 = np.zeros((n_orders, n_dipoles))
         for nn in range(n_orders):
             L = leadfields[nn]
             norm_1 = np.diag(L.T @ C @ L)
-            norm_2 = np.diag(L.T @ L)
-            ap_val1[nn, :] = norm_1 / norm_2
+            # norm_2 = np.diag(L.T @ L) # not necessary since leadfields were L2-normalized before
+            ap_val1[nn, :] = norm_1 #/ norm_2
 
         best_order, best_dipole = np.unravel_index(np.argmax(ap_val1), ap_val1.shape)
 
@@ -616,7 +584,6 @@ class SolverAlternatingProjections(BaseSolver):
         
         # store the current leadfield component in A
         A = leadfields[best_order][:, best_dipole][:, np.newaxis]
-
         # (b) Now, add one source at a time
         for ii in range(1, n_comp):
             ap_val2 = np.zeros((n_orders, n_dipoles))
@@ -624,12 +591,16 @@ class SolverAlternatingProjections(BaseSolver):
             A = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP], axis=1)
             P_A = A @ np.linalg.pinv(A.T @ A) @ A.T
             Q = np.identity(P_A.shape[0]) - P_A
-
+            QCQ = Q @ C @ Q
             for nn in range(n_orders):
                 L = leadfields[nn]
-                upper = np.diag(L.T @ Q @ C @ Q @ L)
+                upper = np.diag(L.T @ QCQ @ L)
                 lower = np.diag(L.T @ Q @ L)
                 ap_val2[nn] = upper / lower
+                # if nn > 0 and ap_val2[nn].max() < ap_val2[nn-1].max():
+                #     print("leaving early")
+                #     break
+                # print(ap_val2[nn].max())
             
             # if ap_val2.max() < stop_crit:
             #     print(f"breaking at iter {ii} since ap_val2 is ", ap_val2.max(), " at max.")
@@ -639,8 +610,8 @@ class SolverAlternatingProjections(BaseSolver):
             S_AP.append( [best_order, best_dipole] )
 
         # Update source covariance
-        source_covariance = np.sum([np.squeeze(self.gradients[order][dipole]) for order, dipole in S_AP], axis=0)
-        
+        # source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP], axis=0)
+
         # Phase 2: refinement
         S_AP_2 = deepcopy(S_AP)
         if len(S_AP) > 1 and refine_solution:
@@ -654,30 +625,40 @@ class SolverAlternatingProjections(BaseSolver):
                     A = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_TMP], axis=1)
                     P_A = A @ np.linalg.pinv(A.T @ A) @ A.T
                     Q = np.identity(P_A.shape[0]) - P_A
-
+                    QCQ = Q @ C @ Q
                     ap_val2 = np.zeros((n_orders, n_dipoles))
                     for nn in range(n_orders):
                         L = leadfields[nn]
-                        upper = np.diag(L.T @ Q @ C @ Q @ L)
+                        upper = np.diag(L.T @ QCQ @ L)
                         lower = np.diag(L.T @ Q @ L)
                         ap_val2[nn] = upper / lower
+                        # if nn > 0 and ap_val2[nn].max() < ap_val2[nn-1].max():
+                        #     print("leaving early")
+                        #     break
+                        # print(ap_val2[nn].max())
                     best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
                     # best_val = ap_val2.max()
                     S_AP_2[q] = [best_order, best_dipole]
                     # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
                     # best_vals[q] = best_val
-
-                if S_AP_2 == S_AP_2_Prev:
-                    # print("stopping refinement at iter ", iter)
+                    
+                if iter > 0 and S_AP_2 == S_AP_2_Prev:
+                    
                     break
-        source_covariance = np.sum([np.squeeze(self.gradients[order][dipole]) for order, dipole in S_AP_2], axis=0)
+        # print("iters: ", iter)
+        source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
 
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
-        source_covariance = csr_matrix(np.diag(source_covariance))
-        L_s = self.leadfield @ source_covariance
-        L = self.leadfield
+        nonzero = np.where(source_covariance!=0)[0]
+        inverse_operator = np.zeros((n_dipoles, n_chans))
+    	
+        source_covariance = csr_matrix(np.diag(source_covariance[nonzero]))
+        L = self.leadfield[:, nonzero]
+        L_s = L @ source_covariance
+        
         W = np.diag(np.linalg.norm(L, axis=0)) 
-        inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        
         return inverse_operator
 
     def prepare_flex(self):
@@ -710,10 +691,11 @@ class SolverAlternatingProjections(BaseSolver):
             self.gradients.append( new_gradient )
         # scale and transform gradients
         for i in range(self.n_orders+1):
-            self.gradients[i] = self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
-            
+            # self.gradients[i] = self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
+            row_max = self.gradients[i].max(axis=1).toarray().ravel()
+            scaling_factors = 1 / row_max
+            self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
         
-
         self.is_prepared = True
 
         

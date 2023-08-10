@@ -3,7 +3,7 @@ import mne
 from copy import deepcopy
 from ..util import find_corner
 from .base import BaseSolver, InverseOperator
-
+from time import time
 class SolverMVAB(BaseSolver):
     ''' Class for the Minimum Variance Adaptive Beamformer (MVAB) inverse
         solution [1].
@@ -483,6 +483,7 @@ class SolverMCMV(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
+        tstart = time()
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         data = self.unpack_data_obj(mne_obj)
 
@@ -505,7 +506,9 @@ class SolverMCMV(BaseSolver):
         # Matrix (opposed to that of the leadfield)
         C = y@y.T
         self.alphas = self.get_alphas(reference=C)
-
+        tend = time()
+        print(f"prep: {tend-tstart}")
+        tstart = time()
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
@@ -524,9 +527,10 @@ class SolverMCMV(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        tend = time()
+        print(f"prep 2 (alpha Ws): {tend-tstart}")
+        
         return self
-
-    
 
 class SolverHOCMCMV(BaseSolver):
     ''' Class for the Higher-Order Covariance Multiple Constrained Minimum Variance (HOCMCMV)

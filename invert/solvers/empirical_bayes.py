@@ -12,7 +12,7 @@ from ..util import pos_from_forward
 # from ..invert import BaseSolver, InverseOperator
 # from .. import invert
 from .base import BaseSolver, InverseOperator
-
+from time import time
 # from .. import invert
 # import BaseSolver, InverseOperator
 
@@ -428,6 +428,7 @@ class SolverMMChampagne(BaseSolver):
         # z_0 = L.T @ Sigma_y_inv @ L
         mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
         loss_list = [1e99,]
+        
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)
             
@@ -461,7 +462,7 @@ class SolverMMChampagne(BaseSolver):
             if change < convergence_criterion:
                 # print("Converged!")
                 break
-            
+        
         # update rest
         gammas /= gammas.max()
         Gamma = np.diag(gammas)
@@ -469,10 +470,6 @@ class SolverMMChampagne(BaseSolver):
         Sigma_y_inv = np.linalg.inv(Sigma_y)
         inverse_operator = Gamma @ L.T @ Sigma_y_inv
         
-        # This is how the final source estimate could be calculated:
-        # mu_x = inverse_operator @ Y
-
-
         return inverse_operator
 
 class SolverMacKayChampagne(BaseSolver):

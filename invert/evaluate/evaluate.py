@@ -6,18 +6,20 @@ from copy import deepcopy
 from sklearn.metrics import auc, roc_curve
 import pandas as pd
 
-def evaluate_all(y_true, y_pred, pos_1, pos_2, argsorted_distance_matrix, distances):
-    
+def evaluate_all(y_true, y_pred, adjacency_true, adjacency_pred, distance_matrix):
+    y_true_collapsed = abs(y_true).mean(axis=-1)
+    y_pred_collapsed = abs(y_pred).mean(axis=-1)
     # mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     # nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, pos_2, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    # mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, pos_2, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
+    mle = eval_mean_localization_error(y_true_collapsed, y_pred_collapsed, adjacency_true, adjacency_pred, distance_matrix)
     # auc = [np.mean(eval_auc(yy_true, yy_pred, pos_1, epsilon=0.01, n_redraw=10)) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     # corr = [pearsonr(yy_true, yy_pred)[0] for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
-    emd = eval_emd(distances, abs(y_true).mean(axis=-1), abs(y_pred).mean(axis=-1))
-    sparsity_pred = eval_sparsity(y_pred)
-    sparsity_true = eval_sparsity(y_true)
-    active_true = eval_active(y_true)
-    active_pred = eval_active(y_pred)
+    emd = eval_emd(distance_matrix, y_true_collapsed, y_pred_collapsed)
+    # sparsity_pred = eval_sparsity(y_pred)
+    # sparsity_true = eval_sparsity(y_true)
+    # active_true = eval_active(y_true)
+    # active_pred = eval_active(y_pred)
     
     d = dict(
         # Mean_Squared_Error=np.nanmedian(mse),
@@ -26,10 +28,10 @@ def evaluate_all(y_true, y_pred, pos_1, pos_2, argsorted_distance_matrix, distan
         # AUC=np.nanmedian(auc),
         # Corr=np.nanmedian(corr),
         EMD=emd,
-        Sparsity_pred=sparsity_pred,
-        Sparsity_true=sparsity_true,
-        Active_True=active_true,
-        Active_Pred=active_pred,
+        # Sparsity_pred=sparsity_pred,
+        # Sparsity_true=sparsity_true,
+        # Active_True=active_true,
+        # Active_Pred=active_pred,
     )
     
     return d
@@ -129,7 +131,80 @@ def true_variance_explained(y_true, y_pred, leadfield):
 def calc_residual_variance(M_hat, M):
     return 100 *  np.sum( (M-M_hat)**2 ) / np.sum(M**2)
 
-def eval_mean_localization_error(y_true, y_est, pos_1, pos_2, k_neighbors=5, 
+def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray, 
+                                 adjacency_true: np.ndarray, adjacency_est: np.ndarray, 
+                                 distance_matrix: np.ndarray) -> float:
+    ''' Calculate the Mean Localization Error (MLE) between a true and predicted source.
+    Parameters
+    ----------
+    y_true : np.ndarray
+        The ground truth values.
+    y_est : np.ndarray
+        The estimated values.
+    adjacency_true : np.ndarray
+        The adjacency matrix for the true graph.
+    adjacency_est : np.ndarray
+        The adjacency matrix for the estimated graph.
+    distance_matrix : np.ndarray
+        The euclidean distance between each dipole in y_true and each dipole in y_est.
+
+    '''
+    if len(y_true.shape) == 2:
+        y_true_collapsed = abs(y_true).mean(axis=-1)
+    else:
+        y_true_collapsed = abs(y_true)
+    if len(y_est.shape) == 2:
+        y_est_collapsed = abs(y_est).mean(axis=-1)
+    else:
+        y_est_collapsed = abs(y_est)
+
+
+    maxima_idc_true = get_maxima(y_true_collapsed, adjacency_true)
+    maxima_idc_est = get_maxima(y_est_collapsed, adjacency_est)
+    print(maxima_idc_true)
+    print(maxima_idc_est)
+    # Get pairwise distance between true and estimated source locations.
+    pairwise_dist = np.zeros((len(maxima_idc_true), len(maxima_idc_est)))
+    for ii, idx_true in enumerate(maxima_idc_true):
+        for jj, idx_est in enumerate(maxima_idc_est):
+            pairwise_dist[ii, jj] = distance_matrix[idx_true, idx_est]
+    
+    mle = (pairwise_dist.min(axis=0).mean() + pairwise_dist.min(axis=1).mean()) / 2
+    
+    return mle
+
+def get_maxima(y: np.ndarray, adjacency: np.ndarray) -> list:
+    ''' 
+    Return indices of local maxima based on the adjacency matrix.
+
+    Parameters
+    ----------
+    y : np.ndarray
+        1D array containing the values of nodes. Each value corresponds to a
+        node's "intensity" or "activity".
+    adjacency : np.ndarray
+        2D square matrix representing the adjacency of nodes. An entry of 1 at
+        position (i,j) implies node i is adjacent to node j.
+
+    Returns
+    -------
+    list_of_maxima : list
+        List of indices where the nodes' values in 'y' are greater than all of
+        their adjacent nodes.
+    '''
+    list_of_maxima = []
+    for i in range(y.shape[0]):
+        neighbors = np.where(adjacency[i])[0] # Get indices of neighbors
+        neighbors = np.delete(neighbors, np.where(neighbors == i))
+        # if print(neighbors, y[i], y[neighbors])
+
+        if np.all(y[i] > y[neighbors]):
+            list_of_maxima.append(i)
+    
+    return list_of_maxima
+    
+
+def eval_mean_localization_error_old(y_true, y_est, pos_1, pos_2, k_neighbors=5, 
     min_dist=30, threshold=0.1, ghost_thresh=40, argsorted_distance_matrix=None):
     ''' Calculate the mean localization error for an arbitrary number of 
     sources.
@@ -181,7 +256,7 @@ def eval_mean_localization_error(y_true, y_est, pos_1, pos_2, k_neighbors=5,
     distance_matrix = cdist(maxima_true, maxima_est)
     # For each true source find the closest predicted source:
     # closest_matches = distance_matrix.min(axis=1)
-    closest_matches = (distance_matrix.min(axis=0) + distance_matrix.min(axis=1)) / 2
+    closest_matches = (distance_matrix.min(axis=0).mean() + distance_matrix.min(axis=1).mean()) / 2
     
     # Filter for ghost sources
     closest_matches = closest_matches[closest_matches<ghost_thresh]

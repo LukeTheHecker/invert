@@ -13,7 +13,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               return_mask=True, scale_data=True, return_info=False,
               add_forward_error=False, forward_error=0.1, remove_channel_dim=False, 
               inter_source_correlation=0.5, diffusion_smoothing=True, 
-              diffusion_parameter=0.1, fixed_covariance=False, iid_noise=False, verbose=0):
+              diffusion_parameter=0.1, fixed_covariance=False, iid_noise=False, 
+              random_seed=None, verbose=0):
     """
     Parameters
     ----------
@@ -60,6 +61,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     iid_noise : bool
         If True: use independently distributed noise
         if False: use correlated noise
+    random_seed : None / int
+        The random seed for replicable simulations
     verbose : int
         Level of verbosity for the function. Default is 0.
     
@@ -70,6 +73,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     y : numpy.ndarray
         The source data matrix.
     """
+    rng = np.random.default_rng(random_seed)
     leadfield = deepcopy(fwd["sol"]["data"])
     leadfield_original = deepcopy(fwd["sol"]["data"])
     n_chans, n_dipoles = leadfield.shape
@@ -82,7 +86,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     # Convert to sparse matrix for speedup
     adjacency = csr_matrix(adjacency)
     if diffusion_smoothing:
-        print("Using Diffusion Smoothing on Graph")
+        # print("Using Diffusion Smoothing on Graph")
         gradient = np.identity(n_dipoles) - diffusion_parameter*laplacian(adjacency)
     else:
         gradient = abs(laplacian(adjacency))
@@ -107,9 +111,9 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         max_order = n_orders
 
     if isinstance(inter_source_correlation, (tuple, list)):
-        get_inter_source_correlation = lambda n=1: np.random.uniform(inter_source_correlation[0], inter_source_correlation[1], n)
+        get_inter_source_correlation = lambda n=1: rng.uniform(inter_source_correlation[0], inter_source_correlation[1], n)
     else:
-        get_inter_source_correlation = lambda n=1: np.random.uniform(inter_source_correlation, inter_source_correlation, n)
+        get_inter_source_correlation = lambda n=1: rng.uniform(inter_source_correlation, inter_source_correlation, n)
 
     for i in range(1, max_order):
         # new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
@@ -124,35 +128,35 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         new_sources = new_sources / row_maxes[np.newaxis]
 
         sources = vstack([sources, new_sources])
-    print(sources.shape)
+    # print(sources.shape)
     if min_order > 0:
         start = int(min_order*n_dipoles)
         sources = sources.toarray()[start:, :]
     
     sources = csr_matrix(sources)
     # Pre-compute random time courses
-    betas = np.random.uniform(*beta_range,n_timecourses)
-    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
+    betas = rng.uniform(*beta_range,n_timecourses)
+    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints, random_state=random_seed) for beta in betas], axis=0)
 
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
     n_candidates = sources.shape[0]
-    print(sources.shape, n_orders)
+    # print(sources.shape, n_orders)
     while True:
         if add_forward_error:
-            leadfield = add_error(leadfield_original, forward_error, gradient)
+            leadfield = add_error(leadfield_original, forward_error, gradient, rng)
         # print("yeet")
         # select sources or source patches
-        n_sources_batch = np.random.randint(min_sources, max_sources+1, batch_size)
-        selection = [np.random.randint(0, n_candidates, n) for n in n_sources_batch]
+        n_sources_batch = rng.integers(min_sources, max_sources+1, batch_size)
+        selection = [rng.integers(0, n_candidates, n) for n in n_sources_batch]
 
         # Assign each source (or source patch) a time course
-        # amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
-        # amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
+        # amplitude_values = [rng.uniform(*amplitude_range, n) for n in n_sources_batch]
+        # amplitudes = [time_courses[rng.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
 
-        amplitude_values = [np.random.uniform(*amplitude_range, n) for n in n_sources_batch]
-        amplitudes = [time_courses[np.random.choice(n_timecourses, n)].T for i, n in enumerate(n_sources_batch)]
+        amplitude_values = [rng.uniform(*amplitude_range, n) for n in n_sources_batch]
+        amplitudes = [time_courses[rng.choice(n_timecourses, n)].T for i, n in enumerate(n_sources_batch)]
 
         inter_source_correlations = get_inter_source_correlation(n=batch_size)
         source_covariances = [get_cov(n, isc) for n, isc in zip(n_sources_batch, inter_source_correlations)]
@@ -169,9 +173,9 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
 
         # Add white noise to clean EEG
-        snr_levels = np.random.uniform(low=snr_range[0], high=snr_range[1], size=batch_size)
+        snr_levels = rng.uniform(low=snr_range[0], high=snr_range[1], size=batch_size)
         # print("iid in generator is: ", iid_noise)
-        x = np.stack([add_white_noise(xx, snr_level, iid=iid_noise) for (xx, snr_level) in zip(x, snr_levels)], axis=0)
+        x = np.stack([add_white_noise(xx, snr_level, rng, iid=iid_noise) for (xx, snr_level) in zip(x, snr_levels)], axis=0)
 
 
         # Apply common average reference
@@ -237,18 +241,18 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
             yield output
 
 def get_cov(n, corr_coef):
-    '''Generate a random covariance matrix  that is symmetric along the
-    diagonal.'''
+    '''Generate a covariance matrix that is symmetric along the
+    diagonal that correlates sources to a specified extent.'''
     cov = np.ones((n,n)) * corr_coef + np.eye(n)*(1-corr_coef)
     return np.linalg.cholesky(cov)
 
-def add_white_noise(X_clean, snr, iid=False):
+def add_white_noise(X_clean, snr, rng, iid=False):
     ''' '''
-    X_noise = np.random.randn(*X_clean.shape)
+    X_noise = rng.standard_normal(X_clean.shape)
     if not iid:
         # print("iid in function is: ", iid)
         # Inter-channel correlations
-        coeff_mat = np.random.rand(X_clean.shape[0], X_clean.shape[0])
+        coeff_mat = rng.random(X_clean.shape[0], X_clean.shape[0])
         np.fill_diagonal(coeff_mat, 1)
         
         # Make positive semi-definite
@@ -260,18 +264,24 @@ def add_white_noise(X_clean, snr, iid=False):
         # Random partially correlated noise
         X_noise = np.linalg.cholesky( coeff_mat ) @ X_noise
     
-    rms_noise = rms(X_noise)
-    rms_signal = rms(X_clean)
+    # rms_noise = rms(X_noise)
+    # rms_signal = rms(X_clean)
 
-    scaler = rms_signal / (snr * rms_noise)
+    # scaler = rms_signal / (snr * rms_noise)
+    
+    # # According to Adler et al.:
+    X_clean_energy = np.trace(X_clean@X_clean.T)/(X_clean.shape[0]*X_clean.shape[1])
+    noise_var = X_clean_energy/snr
+    scaler = np.sqrt(noise_var)
 
     X_full = X_clean + X_noise*scaler
+    # print(rms(X_clean), rms(X_noise*scaler))
     X_full -= X_full.mean(axis=0)
     return X_full
 
-def add_error(leadfield, forward_error, gradient):
+def add_error(leadfield, forward_error, gradient, rng):
     n_chans, n_dipoles = leadfield.shape
-    noise = np.random.uniform(-1, 1, (n_chans, n_dipoles)) @ gradient
+    noise = rng.uniform(-1, 1, (n_chans, n_dipoles)) @ gradient
     leadfield_mix = leadfield / np.linalg.norm(leadfield) + forward_error * noise / np.linalg.norm(noise)
     return leadfield_mix
 
