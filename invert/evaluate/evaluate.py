@@ -161,6 +161,10 @@ def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray,
 
     maxima_idc_true = get_maxima(y_true_collapsed, adjacency_true)
     maxima_idc_est = get_maxima(y_est_collapsed, adjacency_est)
+
+    maxima_idc_true = filter_maxima(maxima_idc_true, adjacency_true, distance_matrix[:, 0])
+    maxima_idc_est = filter_maxima(maxima_idc_est, adjacency_est, distance_matrix[:, 0])
+
     print(maxima_idc_true)
     print(maxima_idc_est)
     # Get pairwise distance between true and estimated source locations.
@@ -172,6 +176,61 @@ def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray,
     mle = (pairwise_dist.min(axis=0).mean() + pairwise_dist.min(axis=1).mean()) / 2
     
     return mle
+
+def replace_clusters(clusters, distvec):
+    list_of_maxima = []
+    for cluster in clusters:
+        if len(cluster) == 1:
+            list_of_maxima.append(cluster[0])
+        else:
+            sub_positions = distvec[np.array(cluster)]
+            # print(sub_positions)
+            avg_pos = np.mean(sub_positions)
+            # print(avg_pos)
+            avg_pos
+            idx = np.argmin((sub_positions - avg_pos)**2)
+            # print(idx)
+            list_of_maxima.append(cluster[idx])
+            
+    return np.array(list_of_maxima)
+
+def dfs(node, R, visited, L_set):
+    # If the node is not in L, or has been visited before, return an empty cluster.
+    if node not in L_set or visited[node]:
+        return []
+    
+    # Mark the current node as visited
+    visited[node] = True
+    
+    # Start a new cluster with the current node
+    cluster = [node]
+    
+    # Go through the nodes that are adjacent to the current node
+    for i, is_adjacent in enumerate(R[node]):
+        if is_adjacent and not visited[i]:
+            cluster.extend(dfs(i, R, visited, L_set))
+    
+    return cluster
+
+def detect_clusters(L, R):
+    n_nodes = len(R)
+    visited = [False] * n_nodes
+    L_set = set(L)
+    clusters = []
+    
+    for node in L:
+        if not visited[node]:
+            cluster = dfs(node, R, visited, L_set)
+            if cluster:
+                clusters.append(cluster)
+    
+    return clusters
+
+def filter_maxima(list_of_maxima, adjacency, distances):
+    clusters = detect_clusters(list_of_maxima, adjacency)
+    list_of_maxima = replace_clusters(clusters, distances)
+    return list_of_maxima
+
 
 def get_maxima(y: np.ndarray, adjacency: np.ndarray) -> list:
     ''' 
@@ -193,12 +252,13 @@ def get_maxima(y: np.ndarray, adjacency: np.ndarray) -> list:
         their adjacent nodes.
     '''
     list_of_maxima = []
-    for i in range(y.shape[0]):
+    nonzeros = np.where(y!=0)[0]
+    for i in nonzeros:
         neighbors = np.where(adjacency[i])[0] # Get indices of neighbors
         neighbors = np.delete(neighbors, np.where(neighbors == i))
         # if print(neighbors, y[i], y[neighbors])
 
-        if np.all(y[i] > y[neighbors]):
+        if np.all(y[i] >= y[neighbors]):
             list_of_maxima.append(i)
     
     return list_of_maxima

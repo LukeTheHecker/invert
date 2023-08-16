@@ -136,8 +136,11 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = rng.uniform(*beta_range,n_timecourses)
-    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints, random_state=random_seed) for beta in betas], axis=0)
-
+    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
+    # print("there are ", len(time_courses), " time courses")
+    # print(time_courses[0, :10])
+    # print(time_courses[1, :10])
+    # print(time_courses[2, :10])
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
@@ -156,8 +159,12 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         # amplitudes = [time_courses[rng.choice(n_timecourses, n)].T * amplitude_values[i] for i, n in enumerate(n_sources_batch)]
 
         amplitude_values = [rng.uniform(*amplitude_range, n) for n in n_sources_batch]
-        amplitudes = [time_courses[rng.choice(n_timecourses, n)].T for i, n in enumerate(n_sources_batch)]
-
+        choices = [rng.choice(n_timecourses, n) for n in n_sources_batch]
+        # print(choices)
+        amplitudes = [time_courses[choice].T for choice in choices]
+        from scipy.stats import pearsonr
+        # print(len(amplitudes), amplitudes[0].shape)
+        # print("Initial corr between two timecourses: ", pearsonr(amplitudes[0][0], amplitudes[0][1])[0])
         inter_source_correlations = get_inter_source_correlation(n=batch_size)
         source_covariances = [get_cov(n, isc) for n, isc in zip(n_sources_batch, inter_source_correlations)]
         amplitudes = [amp @ np.diag(amplitude_values[i]) @ cov for i, (amp, cov) in enumerate(zip(amplitudes, source_covariances))]
@@ -244,7 +251,7 @@ def get_cov(n, corr_coef):
     '''Generate a covariance matrix that is symmetric along the
     diagonal that correlates sources to a specified extent.'''
     cov = np.ones((n,n)) * corr_coef + np.eye(n)*(1-corr_coef)
-    return np.linalg.cholesky(cov)
+    return np.linalg.cholesky(cov).T
 
 def add_white_noise(X_clean, snr, rng, iid=False):
     ''' '''

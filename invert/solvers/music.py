@@ -438,7 +438,8 @@ class SolverAlternatingProjections(BaseSolver):
     def make_inverse_operator(self, forward, mne_obj, *args, n_orders=3, 
                               alpha="auto", n="auto", k="auto", stop_crit=0.95,
                               refine_solution=True, max_iter=1000, diffusion_smoothing=True, 
-                              diffusion_parameter=0.1, **kwargs):
+                              diffusion_parameter=0.1, adjacency_type="spatial", 
+                              adjacency_distance=3e-3, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -467,6 +468,10 @@ class SolverAlternatingProjections(BaseSolver):
             Whether to use diffusion smoothing. Default is True.
         diffusion_parameter : float
             The diffusion parameter (alpha). Default is 0.1.
+        adjacency_type : str
+            The type of adjacency. "spatial" -> based on graph neighbors. "distance" -> based on distance
+        adjacency_distance : float
+            The distance at which neighboring dipoles are considered neighbors.
         
 
         Return
@@ -478,7 +483,8 @@ class SolverAlternatingProjections(BaseSolver):
         self.diffusion_smoothing = diffusion_smoothing, 
         self.diffusion_parameter = diffusion_parameter
         self.n_orders = n_orders
-
+        self.adjacency_type = adjacency_type
+        self.adjacency_distance = adjacency_distance
         data = self.unpack_data_obj(mne_obj)
 
         if not self.is_prepared:
@@ -670,8 +676,10 @@ class SolverAlternatingProjections(BaseSolver):
         '''
         n_dipoles = self.leadfield.shape[1]
         I = np.identity(n_dipoles)
-
-        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        if self.adjacency_type == "spatial":
+            adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        else:
+            adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
         
         LL = laplacian(adjacency)
         self.leadfields = [deepcopy(self.leadfield), ]
