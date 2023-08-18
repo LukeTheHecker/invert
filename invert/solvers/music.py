@@ -267,16 +267,17 @@ class SolverFLEXMUSIC(BaseSolver):
         # print("n_comp: ", n_comp)
         Us = U[:, :n_comp]
         C_initial = Us @ Us.T
-
         dipole_idc = []
         source_covariance = np.zeros(n_dipoles)
         S_AP = []
         for i in range(k):
             Ps = Us @ Us.T
+            PsQ = Ps @ Q
 
             mu = np.zeros((n_orders, n_dipoles))
             for nn in range(n_orders):
-                norm_1 = np.linalg.norm(Ps @ Q @ leadfields[nn], axis=0)
+                
+                norm_1 = np.linalg.norm(PsQ @ leadfields[nn], axis=0)
                 norm_2 = np.linalg.norm(Q @ leadfields[nn], axis=0) 
                 mu[nn, :] = norm_1 / norm_2
 
@@ -304,7 +305,6 @@ class SolverFLEXMUSIC(BaseSolver):
                 Us = U[:, :n_comp-i]
             else:
                 Us = U[:, :n_comp]
-        
         # Phase 2: refinement
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
@@ -489,12 +489,9 @@ class SolverAlternatingProjections(BaseSolver):
 
         if not self.is_prepared:
             self.prepare_flex()
-        start = time()
         inverse_operator = self.make_ap(data, n, k, 
                                         max_iter=max_iter, 
                                         refine_solution=refine_solution)
-        end = time()
-        print(f"Full make_ap: {end-start:.1f} s")
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
@@ -521,7 +518,6 @@ class SolverAlternatingProjections(BaseSolver):
         x_hat : numpy.ndarray
             Source data matrix (sources, time)
         '''
-        # stime = time()
         n_chans, n_dipoles = self.leadfield.shape
         n_time = y.shape[1]
 
@@ -579,7 +575,6 @@ class SolverAlternatingProjections(BaseSolver):
         S_AP = []
         # Initialization:  search the 1st source location over the entire
         # dipoles topographies space
-        start = time()
         ap_val1 = np.zeros((n_orders, n_dipoles))
         for nn in range(n_orders):
             L = leadfields[nn]
@@ -590,13 +585,8 @@ class SolverAlternatingProjections(BaseSolver):
             ap_val1[nn, :] = norm_1 #/ norm_2
 
         best_order, best_dipole = np.unravel_index(np.argmax(ap_val1), ap_val1.shape)
-
         S_AP.append( [best_order, best_dipole] )
-        # store the current leadfield component in A
-        A = leadfields[best_order][:, best_dipole][:, np.newaxis]
-        end = time()
-        print(f"\tInitial Dipole: {end-start:.1f} s")
-        start = time()
+        
         # (b) Now, add one source at a time
         for ii in range(1, n_comp):
             ap_val2 = np.zeros((n_orders, n_dipoles))
@@ -619,14 +609,10 @@ class SolverAlternatingProjections(BaseSolver):
 
             best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
             S_AP.append( [best_order, best_dipole] )
-        end = time()
-        print(f"\tMore dipoles: {end-start:.1f} s")
-        
         # Update source covariance
         # source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP], axis=0)
 
         # Phase 2: refinement
-        start = time()
         S_AP_2 = deepcopy(S_AP)
         if len(S_AP) > 1 and refine_solution:
             # best_vals = np.zeros(n_comp)
@@ -644,6 +630,7 @@ class SolverAlternatingProjections(BaseSolver):
                     ap_val2 = np.zeros((n_orders, n_dipoles))
                     for nn in range(n_orders):
                         L = leadfields[nn]
+
                         # New, fast
                         QL = np.dot(Q, L)
                         ap_val2[nn] = np.sum(L * QCQ.dot(L), axis=0) / np.sum(L * QL, axis=0)
@@ -661,11 +648,6 @@ class SolverAlternatingProjections(BaseSolver):
                     
                 if S_AP_2 == S_AP_2_Prev:  # and iter>0:
                     break
-        print(f"\t{iter} iters")
-        # print("iters: ", iter)
-        end = time()
-        print(f"\tRefine: {end-start:.1f} s")
-        start = time()
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
 
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
@@ -678,9 +660,6 @@ class SolverAlternatingProjections(BaseSolver):
         
         W = np.diag(np.linalg.norm(L, axis=0)) 
         inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
-        end = time()
-        end = time()
-        print(f"\tMinimum norm stuff: {end-start:.1f} s")
         
         return inverse_operator
 
