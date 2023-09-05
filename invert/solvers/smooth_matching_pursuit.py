@@ -96,6 +96,7 @@ class SolverSMP(BaseSolver):
         x_hat : numpy.ndarray
             The inverse solution (dipoles,)
         """
+        
         n_chans = len(y)
         _, n_dipoles = self.leadfield.shape
         

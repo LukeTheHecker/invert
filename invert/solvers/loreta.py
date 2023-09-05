@@ -178,7 +178,7 @@ class SolverELORETA(BaseSolver):
         inverse_operators = []
         for alpha in self.alphas:
             
-            W = self.calc_W(H, W_MNE, W_MNE_inv, alpha, max_iter=max_iter, stop_crit=stop_crit)
+            W = self.calc_W(H, W_MNE_inv, alpha, max_iter=max_iter, stop_crit=stop_crit)
 
             inverse_operator = np.linalg.inv(W) @ leadfield.T @ np.linalg.pinv(leadfield @ np.linalg.inv(W) @ leadfield.T + alpha * H)
             
@@ -193,7 +193,7 @@ class SolverELORETA(BaseSolver):
         return self
 
 
-    def calc_W(self, H, W_MNE, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
+    def calc_W(self, H, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
         n_chans, n_dipoles = self.leadfield.shape
         
         MM = np.linalg.pinv(self.leadfield @ W_MNE_inv @ self.leadfield.T + alpha * H)
@@ -205,7 +205,7 @@ class SolverELORETA(BaseSolver):
             W_i = self.leadfield.T @ MM @ self.leadfield
             W_i = np.sqrt(np.diag(np.diagonal(W_i)))
             w_change = np.linalg.norm(W_i - W_last)
-            
+            print(w_change)
             if w_change < stop_crit:
                 break    
             W_last = deepcopy(W_i)

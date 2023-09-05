@@ -249,9 +249,15 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
 def get_cov(n, corr_coef):
     '''Generate a covariance matrix that is symmetric along the
-    diagonal that correlates sources to a specified extent.'''
-    cov = np.ones((n,n)) * corr_coef + np.eye(n)*(1-corr_coef)
-    return np.linalg.cholesky(cov).T
+    diagonal that correlates sources to a specified degree.'''
+    if corr_coef < 1:
+        cov = np.ones((n,n)) * corr_coef + np.eye(n)*(1-corr_coef)
+        cov = np.linalg.cholesky(cov)
+    else:
+        # Make all signals be exactly the first one (perfectly coherent)
+        cov = np.zeros((n, n))
+        cov[:, 0] = 1
+    return cov.T
 
 def add_white_noise(X_clean, snr, rng, iid=False):
     ''' '''

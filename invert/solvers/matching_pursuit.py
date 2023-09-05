@@ -47,25 +47,26 @@ class SolverOMP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, K=1, max_iter=None) -> mne.SourceEstimate:
         ''' Apply the inverse operator.
         Parameters
         ----------
         mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
             The MNE data object.
-
+        K : int
+            The number of atoms to select per iteration.
         Return
         ------
         stc : mne.SourceEstimate
             The mne Source Estimate object
         '''
         data = self.unpack_data_obj(mne_obj)
-        source_mat = np.stack([self.calc_omp_solution(y, K=K) for y in data.T], axis=1)
+        source_mat = np.stack([self.calc_omp_solution(y, K=K, max_iter=max_iter) for y in data.T], axis=1)
         stc = self.source_to_object(source_mat)
         return stc
     
 
-    def calc_omp_solution(self, y, K=1):
+    def calc_omp_solution(self, y, K=1, max_iter=None):
         """ Calculates the Orthogonal Matching Pursuit (OMP) inverse solution.
         
         Parameters
@@ -81,8 +82,9 @@ class SolverOMP(BaseSolver):
             The inverse solution (dipoles,)
         """
         y -= y.mean()
-        
-        n_chans = len(y)
+
+        if max_iter is None:
+            max_iter = len(y)
         _, n_dipoles = self.leadfield.shape
         # leadfield_pinv = np.linalg.pinv(self.leadfield)
         x_hat = np.zeros(n_dipoles)
@@ -96,7 +98,7 @@ class SolverOMP(BaseSolver):
         y_hat -= y_hat.mean()
         residuals = np.array([np.linalg.norm(y - y_hat), ])
 
-        for _ in range(n_chans):
+        for _ in range(max_iter):
             # b = self.leadfield.T @ r
             b = self.leadfield_normed.T @ r
 
@@ -166,7 +168,7 @@ class SolverSOMP(BaseSolver):
         self.inverse_operators = []
         return self
 
-    def apply_inverse_operator(self, mne_obj, K=1) -> mne.SourceEstimate:
+    def apply_inverse_operator(self, mne_obj, K=1, max_iter=None) -> mne.SourceEstimate:
         ''' Apply the inverse operator.
         Parameters
         ----------
@@ -179,12 +181,12 @@ class SolverSOMP(BaseSolver):
             The mne Source Estimate object
         '''
         data = self.unpack_data_obj(mne_obj)
-        source_mat = self.calc_somp_solution(data, K)
+        source_mat = self.calc_somp_solution(data, K, max_iter=max_iter)
         stc = self.source_to_object(source_mat)
         return stc
     
 
-    def calc_somp_solution(self, y, K):
+    def calc_somp_solution(self, y, K, max_iter=None):
         """ Calculates the S-OMP inverse solution.
         
         Parameters
@@ -201,7 +203,8 @@ class SolverSOMP(BaseSolver):
 
         """
         n_chans, n_time = y.shape
-        max_iter = int(n_chans/2)
+        if max_iter is None:
+            max_iter = int(n_chans/2)
         _, n_dipoles = self.leadfield.shape
 
         leadfield_pinv = np.linalg.pinv(self.leadfield)

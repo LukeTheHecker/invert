@@ -43,16 +43,18 @@ def Solver(solver="mne", **kwargs):
     # Bayesian Algorithms
     elif solver.lower() == "champagne" or solver.lower() == "champ":
         solver_object = solvers.SolverChampagne(**kwargs)
-    elif solver.lower() == "lowsnrchampagne" or solver.lower() == "low snr champagne" or solver.lower() == "lsc":
-        solver_object = solvers.SolverLowSNRChampagne(**kwargs)
+    elif solver.lower() == "lowsnrchampagne" or solver.lower() == "low snr champagne" or solver.lower() == "lowsnr champagne"  or solver.lower() == "lsc":
+        solver_object = solvers.SolverChampagne(**kwargs, update_rule="LowSNR")
+    elif solver.lower() == "mackaychampagne" or solver.lower() == "mackay champagne" or solver.lower() == "mackay-champagne" or solver.lower() == "mcc":
+        solver_object = solvers.SolverChampagne(**kwargs, update_rule="MacKay")
+    elif solver.lower() == "convexitychampagne" or solver.lower() == "convexity champagne" or solver.lower() == "convexity-champagne" or solver.lower() == "coc":
+        solver_object = solvers.SolverChampagne(**kwargs, update_rule="Convexity")
+    
+
     elif solver.lower() == "emchampagne" or solver.lower() == "em champagne" or solver.lower() == "emc":
         solver_object = solvers.SolverEMChampagne(**kwargs)
     elif solver.lower() == "mmchampagne" or solver.lower() == "mm champagne" or solver.lower() == "mmc":
         solver_object = solvers.SolverMMChampagne(**kwargs)
-    elif solver.lower() == "mackaychampagne" or solver.lower() == "mackay champagne" or solver.lower() == "mackay-champagne" or solver.lower() == "mcc":
-        solver_object = solvers.SolverMacKayChampagne(**kwargs)
-    elif solver.lower() == "convexitychampagne" or solver.lower() == "convexity champagne" or solver.lower() == "convexity-champagne" or solver.lower() == "coc":
-        solver_object = solvers.SolverConvexityChampagne(**kwargs)
     elif solver.lower() == "fun":
         solver_object = solvers.SolverFUN(**kwargs)
     elif solver.lower() == "heteroscedastic champagne" or solver.lower() == "hs champagne" or solver.lower() == "hs-champagne" or solver.lower() == "hsc":

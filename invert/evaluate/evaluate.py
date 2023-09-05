@@ -16,10 +16,10 @@ def evaluate_all(y_true, y_pred, adjacency_true, adjacency_pred, distance_matrix
     # auc = [np.mean(eval_auc(yy_true, yy_pred, pos_1, epsilon=0.01, n_redraw=10)) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     # corr = [pearsonr(yy_true, yy_pred)[0] for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     emd = eval_emd(distance_matrix, y_true_collapsed, y_pred_collapsed)
-    # sparsity_pred = eval_sparsity(y_pred)
-    # sparsity_true = eval_sparsity(y_true)
-    # active_true = eval_active(y_true)
-    # active_pred = eval_active(y_pred)
+    sparsity_pred = eval_sparsity(y_pred)
+    sparsity_true = eval_sparsity(y_true)
+    active_true = eval_active(y_true)
+    active_pred = eval_active(y_pred)
     
     d = dict(
         # Mean_Squared_Error=np.nanmedian(mse),
@@ -28,18 +28,24 @@ def evaluate_all(y_true, y_pred, adjacency_true, adjacency_pred, distance_matrix
         # AUC=np.nanmedian(auc),
         # Corr=np.nanmedian(corr),
         EMD=emd,
-        # Sparsity_pred=sparsity_pred,
-        # Sparsity_true=sparsity_true,
-        # Active_True=active_true,
-        # Active_Pred=active_pred,
+        Sparsity_pred=sparsity_pred,
+        Sparsity_true=sparsity_true,
+        Active_True=active_true,
+        Active_Pred=active_pred,
     )
     
     return d
 
-def eval_active(y, thr=0.01):
-    y_norm = np.linalg.norm(y, axis=-1, ord=1)
-    y_norm[abs(y_norm)<abs(y_norm).max()*thr] = 0
-    return (y_norm!=0).sum() / len(y_norm)
+def eval_active(y):
+    if len(y.shape) > 1:
+        return np.linalg.norm(y[:, 0], ord=0)
+    else:
+        return np.linalg.norm(y, ord=0)
+
+# def eval_active(y, thr=0.01):
+#     y_norm = np.linalg.norm(y, axis=-1, ord=1)
+#     y_norm[abs(y_norm)<abs(y_norm).max()*thr] = 0
+#     return (y_norm!=0).sum() / len(y_norm)
 
 def eval_sparsity(y):
     y_scaled = y / np.linalg.norm(y, axis=0)
@@ -165,8 +171,8 @@ def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray,
     maxima_idc_true = filter_maxima(maxima_idc_true, adjacency_true, distance_matrix[:, 0])
     maxima_idc_est = filter_maxima(maxima_idc_est, adjacency_est, distance_matrix[:, 0])
 
-    print(maxima_idc_true)
-    print(maxima_idc_est)
+    # print(maxima_idc_true)
+    # print(maxima_idc_est)
     # Get pairwise distance between true and estimated source locations.
     pairwise_dist = np.zeros((len(maxima_idc_true), len(maxima_idc_est)))
     for ii, idx_true in enumerate(maxima_idc_true):

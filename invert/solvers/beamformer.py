@@ -4,6 +4,7 @@ from copy import deepcopy
 from ..util import find_corner
 from .base import BaseSolver, InverseOperator
 from time import time
+
 class SolverMVAB(BaseSolver):
     ''' Class for the Minimum Variance Adaptive Beamformer (MVAB) inverse
         solution [1].
@@ -121,10 +122,18 @@ class SolverLCMV(BaseSolver):
             
             C_inv = np.linalg.inv(C + alpha*I)
 
-            W = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
-
+            # W = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
+            upper = C_inv @ leadfield
+            lower = np.einsum('ij,jk,ki->i', leadfield.T, C_inv, leadfield)
+            W = upper / lower
+            
+            # C_inv_L = C_inv @ leadfield
+            # diagonal_elements = np.einsum('ij,ji->i', leadfield.T, C_inv_L)
+            # W = C_inv_L / diagonal_elements
+            
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
+            
             inverse_operator = W.T
             inverse_operators.append(inverse_operator)
 

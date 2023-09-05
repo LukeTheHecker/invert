@@ -169,7 +169,7 @@ class BaseSolver:
         
     @staticmethod
     def prep_data(mne_obj):
-        if not mne_obj.proj:
+        if not mne_obj.proj and "eeg" in mne_obj.get_channel_types():
             mne_obj.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
         
         return mne_obj

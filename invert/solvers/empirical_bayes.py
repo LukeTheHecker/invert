@@ -1,6 +1,6 @@
 from copy import deepcopy
 from scipy.spatial.distance import cdist
-from scipy.sparse import spdiags, csr_matrix
+from scipy.sparse import spdiags, csr_matrix, diags
 from scipy.linalg import inv, sqrtm
 from scipy.sparse.linalg import inv
 import numpy as np
@@ -8,6 +8,7 @@ import mne
 from scipy.fftpack import dct
 from scipy.linalg import toeplitz
 import matplotlib.pyplot as plt
+
 from ..util import pos_from_forward
 # from ..invert import BaseSolver, InverseOperator
 # from .. import invert
@@ -17,7 +18,7 @@ from time import time
 # import BaseSolver, InverseOperator
 
 
-class SolverChampagne(BaseSolver):
+class SolverChampagneOld(BaseSolver):
     ''' Class for the Champagne inverse solution. Code is based on the
     implementation from the BSI-Zoo: https://github.com/braindatalab/BSI-Zoo/
     
@@ -581,10 +582,12 @@ class SolverMacKayChampagne(BaseSolver):
         # z_0 = L.T @ Sigma_y_inv @ L
         mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
         loss_list = [1e99,]
-        for i in range(max_iter):
+        for _ in range(max_iter):
             old_gammas = deepcopy(gammas)
             
-            gammas = np.mean(mu_x**2, axis=1) / (gammas * np.diag(L.T @ Sigma_y_inv @ L))
+            # gammas = np.mean(mu_x**2, axis=1) / (gammas * np.diag(L.T @ Sigma_y_inv @ L))
+            gammas = np.mean(mu_x**2, axis=1) / (gammas * np.diag(L.T @ Sigma_y_inv @ L) + 1e-8)  # Adding a small constant for numerical stability
+            # gammas = np.squeeze(np.mean(mu_x**2, axis=1) / (gammas[np.newaxis, :] @ L.T @ Sigma_y_inv @ L))  # New rule for MacKay
             
             gammas[np.isnan(gammas)] = 0
             
@@ -601,6 +604,20 @@ class SolverMacKayChampagne(BaseSolver):
             mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
             loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
 
+            # # ChatGPT LOSS
+            # # Compute the residuals
+            residuals = Y_scaled - L @ mu_x
+
+            # # Log likelihood term
+            # log_likelihood_data = -0.5 * np.log(np.linalg.det(Sigma_y)) - 0.5 * residuals.T @ Sigma_y_inv @ residuals
+
+            # # Regularization term
+            # log_likelihood_prior = -0.5 * np.log(np.linalg.det(Gamma)) - 0.5 * mu_x.T @ np.linalg.inv(Gamma) @ mu_x
+
+            # # Total loss
+            # loss = log_likelihood_data + alpha * log_likelihood_prior
+
+
             loss_list.append(loss)
 
             # Check if gammas went to zero
@@ -610,13 +627,15 @@ class SolverMacKayChampagne(BaseSolver):
                 break
             # Check convergence:
             change = loss_list[-2] - loss_list[-1] 
-            # print(change)
+            print(f"\tloss: {loss:.1f}")
+            print(f"\tchange: {change:.1f} ")
+            print(f"\tresiduals: {np.linalg.norm(residuals):.3f}")
             if change < convergence_criterion:
                 # print("Converged!")
                 break
             
         # update rest
-        gammas /= gammas.max()
+        # gammas /= gammas.max()
         Gamma = np.diag(gammas)
         Sigma_y = (alpha**2) * I + L @ Gamma @ L.T
         Sigma_y_inv = np.linalg.inv(Sigma_y)
@@ -740,12 +759,14 @@ class SolverConvexityChampagne(BaseSolver):
         loss_list = [1e99,]
         for i in range(max_iter):
             old_gammas = deepcopy(gammas)
-            # z = []
-            for n in range(len(gammas)):
-                Ln = L[:, n][:,np.newaxis]
-                g = np.trace(Ln.T @ Sigma_y_inv @ Ln)
-                upper_term = (1/n_times) *(mu_x[n]**2).sum()
-                gammas[n] = np.sqrt(upper_term / g)
+
+            gammas = np.sqrt(np.mean(mu_x**2, axis=1) / np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])]))
+            # # z = []
+            # for n in range(len(gammas)):
+            #     Ln = L[:, n][:,np.newaxis]
+            #     g = np.trace(Ln.T @ Sigma_y_inv @ Ln)
+            #     upper_term = (1/n_times) *(mu_x[n]**2).sum()
+            #     gammas[n] = np.sqrt(upper_term / g)
 
             gammas[np.isnan(gammas)] = 0
             # print("max gamma: ", gammas.max())
@@ -771,6 +792,7 @@ class SolverConvexityChampagne(BaseSolver):
                 break
             # Check convergence:
             change = loss_list[-2] - loss_list[-1] 
+            print(f"loss: {loss}")
             # print(change)
             if change < convergence_criterion:
                 # print("Converged!")
@@ -1123,6 +1145,343 @@ class SolverLowSNRChampagne(BaseSolver):
 
         return inverse_operator
 
+class SolverChampagne(BaseSolver):
+    ''' Class for Champagne inverse solution (MacKay, Convexity Bound, LowSNR). 
+
+    References
+    ----------
+    [1] Cai, C., Kang, H., Hashemi, A., Chen, D., Diwakar, M., Haufe, S., ... &
+    Nagarajan, S. S. (2022). Bayesian algorithms for joint estimation of brain
+    activity and noise in electromagnetic imaging. IEEE Transactions on Medical
+    Imaging.
+    '''
+
+    def __init__(self, name="Champagne", update_rule="MacKay", **kwargs):
+        '''
+        Parameters
+        ----------
+        update_rule : str
+            Either of: "MacKay", "Convexity", "LowSNR"
+        '''
+        self.name = update_rule + " " + name
+        self.update_rule = update_rule
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, alpha='auto', 
+                              max_iter=1000, noise_cov=None, prune=True, 
+                              pruning_thresh=1e-3, convergence_criterion=1e-8, 
+                              **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        alpha : float
+            The regularization parameter.
+        max_iter : int
+            Maximum number of iterations.
+        noise_cov : [None, numpy.ndarray]
+            The noise covariance matrix. Use "None" if not available.
+        prune : bool
+            If True, the algorithm sets small-activity dipoles to zero
+            (pruning).
+        pruning_thresh : float
+            The threshold at which small gammas (dipole candidates) are set to
+            zero.
+        convergence_criterion : float
+            Minimum change of loss function until convergence is assumed.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
+        # Store attributes
+        n_chans = self.leadfield.shape[0]
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+        self.noise_cov = noise_cov
+        
+        self.max_iter = max_iter
+        self.prune = prune
+        self.pruning_thresh = pruning_thresh
+        self.convergence_criterion = convergence_criterion
+
+        data = self.unpack_data_obj(mne_obj)
+
+        self.get_alphas(reference=self.leadfield@self.leadfield.T)
+        inverse_operators = []
+        for alpha in self.alphas:
+            inverse_operator = self.make_champagne(data, alpha)
+            inverse_operators.append( inverse_operator )
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+    def make_champagne(self, Y, alpha):
+        ''' Majority Maximization Champagne method.
+
+        Parameters
+        ----------
+        Y : array, shape (n_sensors,)
+            measurement vector, capturing sensor measurements
+        alpha : float
+            The regularization parameter.
+    
+        Returns
+        -------
+        x : numpy.ndarray
+            Parameter vector, e.g., source vector in the context of BSI (x in the cost
+            function formula).
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        _, n_times = Y.shape
+        L = deepcopy(self.leadfield)
+        set_threshold = 1e-3
+
+        # re-reference data
+        Y -= Y.mean(axis=0)
+
+        # Scaling of the data (necessary for convergence criterion and pruning
+        # threshold)
+        Y_scaled = deepcopy(Y)
+        Y_scaled /= abs(Y_scaled).mean()
+
+        I = np.identity(n_chans)
+        gammas = np.ones(n_dipoles)
+        Gamma = diags(gammas,0)
+        noise_cov = (alpha**2) * I
+        Sigma_y = noise_cov + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+        # z_0 = L.T @ Sigma_y_inv @ L
+        mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+        loss_list = [1e99,]
+        active_set = np.arange(n_dipoles)
+
+        for _ in range(self.max_iter):
+            old_gammas = deepcopy(gammas)
+            # Update gammas:
+            # if self.update_rule.lower() == "default":
+            #     upper_term = np.mean(mu_x**2, axis=1)
+            #     lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+            #     gammas = np.sqrt(upper_term / lower_term)
+
+            if self.update_rule.lower() == "mackay":
+                upper_term = np.mean(mu_x**2, axis=1)
+                lower_term = gammas * np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+                gammas = upper_term / lower_term
+
+            elif self.update_rule.lower() == "convexity":
+                upper_term = np.mean(mu_x**2, axis=1)
+                lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+                gammas = np.sqrt(upper_term / lower_term)
+
+            elif self.update_rule.lower() == "lowsnr":
+                upper_term = np.mean(mu_x**2, axis=1)
+                lower_term = np.sum(L**2, axis=0)
+                # gammas = np.sqrt(upper_term / lower_term)
+                gammas = np.sqrt(upper_term) / np.sqrt(lower_term)
+
+                
+            # Remove nans
+            gammas[np.isnan(gammas)] = 0
+
+            
+
+
+            if self.prune:
+                active_set_idc = np.where(gammas>set_threshold)[0]
+                if len(active_set_idc) == 0:
+                    print("pruned too much")
+                    gammas = old_gammas
+                    break
+                active_set = active_set[active_set_idc]
+                # print(f"New set: {len(active_set)}")
+                gammas = gammas[active_set_idc]
+                L = L[:, active_set_idc]
+            
+
+            # Prune low gammas
+            # if self.prune:
+            #     prune_candidates = gammas < self.pruning_thresh
+            #     gammas[prune_candidates] = 0
+            
+            # update rest
+            Gamma = diags(gammas,0)
+            Sigma_y = noise_cov + L @ Gamma @ L.T
+            Sigma_y_inv = np.linalg.inv(Sigma_y)
+            # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+            mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+
+            # First term: L @ Gamma @ L.T
+            # L_Gamma = L * Gamma.diagonal()  # Element-wise product
+            # term1 = np.sum(L_Gamma * L)
+
+            # # Second term: Y_scaled.T @ Sigma_y_inv @ Y_scaled
+            # Y_Sigma = Y_scaled.T * Sigma_y_inv.diagonal()  # Element-wise product
+            # term2 = np.mean(np.sum(Y_Sigma * Y_scaled.T, axis=1))
+
+            # loss = term1 + term2
+            loss = np.trace(L@Gamma@L.T) + np.mean(np.trace(Y_scaled.T@Sigma_y_inv@Y_scaled))
+            
+            # Compute the residuals
+            loss_list.append(loss)
+
+            # Check if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
+            # Check convergence:
+            change = loss_list[-2] - loss_list[-1] 
+            # print(gammas.max(), gammas.min(), np.percentile(gammas, 5))
+            # residuals = Y_scaled - L @ mu_x
+            print(f"\tloss: {loss:.1f}")
+            # print(f"\tchange: {change:.1f} ")
+            # print(f"\tresiduals: {np.linalg.norm(residuals):.3f}")
+            
+            
+            
+            if change < self.convergence_criterion:
+                print("Converged!")
+                break
+        
+        # update rest
+        L = deepcopy(self.leadfield)
+        gammas_final = np.zeros(n_dipoles)
+        gammas_final[active_set] = gammas
+        Gamma = diags(gammas_final,0)
+        Sigma_y = noise_cov + L @ Gamma @ L.T
+        Sigma_y_inv = np.linalg.inv(Sigma_y)
+        inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+        # This is how the final source estimate could be calculated:
+        # mu_x = inverse_operator @ Y
+
+
+        return inverse_operator
+    
+    # def make_champagne(self, Y, alpha):
+    #     ''' Majority Maximization Champagne method.
+
+    #     Parameters
+    #     ----------
+    #     Y : array, shape (n_sensors,)
+    #         measurement vector, capturing sensor measurements
+    #     alpha : float
+    #         The regularization parameter.
+    
+    #     Returns
+    #     -------
+    #     x : numpy.ndarray
+    #         Parameter vector, e.g., source vector in the context of BSI (x in the cost
+    #         function formula).
+    #     '''
+    #     n_chans, n_dipoles = self.leadfield.shape
+    #     _, n_times = Y.shape
+    #     L = deepcopy(self.leadfield)
+    #     set_threshold = 1e-3
+
+    #     # re-reference data
+    #     Y -= Y.mean(axis=0)
+
+    #     # Scaling of the data (necessary for convergence criterion and pruning
+    #     # threshold)
+    #     Y_scaled = deepcopy(Y)
+    #     Y_scaled /= abs(Y_scaled).mean()
+
+    #     I = np.identity(n_chans)
+    #     gammas = np.ones(n_dipoles)
+    #     Gamma = diags(gammas,0)
+    #     noise_cov = (alpha**2) * I
+    #     Sigma_y = noise_cov + L @ Gamma @ L.T
+    #     Sigma_y_inv = np.linalg.inv(Sigma_y)
+    #     # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+    #     # z_0 = L.T @ Sigma_y_inv @ L
+    #     mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+    #     loss_list = [1e99,]
+
+    #     for _ in range(self.max_iter):
+    #         old_gammas = deepcopy(gammas)
+    #         # Update gammas:
+    #         # if self.update_rule.lower() == "default":
+    #         #     upper_term = np.mean(mu_x**2, axis=1)
+    #         #     lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+    #         #     gammas = np.sqrt(upper_term / lower_term)
+
+    #         if self.update_rule.lower() == "mackay":
+    #             upper_term = np.mean(mu_x**2, axis=1)
+    #             lower_term = gammas * np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+    #             gammas = upper_term / lower_term
+
+    #         elif self.update_rule.lower() == "convexity":
+    #             upper_term = np.mean(mu_x**2, axis=1)
+    #             lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+    #             gammas = np.sqrt(upper_term / lower_term)
+
+    #         elif self.update_rule.lower() == "lowsnr":
+    #             upper_term = np.mean(mu_x**2, axis=1)
+    #             lower_term = np.sum(L**2, axis=0)
+    #             # gammas = np.sqrt(upper_term / lower_term)
+    #             gammas = np.sqrt(upper_term) / np.sqrt(lower_term)
+
+                
+    #         # Remove nans
+    #         gammas[np.isnan(gammas)] = 0
+            
+    #         # Prune low gammas
+    #         if self.prune:
+    #             prune_candidates = gammas < self.pruning_thresh
+    #             gammas[prune_candidates] = 0
+            
+    #         # update rest
+    #         Gamma = diags(gammas,0)
+    #         Sigma_y = noise_cov + L @ Gamma @ L.T
+    #         Sigma_y_inv = np.linalg.inv(Sigma_y)
+    #         # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
+    #         mu_x = Gamma @ L.T @ Sigma_y_inv @ Y_scaled
+
+    #         loss = np.trace(L@Gamma@L.T) + (1/n_times) * (Y_scaled.T@Sigma_y@Y_scaled).sum()
+    #         # Compute the residuals
+            
+    #         loss_list.append(loss)
+
+    #         # Check if gammas went to zero
+    #         if np.linalg.norm(gammas) == 0:
+    #             # print("breaking")
+    #             gammas = old_gammas
+    #             break
+    #         # Check convergence:
+    #         change = loss_list[-2] - loss_list[-1] 
+    #         print(gammas.max(), gammas.min(), np.percentile(gammas, 5))
+    #         # residuals = Y_scaled - L @ mu_x
+    #         # print(f"\tloss: {loss:.1f}")
+    #         # print(f"\tchange: {change:.1f} ")
+    #         # print(f"\tresiduals: {np.linalg.norm(residuals):.3f}")
+    #         print(gammas.max())
+    #         if change < self.convergence_criterion:
+    #             print("Converged!")
+    #             break
+
+            
+    #     # update rest
+    #     # gammas /= gammas.max()
+    #     Gamma = diags(gammas,0)
+    #     Sigma_y = noise_cov + L @ Gamma @ L.T
+    #     Sigma_y_inv = np.linalg.inv(Sigma_y)
+    #     inverse_operator = Gamma @ L.T @ Sigma_y_inv
+        
+    #     # This is how the final source estimate could be calculated:
+    #     # mu_x = inverse_operator @ Y
+
+
+    #     return inverse_operator
+
 class SolverFUN(BaseSolver):
     ''' Class for the Full-Structure Noise (FUN) inverse solution. 
 
@@ -1204,6 +1563,7 @@ class SolverFUN(BaseSolver):
             zero.
         convergence_criterion : float
             Minimum change of loss function until convergence is assumed.
+        
         Returns
         -------
         x : numpy.ndarray
@@ -1305,7 +1665,7 @@ class SolverFUN(BaseSolver):
             if i>0:
                 dx = np.max(abs(last_X_hat - X_hat))
                 # dx = np.sum((last_X_hat - X_hat)**2)
-                # print(dx)
+                print(dx)
                 if dx < convergence_criterion:
                     # print("converged")
                     break
