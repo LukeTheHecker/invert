@@ -2,6 +2,9 @@ import numpy as np
 from copy import deepcopy
 import mne
 from scipy.sparse.csgraph import laplacian
+from scipy.linalg import sqrtm, pinv
+from scipy.sparse import csr_matrix
+from scipy import sparse as sp
 # from ..invert import BaseSolver, InverseOperator
 # from .. import invert
 from .base import BaseSolver, InverseOperator
@@ -167,50 +170,64 @@ class SolverELORETA(BaseSolver):
         
         # Some pre-calculations
         I = np.identity(n_chans)
-        one = np.ones((n_chans, 1))
-        H = I - (one @ one.T) / (one.T @ one)
-        W_MNE = np.diag(np.linalg.norm(leadfield, axis=0))
-        W_MNE_inv = np.linalg.inv(W_MNE)
         
         # No regularization leads to weird results with eLORETA
-        if self.alphas[0] == 0:
-            self.alphas[0] = 0.01
+        # if self.alphas[0] == 0:
+        #     self.alphas[0] = 0.01
         inverse_operators = []
         for alpha in self.alphas:
             
-            W = self.calc_W(H, W_MNE_inv, alpha, max_iter=max_iter, stop_crit=stop_crit)
+            W = self.calc_W(alpha, max_iter=max_iter, stop_crit=stop_crit)
+            W_inv = sp.linalg.inv(W)
 
-            inverse_operator = np.linalg.inv(W) @ leadfield.T @ np.linalg.pinv(leadfield @ np.linalg.inv(W) @ leadfield.T + alpha * H)
-            
-            # According to Grech 2008:
-            # D = calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=stop_crit, verbose=verbose)
-            # D_inv = np.linalg.inv(D)
-            # inverse_operator = D_inv @ leadfield.T @ np.linalg.inv( leadfield @ D_inv @ leadfield.T + alpha * noise_cov )
-
+            inverse_operator = W_inv @ leadfield.T @ pinv(leadfield @ W_inv @ leadfield.T + alpha * I)
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
 
+    def calc_W(self, alpha, max_iter=100, stop_crit=1e-3):
+        from scipy.sparse import csr_matrix
+        K = self.leadfield
+        n_chans, n_dipoles= K.shape
 
-    def calc_W(self, H, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
-        n_chans, n_dipoles = self.leadfield.shape
-        
-        MM = np.linalg.pinv(self.leadfield @ W_MNE_inv @ self.leadfield.T + alpha * H)
-        W_last = np.zeros((n_dipoles, n_dipoles))
-        # changes = [1e99,]
-        # norms = [1e99,]
-        # eps = 1e-16
-        for i in range(max_iter):
-            W_i = self.leadfield.T @ MM @ self.leadfield
-            W_i = np.sqrt(np.diag(np.diagonal(W_i)))
-            w_change = np.linalg.norm(W_i - W_last)
-            print(w_change)
-            if w_change < stop_crit:
-                break    
-            W_last = deepcopy(W_i)
+        I = csr_matrix(np.identity(n_chans))
+        W = csr_matrix(np.identity(n_dipoles))
+        W_inv = W
+
+        for iter in range(max_iter):
             
-        return W_i
+            
+            W_old = deepcopy(W)
+            W_inv = sp.linalg.inv(W)
+                
+            M = pinv(K @ W_inv @ K.T + alpha*I)
+
+            W = csr_matrix(np.diag(np.sqrt(np.einsum('ij,jk,ki->i', K.T, M, K))))
+
+            change = np.trace(abs(W.toarray()-W_old.toarray()))
+            print(f"iter {iter}: {change}")
+            if change < stop_crit:
+                break
+        return W
+    # def calc_W(self, H, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
+    #     n_chans, n_dipoles = self.leadfield.shape
+        
+    #     MM = np.linalg.pinv(self.leadfield @ W_MNE_inv @ self.leadfield.T + alpha * H)
+    #     W_last = np.zeros((n_dipoles, n_dipoles))
+    #     # changes = [1e99,]
+    #     # norms = [1e99,]
+    #     # eps = 1e-16
+    #     for i in range(max_iter):
+    #         W_i = self.leadfield.T @ MM @ self.leadfield
+    #         W_i = np.sqrt(np.diag(np.diagonal(W_i)))
+    #         w_change = np.linalg.norm(W_i - W_last)
+    #         print("w change i: ", w_change)
+    #         if w_change <= stop_crit:
+    #             break    
+    #         W_last = deepcopy(W_i)
+            
+    #     return W_i
 
 
 def calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=0.005, verbose=0):
