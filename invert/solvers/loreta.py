@@ -172,8 +172,14 @@ class SolverELORETA(BaseSolver):
         I = np.identity(n_chans)
         
         # No regularization leads to weird results with eLORETA
-        # if self.alphas[0] == 0:
-        #     self.alphas[0] = 0.01
+        if 0 in self.alphas and len(self.alphas) > 1:
+            idx = self.alphas.index(0)
+            self.alphas.pop(idx)
+            self.r_values = np.delete(self.r_values, idx)
+        elif 0 in self.alphas and len(self.alphas) == 1:
+            idx = self.alphas.index(0)
+            self.alphas = [0.01]
+        
         inverse_operators = []
         for alpha in self.alphas:
             
