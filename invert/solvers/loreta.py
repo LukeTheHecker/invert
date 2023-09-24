@@ -201,9 +201,8 @@ class SolverELORETA(BaseSolver):
         W = csr_matrix(np.identity(n_dipoles))
         W_inv = W
 
-        for iter in range(max_iter):
-            
-            
+        # Refine W iteratively
+        for iter in range(max_iter):            
             W_old = deepcopy(W)
             W_inv = sp.linalg.inv(W)
                 
@@ -214,26 +213,10 @@ class SolverELORETA(BaseSolver):
             change = np.trace(abs(W.toarray()-W_old.toarray()))
             print(f"iter {iter}: {change}")
             if change < stop_crit:
+                # converged!
                 break
+
         return W
-    # def calc_W(self, H, W_MNE_inv, alpha, max_iter=100, stop_crit=0.005):
-    #     n_chans, n_dipoles = self.leadfield.shape
-        
-    #     MM = np.linalg.pinv(self.leadfield @ W_MNE_inv @ self.leadfield.T + alpha * H)
-    #     W_last = np.zeros((n_dipoles, n_dipoles))
-    #     # changes = [1e99,]
-    #     # norms = [1e99,]
-    #     # eps = 1e-16
-    #     for i in range(max_iter):
-    #         W_i = self.leadfield.T @ MM @ self.leadfield
-    #         W_i = np.sqrt(np.diag(np.diagonal(W_i)))
-    #         w_change = np.linalg.norm(W_i - W_last)
-    #         print("w change i: ", w_change)
-    #         if w_change <= stop_crit:
-    #             break    
-    #         W_last = deepcopy(W_i)
-            
-    #     return W_i
 
 
 def calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=0.005, verbose=0):
