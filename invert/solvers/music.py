@@ -531,8 +531,11 @@ class SolverAlternatingProjections(BaseSolver):
         # Assert common average reference
         y -= y.mean(axis=0)
         
+        
         # Compute Data Covariance
         if type(n) == str:
+            C = y@y.T
+            U, D, _= np.linalg.svd(C, full_matrices=False)
             if n == "L":
                 # Based L-Curve Criterion
                 n_comp = self.get_comps_L(D)
