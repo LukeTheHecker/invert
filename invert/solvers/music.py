@@ -373,7 +373,6 @@ class SolverFLEXMUSIC(BaseSolver):
         self.leadfields = [deepcopy(self.leadfield), ]
         self.gradients = [csr_matrix(I),]
         
-
         if self.diffusion_smoothing:
             smoothing_operator = csr_matrix(I - self.diffusion_parameter * LL)
         else:
@@ -430,9 +429,10 @@ class SolverAlternatingProjections(BaseSolver):
     Symposium on Biomedical Imaging (ISBI) (pp. 1-5). IEEE.
 
     '''
-    def __init__(self, name="Flexible Alternative Projections", **kwargs):
+    def __init__(self, name="Flexible Alternative Projections", scale_leadfield=False, **kwargs):
         self.name = name
         self.is_prepared = False
+        self.scale_leadfield = scale_leadfield
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, mne_obj, *args, n_orders=3, 
@@ -608,10 +608,23 @@ class SolverAlternatingProjections(BaseSolver):
                 # upper = np.diag(L.T @ QCQ @ L)
                 # lower = np.diag(L.T @ Q @ L)
                 # ap_val2[nn] = upper / lower
+            
+            # Select the best candidate, unless it is already in the set
+            # best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
+            # S_AP.append( [best_order, best_dipole] )
+            select_idx = -1
+            while True:
+                
+                best_order, best_dipole = np.unravel_index(np.argsort(ap_val2.flatten())[select_idx], ap_val2.shape)
+                candidate = [best_order, best_dipole]
+                if not candidate in S_AP:
+                    S_AP.append( [best_order, best_dipole] )
+                    break
+                print("rerolled AP candidate")
+                select_idx -= 1
 
-
-            best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
-            S_AP.append( [best_order, best_dipole] )
+            if len(S_AP) != len(set(tuple(row) for row in S_AP)):
+                print("Found duplicate candidates in AP!!!!")
         # Update source covariance
         # source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP], axis=0)
 
@@ -632,9 +645,8 @@ class SolverAlternatingProjections(BaseSolver):
                     QCQ = np.dot(Q, C).dot(Q)
                     ap_val2 = np.zeros((n_orders, n_dipoles))
                     for nn in range(n_orders):
-                        L = leadfields[nn]
-
                         # New, fast
+                        L = leadfields[nn]
                         QL = np.dot(Q, L)
                         ap_val2[nn] = np.sum(L * QCQ.dot(L), axis=0) / np.sum(L * QL, axis=0)
 
@@ -642,10 +654,25 @@ class SolverAlternatingProjections(BaseSolver):
                         # upper = np.diag(L.T @ QCQ @ L)
                         # lower = np.diag(L.T @ Q @ L)
                         # ap_val2[nn] = upper / lower
+                    
+                    # Select the best candidate, unless it is already in the set
+                    # best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
+                    # S_AP_2[q] = [best_order, best_dipole]
+                    select_idx = -1
+                    while True:
                         
-                    best_order, best_dipole = np.unravel_index(np.argmax(ap_val2), ap_val2.shape)
-                    # best_val = ap_val2.max()
-                    S_AP_2[q] = [best_order, best_dipole]
+                        best_order, best_dipole = np.unravel_index(np.argsort(ap_val2.flatten())[select_idx], ap_val2.shape)
+                        candidate = [best_order, best_dipole]
+                        if not candidate in S_AP_2[:q] and not candidate in S_AP_2[q+1:]:
+                            S_AP_2[q] = [best_order, best_dipole]
+                            break
+                        print("rerolled AP candidate")
+                        select_idx -= 1
+
+                    
+                    # S_AP_2[q] = [best_order, best_dipole]
+                    if len(S_AP_2) != len(set(tuple(row) for row in S_AP_2)):
+                        print("Found duplicate candidates in AP refinement")
                     # print(f"refinement: adding new value {best_val} at idx {best_dipole}, best_order {best_order}")
                     # best_vals[q] = best_val
                     
@@ -693,6 +720,11 @@ class SolverAlternatingProjections(BaseSolver):
         for _ in range(self.n_orders):
             new_leadfield = self.leadfields[-1] @ smoothing_operator
             new_gradient = self.gradients[-1] @ smoothing_operator
+
+            # Scaling? Not sure...
+            if self.scale_leadfield:
+                new_leadfield -= new_leadfield.mean(axis=0)
+                new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
         
             self.leadfields.append( new_leadfield )
             self.gradients.append( new_gradient )
