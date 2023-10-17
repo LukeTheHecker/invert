@@ -137,6 +137,21 @@ def true_variance_explained(y_true, y_pred, leadfield):
 def calc_residual_variance(M_hat, M):
     return 100 *  np.sum( (M-M_hat)**2 ) / np.sum(M**2)
 
+def coeff_det(M, M_hat):
+    M_prep = deepcopy(M)
+    M_hat_prep = deepcopy(M_hat)
+    
+    # M_prep -= M_prep.mean(axis=0)
+    # M_hat_prep -= M_hat_prep.mean(axis=0)
+    
+    M_prep /= M_prep.std()
+    M_hat_prep /= M_hat_prep.std()
+    SS_res = np.sum((M_prep-M_hat_prep)**2)
+    SS_tot = np.sum((M_prep - np.mean(M_prep))**2)
+
+    return 1 - (SS_res / SS_tot)
+
+
 def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray, 
                                  adjacency_true: np.ndarray, adjacency_est: np.ndarray, 
                                  distance_matrix: np.ndarray) -> float:
