@@ -131,7 +131,7 @@ def true_variance_explained(y_true, y_pred, leadfield):
     # Common average reference
     # M -= M.mean(axis=-1)
     # M_hat -= M_hat.mean(axis=-1)
-
+    
     return calc_residual_variance(M_hat, M)
 
 def calc_residual_variance(M_hat, M):

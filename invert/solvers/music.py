@@ -136,16 +136,18 @@ class SolverFLEXMUSIC(BaseSolver):
     published.
 
     '''
-    def __init__(self, name="FLEX-MUSIC", **kwargs):
+    def __init__(self, name="FLEX-MUSIC", scale_leadfield=False, **kwargs):
         self.name = name
         self.is_prepared = False
+        self.scale_leadfield = scale_leadfield
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, mne_obj, *args, n_orders=3, 
                               truncate=False, alpha="auto", n="auto", 
                               k="auto", stop_crit=0.95, refine_solution=False, 
                               max_iter=1000, diffusion_smoothing=True, 
-                              diffusion_parameter=0.1, **kwargs):
+                              diffusion_parameter=0.1, adjacency_type="spatial", 
+                              adjacency_distance=3e-3, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -177,6 +179,10 @@ class SolverFLEXMUSIC(BaseSolver):
             Whether to use diffusion smoothing. Default is True.
         diffusion_parameter : float
             The diffusion parameter (alpha). Default is 0.1.
+        adjacency_type : str
+            The type of adjacency. "spatial" -> based on graph neighbors. "distance" -> based on distance
+        adjacency_distance : float
+            The distance at which neighboring dipoles are considered neighbors.
         
         Return
         ------
@@ -187,6 +193,8 @@ class SolverFLEXMUSIC(BaseSolver):
         self.diffusion_smoothing = diffusion_smoothing, 
         self.diffusion_parameter = diffusion_parameter
         self.n_orders = n_orders
+        self.adjacency_type = adjacency_type
+        self.adjacency_distance = adjacency_distance
         self.truncate = truncate
         
         data = self.unpack_data_obj(mne_obj)
@@ -357,8 +365,46 @@ class SolverFLEXMUSIC(BaseSolver):
 
         return inverse_operator
 
+    # def prepare_flex(self):
+    #     ''' Create the dictionary of increasingly smooth sources unless self.n_orders==0.
+        
+    #     Parameters
+    #     ----------
+
+    #     '''
+    #     n_dipoles = self.leadfield.shape[1]
+    #     I = np.identity(n_dipoles)
+
+    #     adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        
+    #     LL = laplacian(adjacency)
+    #     self.leadfields = [deepcopy(self.leadfield), ]
+    #     self.gradients = [csr_matrix(I),]
+        
+    #     if self.diffusion_smoothing:
+    #         smoothing_operator = csr_matrix(I - self.diffusion_parameter * LL)
+    #     else:
+    #         smoothing_operator = csr_matrix(abs(LL))
+
+    #     for _ in range(self.n_orders):
+    #         new_leadfield = self.leadfields[-1] @ smoothing_operator
+    #         new_gradient = self.gradients[-1] @ smoothing_operator
+        
+    #         self.leadfields.append( new_leadfield )
+    #         self.gradients.append( new_gradient )
+            
+    #     # scale and transform gradients
+    #     for i in range(self.n_orders+1):
+    #         # self.gradients[i] =self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
+    #         row_max = self.gradients[i].max(axis=1).toarray().ravel()
+    #         scaling_factors = 1 / row_max
+    #         self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
+            
+    #     self.is_prepared = True
+
     def prepare_flex(self):
-        ''' Create the dictionary of increasingly smooth sources unless self.n_orders==0.
+        ''' Create the dictionary of increasingly smooth sources unless
+        self.n_orders==0. Flexibly selects diffusion parameter, too.
         
         Parameters
         ----------
@@ -366,34 +412,50 @@ class SolverFLEXMUSIC(BaseSolver):
         '''
         n_dipoles = self.leadfield.shape[1]
         I = np.identity(n_dipoles)
-
-        adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        if self.adjacency_type == "spatial":
+            adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        else:
+            adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
         
         LL = laplacian(adjacency)
         self.leadfields = [deepcopy(self.leadfield), ]
         self.gradients = [csr_matrix(I),]
         
-        if self.diffusion_smoothing:
-            smoothing_operator = csr_matrix(I - self.diffusion_parameter * LL)
-        else:
-            smoothing_operator = csr_matrix(abs(LL))
 
-        for _ in range(self.n_orders):
-            new_leadfield = self.leadfields[-1] @ smoothing_operator
-            new_gradient = self.gradients[-1] @ smoothing_operator
-        
-            self.leadfields.append( new_leadfield )
-            self.gradients.append( new_gradient )
+        # if self.diffusion_smoothing:
+        #     smoothing_operator = csr_matrix(I - self.diffusion_parameter * LL)
+        # else:
+        #     smoothing_operator = csr_matrix(abs(LL))
+        if self.diffusion_parameter == "auto":
+            alphas = [0.05, 0.075, 0.1, 0.125, 0.15, 0.175]
+            smoothing_operators = [csr_matrix(I - alpha * LL) for alpha in alphas]
+        else:
+            smoothing_operators = [csr_matrix(I - self.diffusion_parameter * LL),]
+
+
+        for smoothing_operator in smoothing_operators:
+
+            for i in range(self.n_orders):
+                smoothing_operator_i = smoothing_operator**(i+1)  # csr_matrix(np.linalg.matrix_power(smoothing_operator.toarray(), i+1))
+                new_leadfield = self.leadfields[0] @ smoothing_operator_i
+                new_gradient = self.gradients[0] @ smoothing_operator_i
+
+                # Scaling? Not sure...
+                if self.scale_leadfield:
+                    new_leadfield -= new_leadfield.mean(axis=0)
+                    new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
             
+                self.leadfields.append( new_leadfield )
+                self.gradients.append( new_gradient )
         # scale and transform gradients
-        for i in range(self.n_orders+1):
-            # self.gradients[i] =self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
+        for i in range(len(self.gradients)):
+            # self.gradients[i] = self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
             row_max = self.gradients[i].max(axis=1).toarray().ravel()
             scaling_factors = 1 / row_max
             self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
-            
+        
         self.is_prepared = True
-
+        
     @staticmethod
     def get_comps_L(D):
         # L-curve method
