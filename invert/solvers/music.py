@@ -284,11 +284,13 @@ class SolverFLEXMUSIC(BaseSolver):
 
             mu = np.zeros((n_orders, n_dipoles))
             for nn in range(n_orders):
-                
                 norm_1 = np.linalg.norm(PsQ @ leadfields[nn], axis=0)
                 norm_2 = np.linalg.norm(Q @ leadfields[nn], axis=0) 
+                # norm_1 = np.diag(leadfields[nn].T @ PsQ @ leadfields[nn])
+                # norm_2 = np.diag(leadfields[nn].T @ Q @ leadfields[nn])
+                
                 mu[nn, :] = norm_1 / norm_2
-
+            self.mu = mu
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
             
@@ -636,7 +638,7 @@ class SolverAlternatingProjections(BaseSolver):
             msg = f"covariance_type must be MUSIC or AP but is {covariance_type}"
             raise AttributeError(msg)
 
-
+        
         S_AP = []
         # Initialization:  search the 1st source location over the entire
         # dipoles topographies space
@@ -647,7 +649,7 @@ class SolverAlternatingProjections(BaseSolver):
             norm_1 = np.einsum('ij,jk,ki->i', L.T, C, L)
             norm_2 = np.diag(L.T @ L) # not necessary since leadfields were L2-normalized before
             ap_val1[nn, :] = norm_1 / norm_2
-
+        self.mu = ap_val1
         best_order, best_dipole = np.unravel_index(np.argmax(ap_val1), ap_val1.shape)
         S_AP.append( [best_order, best_dipole] )
         
