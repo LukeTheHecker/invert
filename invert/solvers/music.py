@@ -288,8 +288,16 @@ class SolverFLEXMUSIC(BaseSolver):
                 norm_2 = np.linalg.norm(Q @ leadfields[nn], axis=0) 
                 # norm_1 = np.diag(leadfields[nn].T @ PsQ @ leadfields[nn])
                 # norm_2 = np.diag(leadfields[nn].T @ Q @ leadfields[nn])
-                
                 mu[nn, :] = norm_1 / norm_2
+                print("norm_1:")
+                print(norm_1)
+                print("norm_2:")
+                print(norm_2)
+                print("Q:")
+                print(Q)
+                print(f"leadfields[{nn}]:")
+                print(leadfields[nn])
+                
             self.mu = mu
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
@@ -353,6 +361,7 @@ class SolverFLEXMUSIC(BaseSolver):
                 if iter > 0 and S_AP_2 == S_AP_2_Prev:
                     break
 
+        self.source_idc = S_AP_2
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
         nonzero = np.where(source_covariance!=0)[0]
