@@ -147,7 +147,7 @@ class SolverFLEXMUSIC(BaseSolver):
                               k="auto", stop_crit=0.95, refine_solution=False, 
                               max_iter=1000, diffusion_smoothing=True, 
                               diffusion_parameter=0.1, adjacency_type="spatial", 
-                              adjacency_distance=3e-3, **kwargs):
+                              adjacency_distance=3e-3, depth_weights=None,**kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -183,6 +183,8 @@ class SolverFLEXMUSIC(BaseSolver):
             The type of adjacency. "spatial" -> based on graph neighbors. "distance" -> based on distance
         adjacency_distance : float
             The distance at which neighboring dipoles are considered neighbors.
+        depth_weights : numpy.ndarray
+            The depth weights to use for depth weighting the leadfields. If None, no depth weighting is applied.
         
         Return
         ------
@@ -204,12 +206,13 @@ class SolverFLEXMUSIC(BaseSolver):
         
         inverse_operator = self.make_flex(data, n, k, stop_crit, 
                                           truncate, refine_solution=refine_solution, 
-                                          max_iter=max_iter)
+                                          max_iter=max_iter,
+                                          depth_weights=depth_weights)
         
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_flex(self, y, n, k, stop_crit, truncate, refine_solution=False, max_iter=1000):
+    def make_flex(self, y, n, k, stop_crit, truncate, refine_solution=False, max_iter=1000, depth_weights=None):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -226,6 +229,8 @@ class SolverFLEXMUSIC(BaseSolver):
         truncate : bool
             If True: Truncate SVD's eigenvectors (like TRAP-MUSIC), otherwise
             don't (like RAP-MUSIC).
+        depth_weights : numpy.ndarray
+            The depth weights to use for depth weighting the leadfields. If None, no depth weighting is applied.
 
         Return
         ------
@@ -244,7 +249,7 @@ class SolverFLEXMUSIC(BaseSolver):
         if k == "auto":
             k = n_chans
         # Assert common average reference
-        y -= y.mean(axis=0)
+        # y -= y.mean(axis=0)
         # Compute Data Covariance
         C = y@y.T
         
@@ -274,11 +279,13 @@ class SolverFLEXMUSIC(BaseSolver):
             n_comp = deepcopy(n)
         # print("n_comp: ", n_comp)
         Us = U[:, :n_comp]
+        
         C_initial = Us @ Us.T
         dipole_idc = []
         source_covariance = np.zeros(n_dipoles)
         S_AP = []
         for i in range(k):
+            print(f"Source Iteration ", i)
             Ps = Us @ Us.T
             PsQ = Ps @ Q
 
@@ -289,20 +296,14 @@ class SolverFLEXMUSIC(BaseSolver):
                 # norm_1 = np.diag(leadfields[nn].T @ PsQ @ leadfields[nn])
                 # norm_2 = np.diag(leadfields[nn].T @ Q @ leadfields[nn])
                 mu[nn, :] = norm_1 / norm_2
-                print("norm_1:")
-                print(norm_1)
-                print("norm_2:")
-                print(norm_2)
-                print("Q:")
-                print(Q)
-                print(f"leadfields[{nn}]:")
-                print(leadfields[nn])
+
                 
             self.mu = mu
             # Find the dipole/ patch with highest correlation with the residual
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
             
             if i>0 and np.max(mu) < stop_crit:
+                print(f"\t break because mu is ", np.max(mu))
                 break
             S_AP.append([best_order, best_dipole])
 
@@ -326,6 +327,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # Phase 2: refinement
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
+        print(S_AP)
         
         if len(S_AP) > 1 and refine_solution:
             # best_vals = np.zeros(n_comp)
@@ -363,16 +365,24 @@ class SolverFLEXMUSIC(BaseSolver):
 
         self.source_idc = S_AP_2
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
+        
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
         nonzero = np.where(source_covariance!=0)[0]
         inverse_operator = np.zeros((n_dipoles, n_chans))
 
         source_covariance = csr_matrix(np.diag(source_covariance[nonzero]))
         L = self.leadfield[:, nonzero]
-        L_s = L @ source_covariance
+        if depth_weights is not None:
+            L = L * depth_weights[nonzero]
         
-        W = np.diag(np.linalg.norm(L, axis=0)) 
-        inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        # Version 7: Standard Minimum Norm Estimate with Source Covariance (MNE PDF p.122)
+        # alpha = np.trace(L.T @ L) / np.trace(L @ source_covariance @ L.T) #
+        # source_covariance *= alpha
+        inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+
+        # L_s = L @ source_covariance
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+        # inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
 
         return inverse_operator
 
@@ -512,7 +522,7 @@ class SolverAlternatingProjections(BaseSolver):
                               alpha="auto", n="auto", k="auto", stop_crit=0.95,
                               refine_solution=True, max_iter=1000, diffusion_smoothing=True, 
                               diffusion_parameter=0.1, adjacency_type="spatial", 
-                              adjacency_distance=3e-3, **kwargs):
+                              adjacency_distance=3e-3, depth_weights=None, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -545,7 +555,8 @@ class SolverAlternatingProjections(BaseSolver):
             The type of adjacency. "spatial" -> based on graph neighbors. "distance" -> based on distance
         adjacency_distance : float
             The distance at which neighboring dipoles are considered neighbors.
-        
+        depth_weights : numpy.ndarray
+            The depth weights to use for depth weighting the leadfields. If None, no depth weighting is applied.
 
         Return
         ------
@@ -564,11 +575,12 @@ class SolverAlternatingProjections(BaseSolver):
             self.prepare_flex()
         inverse_operator = self.make_ap(data, n, k, 
                                         max_iter=max_iter, 
-                                        refine_solution=refine_solution)
+                                        refine_solution=refine_solution,
+                                        depth_weights=depth_weights)
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_ap(self, y, n, k, refine_solution=True, max_iter=1000, covariance_type="AP"):
+    def make_ap(self, y, n, k, refine_solution=True, max_iter=1000, covariance_type="AP", depth_weights=None):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -754,6 +766,7 @@ class SolverAlternatingProjections(BaseSolver):
                     
                 if S_AP_2 == S_AP_2_Prev:  # and iter>0:
                     break
+        self.candidates = S_AP_2
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
 
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
@@ -761,12 +774,72 @@ class SolverAlternatingProjections(BaseSolver):
         inverse_operator = np.zeros((n_dipoles, n_chans))
     	
         source_covariance = csr_matrix(np.diag(source_covariance[nonzero]))
+        
         L = self.leadfield[:, nonzero]
-        L_s = L @ source_covariance
         
-        W = np.diag(np.linalg.norm(L, axis=0)) 
-        inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+        if depth_weights is not None:
+            L = L * depth_weights[nonzero]
         
+        # L_s = L @ source_covariance
+        # W = np.diag(np.linalg.norm(L, axis=0)) 
+
+        # # Version 1: Lukas'
+        # inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
+
+        # # Version 2: MNE vanilla
+        # inverse_operator[nonzero, :] = np.linalg.inv(L.T@L) @ L.T
+        # print("Version 2: MNE vanilla")
+
+        # # Version 3: WMNE vanilla
+        # alpha = np.trace(L.T @ L) / np.trace(W.T @ W) # 1
+        # inverse_operator[nonzero, :] = np.linalg.inv(L.T @ L + alpha * W.T @ W) @ L.T
+        # print("Version 3: WMNE vanilla")
+        
+        # # Version 4: MNE + Source Cov
+        # W = source_covariance.toarray()
+        # alpha = np.trace(L.T @ L) / np.trace(W.T @ W) # 1
+        # inverse_operator[nonzero, :] = np.linalg.inv(L.T @ L + alpha * W.T @ W) @ L.T
+        # print("Version 4: MNE Source Cov")
+        # print(np.trace(L.T @ L), np.trace(W.T @ W)*alpha)
+
+        # # Version 5: WMNE + Source Cov
+        # alpha = np.trace(L.T @ L) / np.trace(W.T @ W) # 1
+        # W = W @ source_covariance
+        # inverse_operator[nonzero, :] = np.linalg.inv(L.T @ L + alpha * W.T @ W) @ L.T
+        # print("Version 5: WMNE + Source Cov")
+
+        # # Version 6: WMNE + Source Cov Dimitrios
+        # gamma = 0.5
+        # norm = np.linalg.norm(L, axis=0)
+        # # L_weighted = deepcopy(L)
+        # # for i in range(L.shape[1]):
+        # #     L_weighted[:, i] = L_weighted[:, i] * np.linalg.norm(L_weighted[:, i])**(-gamma)
+        # weights = (np.linalg.norm(L, axis=0))**(-gamma)
+        # L_weighted = L @ np.diag( weights )
+        # L_weighted *= 1 / weights.sum()
+        # inverse_operator[nonzero, :] = source_covariance @ L_weighted.T @ np.linalg.inv(L_weighted @ source_covariance @ L_weighted.T)
+        # print("Version 6: WMNE + Source Cov Dimitrios")
+        
+        # # Version 6: WMNE + Source Cov Dimitrios
+        # gamma = 0.5
+        # weights = (np.linalg.norm(L, axis=0))**(-gamma)
+        # source_covariance =  source_covariance @ np.diag( weights )
+        
+        # # source_covariance /= np.trace(L @ source_covariance @ L.T) / n_chans
+        # # print("Trace check: ", np.trace(L @ source_covariance @ L.T) / n_chans)
+        
+        # source_covariance /= np.trace(L @ source_covariance @ L.T) / np.trace(L @ L.T)
+        # print("Trace check: ", np.trace(L @ source_covariance @ L.T) / np.trace(L @ L.T))
+        
+        # inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.inv(L @ source_covariance @ L.T)
+        # print("Version 6: WMNE + Source Cov Dimitrios")
+
+        # Version 7: Standard Minimum Norm Estimate with Source Covariance (MNE PDF p.122)
+        # alpha = np.trace(L.T @ L) / np.trace(L @ source_covariance @ L.T) #
+        # source_covariance *= alpha
+        inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        print("Version 7: MNE + Source Cov (MNE PDF p.122)")
+
         return inverse_operator
 
     # def prepare_flex(self):
