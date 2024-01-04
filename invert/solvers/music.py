@@ -363,7 +363,7 @@ class SolverFLEXMUSIC(BaseSolver):
                 if iter > 0 and S_AP_2 == S_AP_2_Prev:
                     break
 
-        self.source_idc = S_AP_2
+        self.candidates = S_AP_2
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
         
         # Prior-Cov based version 2: Use the selected smooth patches as source covariance priors
@@ -378,12 +378,16 @@ class SolverFLEXMUSIC(BaseSolver):
         # Version 7: Standard Minimum Norm Estimate with Source Covariance (MNE PDF p.122)
         # alpha = np.trace(L.T @ L) / np.trace(L @ source_covariance @ L.T) #
         # source_covariance *= alpha
-        inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        # inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
 
-        # L_s = L @ source_covariance
-        # W = np.diag(np.linalg.norm(L, axis=0)) 
-        # inverse_operator[nonzero, :] = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
-
+        # Version 8: Lower rank MNE
+        n = len(S_AP_2)
+        source_covariance = np.identity(n)
+        L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
+        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1))
+        # print(source_covariance.shape, L.shape, gradients.shape)
+        inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        # print(inverse_operator.shape)
         return inverse_operator
 
     # def prepare_flex(self):
@@ -471,8 +475,10 @@ class SolverFLEXMUSIC(BaseSolver):
         # scale and transform gradients
         for i in range(len(self.gradients)):
             # self.gradients[i] = self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
-            row_max = self.gradients[i].max(axis=1).toarray().ravel()
-            scaling_factors = 1 / row_max
+            # row_max = self.gradients[i].max(axis=1).toarray().ravel()
+            # scaling_factors = 1 / row_max
+            row_sums = self.gradients[i].sum(axis=1).ravel()  # Compute the sum of each row
+            scaling_factors = 1 / row_sums
             self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
         
         self.is_prepared = True
@@ -580,7 +586,7 @@ class SolverAlternatingProjections(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_ap(self, y, n, k, refine_solution=True, max_iter=1000, covariance_type="AP", depth_weights=None):
+    def make_ap(self, y, n, k, refine_solution=True, max_iter=1000, covariance_type="AP", depth_weights=None, apply_depth_weights=True):
         ''' Create the FLEX-MUSIC inverse solution to the EEG data.
         
         Parameters
@@ -597,6 +603,10 @@ class SolverAlternatingProjections(BaseSolver):
         refine_solution : bool
             If True: Re-visit each selected candidate and check if there is a
             better alternative.
+        depth_weights : numpy.ndarray
+            The depth weights to use for depth weighting the leadfields. If None, no depth weighting is applied.
+        apply_depth_weights : bool
+            Whether to apply depth weights to the leadfields.
 
         Return
         ------
@@ -774,9 +784,7 @@ class SolverAlternatingProjections(BaseSolver):
         inverse_operator = np.zeros((n_dipoles, n_chans))
     	
         source_covariance = csr_matrix(np.diag(source_covariance[nonzero]))
-        
         L = self.leadfield[:, nonzero]
-        
         if depth_weights is not None:
             L = L * depth_weights[nonzero]
         
@@ -837,9 +845,17 @@ class SolverAlternatingProjections(BaseSolver):
         # Version 7: Standard Minimum Norm Estimate with Source Covariance (MNE PDF p.122)
         # alpha = np.trace(L.T @ L) / np.trace(L @ source_covariance @ L.T) #
         # source_covariance *= alpha
-        inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
-        print("Version 7: MNE + Source Cov (MNE PDF p.122)")
+        # inverse_operator[nonzero, :] = source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        # print("Version 7: MNE + Source Cov (MNE PDF p.122)")
 
+        # Version 8: Lower rank MNE
+        n = len(S_AP_2)
+        source_covariance = np.identity(n)
+        L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
+        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1))
+        # print(source_covariance.shape, L.shape, gradients.shape)
+        inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        # print(inverse_operator.shape)
         return inverse_operator
 
     # def prepare_flex(self):
@@ -934,8 +950,10 @@ class SolverAlternatingProjections(BaseSolver):
         # scale and transform gradients
         for i in range(len(self.gradients)):
             # self.gradients[i] = self.gradients[i].toarray() / self.gradients[i].toarray().max(axis=0)
-            row_max = self.gradients[i].max(axis=1).toarray().ravel()
-            scaling_factors = 1 / row_max
+            # row_max = self.gradients[i].max(axis=1).toarray().ravel()
+            # scaling_factors = 1 / row_max
+            row_sums = self.gradients[i].sum(axis=1).ravel()  # Compute the sum of each row
+            scaling_factors = 1 / row_sums
             self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
         
         self.is_prepared = True
