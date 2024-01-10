@@ -137,6 +137,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", **kwargs)
     elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
         solver_object = solvers.SolverFLEXMUSIC(**kwargs)
+    elif solver.lower() == "ssm" or solver.lower() == "signal subspaces matching":
+        solver_object = solvers.SolverSignalSubspaceMatching(**kwargs)
     
     # Alternative Projections
     elif solver.lower() == "flex-ap" or solver.lower() == "flex ap":
