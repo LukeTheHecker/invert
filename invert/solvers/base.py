@@ -80,7 +80,7 @@ class BaseSolver:
 
     '''
     def __init__(self, regularisation_method="GCV", n_reg_params=7, 
-        prep_leadfield=True, use_last_alpha=False, rank="auto",
+        prep_leadfield=False, use_last_alpha=False, rank="auto",
         reduce_rank=False, plot_reg=False, verbose=0):
         self.verbose = verbose
 
@@ -188,7 +188,7 @@ class BaseSolver:
 
         '''
 
-        type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray, mne.io.brainvision.brainvision.RawBrainVision]
+        type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray,]  # mne.io.brainvision.brainvision.RawBrainVision]
         if pick_types is None:
             pick_types = dict(meg=True, eeg=True, fnirs=True)
         
@@ -604,7 +604,7 @@ class BaseSolver:
         self.leadfield = deepcopy(self.forward["sol"]["data"])
         
         if self.prep_leadfield:
-            self.leadfield -= self.leadfield.mean(axis=0)
+            # self.leadfield -= self.leadfield.mean(axis=0)
             self.leadfield /= np.linalg.norm(self.leadfield, axis=0)
             
 

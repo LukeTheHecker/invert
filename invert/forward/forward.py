@@ -60,7 +60,7 @@ def create_forward_model(sampling='ico3', info=None, fixed_ori=True, conductivit
     src = mne.setup_source_space(subject, spacing=sampling, surface='white',
                                         subjects_dir=subjects_dir, add_dist=False,
                                         n_jobs=n_jobs, verbose=verbose)
-
+    
     # Forward Model
     fwd = mne.make_forward_solution(info, trans=trans, src=src,
                                     bem=bem, eeg=True, mindist=5.0, n_jobs=n_jobs,

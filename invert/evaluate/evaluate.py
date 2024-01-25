@@ -9,6 +9,7 @@ import pandas as pd
 def evaluate_all(y_true, y_pred, adjacency_true, adjacency_pred, distance_matrix):
     y_true_collapsed = abs(y_true).mean(axis=-1)
     y_pred_collapsed = abs(y_pred).mean(axis=-1)
+    
     # mse = [eval_mse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     # nmse = [eval_nmse(yy_true, yy_pred) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
     # mle = [eval_mean_localization_error(yy_true, yy_pred, pos_1, pos_2, ghost_thresh=40, threshold=0.01, argsorted_distance_matrix=argsorted_distance_matrix) for yy_true, yy_pred in zip(y_true.T, y_pred.T)]
