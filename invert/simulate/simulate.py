@@ -137,10 +137,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     # Pre-compute random time courses
     betas = rng.uniform(*beta_range,n_timecourses)
     time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
-    # print("there are ", len(time_courses), " time courses")
-    # print(time_courses[0, :10])
-    # print(time_courses[1, :10])
-    # print(time_courses[2, :10])
+    
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
 
@@ -169,7 +166,12 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         source_covariances = [get_cov(n, isc) for n, isc in zip(n_sources_batch, inter_source_correlations)]
         amplitudes = [amp @ np.diag(amplitude_values[i]) @ cov for i, (amp, cov) in enumerate(zip(amplitudes, source_covariances))]
 
-
+        # print("All the data: \n")
+        # print("n_sources_batch: ", n_sources_batch, np.min(n_sources_batch), np.max(n_sources_batch))
+        # print("selection: ", selection)
+        # print("amplitude_values: ", amplitude_values)
+        # print("inter_source_correlations: ", inter_source_correlations)
+        
 
         # print(np.stack(amplitudes, axis=0).shape)
 
@@ -178,25 +180,21 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
         # Project simulated sources through leadfield
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
-
         # Add white noise to clean EEG
         snr_levels = rng.uniform(low=snr_range[0], high=snr_range[1], size=batch_size)
-        # print("iid in generator is: ", iid_noise)
         x = np.stack([add_white_noise(xx, snr_level, rng, iid=iid_noise) for (xx, snr_level) in zip(x, snr_levels)], axis=0)
 
-
         # Apply common average reference
-        x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
-        # Scale eeg
-        # if scale_data:
-        #     x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+        # x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
         
         if use_cov:
             # Calculate Covariance
             x = np.stack([xx@xx.T for xx in x], axis=0)
-
+            
             # Normalize Covariance to abs. max. of 1
             x = np.stack([C / np.max(abs(C)) for C in x], axis=0)
+            # x = np.stack([C / (np.trace(C) / C.shape[0]) for C in x], axis=0)
+
             if not remove_channel_dim:
                 x = np.expand_dims(x, axis=-1)
         
@@ -247,6 +245,120 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         for _ in range(batch_repetitions):
             yield output
 
+def generator_simple(fwd, batch_size, corrs, T, n_sources, SNR_range, 
+                     random_seed=42, return_info=True):
+        rng = np.random.default_rng(random_seed)
+        leadfield = deepcopy(fwd["sol"]["data"])
+        leadfield /= leadfield.std(axis=0)
+        n_channels, n_dipoles = leadfield.shape
+
+        while True:
+            sim_info = list()
+            X = np.zeros((batch_size, n_channels, T))
+            y = np.zeros((batch_size, n_dipoles, T))
+            corrs_batch = rng.uniform(corrs[0], corrs[1], batch_size)
+            SNR_batch = rng.uniform(SNR_range[0], SNR_range[1], batch_size)
+            indices = [rng.choice(fwd["sol"]["data"].shape[1], n_sources) for _ in range(batch_size)]
+            
+            for i in range(batch_size):
+                # print(leadfield.shape, corrs_batch[i], T, n_sources, indices[i], SNR_batch[i], random_seed)
+                X[i], y[i] = generator_single_simple(leadfield, corrs_batch[i], T, n_sources, indices[i], SNR_batch[i], random_seed=random_seed)
+                d = dict(
+                    n_sources=n_sources, 
+                    amplitudes=1,
+                    snr=SNR_batch[i],
+                    inter_source_correlations=corrs_batch[i],
+                    n_orders = [0,0],
+                    diffusion_parameter=0,
+                    n_timepoints=T,
+                    n_timecourses=np.inf,
+                    iid_noise=True)
+                sim_info.append(d)
+            if return_info:
+                sim_info = pd.DataFrame(sim_info)
+                yield X, y, sim_info
+            else:
+                yield X, y
+
+
+def generator_single_simple(leadfield, corr, T, n_sources, indices, SNR, random_seed=42):
+    """
+    Parameters
+    ----------
+    leadfield : numpy.ndarray
+        The leadfield matrix.
+    corr : float
+        The correlation coefficient between the sources.
+    T : int
+        The number of time points in the sources.
+    n_sources : int
+        The number of sources to generate.
+    indices : list
+        The indices of the sources to generate.
+    SNR : float
+        The signal to noise ratio.
+    random_seed : int
+        The random seed for replicable simulations.
+    
+    Return
+    ------
+    X : numpy.ndarray
+        The simulated EEG data. 
+    y: numpy.ndarray
+        The simulated source data.
+    """
+    rng = np.random.default_rng(random_seed)
+    
+    S = gen_correlated_sources(corr, T, n_sources)
+    M = leadfield[:, indices] @ S # use Ground Truth Gain matrix
+    n_channels, n_dipoles = leadfield.shape
+
+    scale = np.max(abs(M))
+    Ms = M * scale
+    MEG_energy = np.trace(Ms @ Ms.T) / (n_channels*T)
+    noise_var = MEG_energy/(10**(SNR/10))
+    Noise = rng.standard_normal((n_channels, T)) * np.sqrt(noise_var)
+    X = Ms + Noise
+    y = np.zeros((n_dipoles, T))
+    y[indices, :] = S
+    
+    
+    return X, y
+
+def gen_correlated_sources(corr_coeff, T, Q):
+    ''' Generate Q correlated sources with a specified correlation coefficient.
+    The sources are generated as sinusoids with random frequencies and phases.
+
+    Parameters
+    ----------
+    corr_coeff : float
+        The correlation coefficient between the sources.
+    T : int
+        The number of time points in the sources.
+    Q : int
+        The number of sources to generate.
+
+    Returns
+    -------
+    Y : numpy.ndarray
+        The generated sources.
+    '''
+    Cov = np.ones((Q, Q)) * corr_coeff + np.diag(np.ones(Q) * (1 - corr_coeff))  # required covariance matrix
+    freq = np.random.randint(10, 31, Q)  # random frequencies between 10Hz to 30Hz
+
+    phases = 2 * np.pi * np.random.rand(Q)  # random phases
+    t = np.linspace(10 * np.pi / T, 10 * np.pi, T)
+    Signals = np.sqrt(2) * np.cos(2 * np.pi * freq[:, None] * t + phases[:, None])  # the basic signals
+
+    if corr_coeff < 1:
+        A = np.linalg.cholesky(Cov).T  # Cholesky Decomposition
+        Y = A @ Signals
+    else:  # Coherent Sources
+        Y = np.tile(Signals[0, :], (Q, 1))
+
+    return Y
+
+
 def get_cov(n, corr_coef):
     '''Generate a covariance matrix that is symmetric along the
     diagonal that correlates sources to a specified degree.'''
@@ -265,7 +377,7 @@ def add_white_noise(X_clean, snr, rng, iid=False):
     if not iid:
         # print("iid in function is: ", iid)
         # Inter-channel correlations
-        coeff_mat = rng.random(X_clean.shape[0], X_clean.shape[0])
+        coeff_mat = rng.random((X_clean.shape[0], X_clean.shape[0]))
         np.fill_diagonal(coeff_mat, 1)
         
         # Make positive semi-definite

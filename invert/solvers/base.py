@@ -79,12 +79,12 @@ class BaseSolver:
         Plot the regularization parameters.
 
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=7, 
+    def __init__(self, regularisation_method="GCV", n_reg_params=8, 
         prep_leadfield=False, use_last_alpha=False, rank="auto",
         reduce_rank=False, plot_reg=False, verbose=0):
         self.verbose = verbose
 
-        self.r_values = np.insert(np.logspace(-3, 3, n_reg_params), 0, 0)
+        self.r_values = np.insert(np.logspace(-6, 1, n_reg_params), 0, 0)
 
 
         # self.alphas = deepcopy(self.r_values)
@@ -98,7 +98,7 @@ class BaseSolver:
         self.plot_reg = plot_reg
         self.made_inverse_operator = False
 
-    def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", **kwargs):
+    def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", reference=None, **kwargs):
         """ Base function to create the inverse operator based on the forward
             model.
 
@@ -119,7 +119,7 @@ class BaseSolver:
         self.forward = forward
         self.prepare_forward()
         self.alpha = alpha
-        self.alphas = self.get_alphas()
+        self.alphas = self.get_alphas(reference=reference)
         self.made_inverse_operator = True
 
     def store_obj_information(self, mne_obj):
@@ -270,7 +270,8 @@ class BaseSolver:
 
         '''
         if reference is None:
-            _, eigs, _ = np.linalg.svd(self.leadfield, full_matrices=False) 
+            L = self.leadfield
+            _, eigs, _ = np.linalg.svd(L@L.T, full_matrices=False) 
         else:
             _, eigs, _ = np.linalg.svd(reference, full_matrices=False)
         self.max_eig = eigs.max()
@@ -426,7 +427,6 @@ class BaseSolver:
         source_mat = self.inverse_operators[optimum_idx].data @ M
         return source_mat[0], optimum_idx
 
-    
     def regularise_product(self, M, plot=False):
         """ Find optimally regularized inverse solution using the product method [1].
         

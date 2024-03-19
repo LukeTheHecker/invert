@@ -5,6 +5,8 @@ from scipy.spatial.distance import cdist
 from copy import deepcopy
 from sklearn.metrics import auc, roc_curve
 import pandas as pd
+from scipy.optimize import linear_sum_assignment
+
 
 def evaluate_all(y_true, y_pred, adjacency_true, adjacency_pred, distance_matrix):
     y_true_collapsed = abs(y_true).mean(axis=-1)
@@ -155,6 +157,88 @@ def coeff_det(M, M_hat):
 
 def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray, 
                                  adjacency_true: np.ndarray, adjacency_est: np.ndarray, 
+                                 distance_matrix: np.ndarray,
+                                 mode: str="dle") -> float:
+    ''' Calculate the Mean Localization Error (MLE) between a true and predicted source.
+    Parameters
+    ----------
+    y_true : np.ndarray
+        The ground truth values.
+    y_est : np.ndarray
+        The estimated values.
+    adjacency_true : np.ndarray
+        The adjacency matrix for the true graph.
+    adjacency_est : np.ndarray
+        The adjacency matrix for the estimated graph.
+    distance_matrix : np.ndarray
+        The euclidean distance between each dipole in y_true and each dipole in y_est.
+    mode : str
+        The mode to use for the MLE calculation. Options are "dle" (default), "truth" and "est" and "match".
+
+    '''
+    if len(y_true.shape) == 2:
+        y_true_collapsed = abs(y_true).mean(axis=-1)
+    else:
+        y_true_collapsed = abs(y_true)
+    if len(y_est.shape) == 2:
+        y_est_collapsed = abs(y_est).mean(axis=-1)
+    else:
+        y_est_collapsed = abs(y_est)
+
+
+    maxima_idc_true = get_maxima(y_true_collapsed, adjacency_true)
+    maxima_idc_est = get_maxima(y_est_collapsed, adjacency_est)
+
+    maxima_idc_true = filter_maxima(maxima_idc_true, adjacency_true, distance_matrix[:, 0])
+    maxima_idc_est = filter_maxima(maxima_idc_est, adjacency_est, distance_matrix[:, 0])
+
+    # print(maxima_idc_true)
+    # print(maxima_idc_est)
+    # Get pairwise distance between true and estimated source locations.
+    pairwise_dist = np.zeros((len(maxima_idc_true), len(maxima_idc_est)))
+    # print(pairwise_dist.shape)
+    for ii, idx_true in enumerate(maxima_idc_true):
+        for jj, idx_est in enumerate(maxima_idc_est):
+            pairwise_dist[ii, jj] = distance_matrix[idx_true, idx_est]
+    if mode == "dle":
+        mle = (pairwise_dist.min(axis=0).mean() + pairwise_dist.min(axis=1).mean()) / 2
+    elif mode == "est":
+        mle = pairwise_dist.min(axis=0).mean()
+    elif mode == "true":
+        mle = pairwise_dist.min(axis=1).mean()
+    elif mode == "match":
+        # Solve the assignment problem (i.e., find the matching with minimum total distance)
+        true_indices, estimated_indices = linear_sum_assignment(pairwise_dist)
+        # Calculate the sum of distances for the optimal assignment
+        mle = pairwise_dist[true_indices, estimated_indices].mean()
+    elif mode == "amir":
+        mle = shortest_dists_amir(pairwise_dist)
+        
+    else:
+        raise ValueError(f"Invalid mode '{mode}' for MLE calculation.")
+    # explanation:
+    # pairwise_dist.min(axis=0) returns the minimum distance for each estimated source
+        
+    return mle
+
+def shortest_dists_amir(m_dists):
+    ''' Code translated form amirs matlab code
+    '''
+    n_predictions, n_ground_truths = m_dists.shape
+    n_matches = min(n_predictions, n_ground_truths)  # Choose number of iterations
+    mean_dist = 0
+    m_dists = m_dists.T  # Transpose for convenience
+    # Pick smallest distance in matrix and exclude its row and col
+    for _ in range(n_matches):
+        d = np.min(m_dists)
+        n, m = np.unravel_index(np.argmin(m_dists), m_dists.shape)
+        m_dists = np.delete(np.delete(m_dists, n, axis=0), m, axis=1)  # Exclude
+        mean_dist += d  # Add to cumulative error
+    mean_dist /= n_matches  # Calculate mean error
+    return mean_dist
+
+def eval_mean_localization_error_old(y_true: np.ndarray, y_est: np.ndarray, 
+                                 adjacency_true: np.ndarray, adjacency_est: np.ndarray, 
                                  distance_matrix: np.ndarray) -> float:
     ''' Calculate the Mean Localization Error (MLE) between a true and predicted source.
     Parameters
@@ -195,7 +279,7 @@ def eval_mean_localization_error(y_true: np.ndarray, y_est: np.ndarray,
         for jj, idx_est in enumerate(maxima_idc_est):
             pairwise_dist[ii, jj] = distance_matrix[idx_true, idx_est]
     
-    mle = (pairwise_dist.min(axis=0).mean() + pairwise_dist.min(axis=1).mean()) / 2
+    mle = pairwise_dist.min(axis=0).mean()
     
     return mle
 
@@ -286,69 +370,69 @@ def get_maxima(y: np.ndarray, adjacency: np.ndarray) -> list:
     return list_of_maxima
     
 
-def eval_mean_localization_error_old(y_true, y_est, pos_1, pos_2, k_neighbors=5, 
-    min_dist=30, threshold=0.1, ghost_thresh=40, argsorted_distance_matrix=None):
-    ''' Calculate the mean localization error for an arbitrary number of 
-    sources.
+# def eval_mean_localization_error_old(y_true, y_est, pos_1, pos_2, k_neighbors=5, 
+#     min_dist=30, threshold=0.1, ghost_thresh=40, argsorted_distance_matrix=None):
+#     ''' Calculate the mean localization error for an arbitrary number of 
+#     sources.
     
-    Parameters
-    ----------
-    y_true : numpy.ndarray
-        The true source vector (1D)
-    y_est : numpy.ndarray
-        The estimated source vector (1D)
-    pos : numpy.ndarray
-        The dipole position matrix
-    k_neighbors : int
-        The number of neighbors to incorporate for finding maximum
-    threshold : float
-        Proportion between 0 and 1. Defined the minimum value for a maximum to 
-        be of significance. 0.1 -> 10% of the absolute maximum
-    min_dist : float/int
-        The minimum viable distance in mm between maxima. The higher this 
-        value, the more maxima will be filtered out.
-    ghost_thresh : float/int
-        The threshold distance between a true and a predicted source to not 
-        belong together anymore. Predicted sources that have no true source 
-        within the vicinity defined be ghost_thresh will be labeled 
-        ghost_source.
+#     Parameters
+#     ----------
+#     y_true : numpy.ndarray
+#         The true source vector (1D)
+#     y_est : numpy.ndarray
+#         The estimated source vector (1D)
+#     pos : numpy.ndarray
+#         The dipole position matrix
+#     k_neighbors : int
+#         The number of neighbors to incorporate for finding maximum
+#     threshold : float
+#         Proportion between 0 and 1. Defined the minimum value for a maximum to 
+#         be of significance. 0.1 -> 10% of the absolute maximum
+#     min_dist : float/int
+#         The minimum viable distance in mm between maxima. The higher this 
+#         value, the more maxima will be filtered out.
+#     ghost_thresh : float/int
+#         The threshold distance between a true and a predicted source to not 
+#         belong together anymore. Predicted sources that have no true source 
+#         within the vicinity defined be ghost_thresh will be labeled 
+#         ghost_source.
     
-    Return
-    ------
-    mean_localization_error : float
-        The mean localization error between all sources in y_true and the 
-        closest matches in y_est.
-    '''
-    if y_est.sum() == 0 or y_true.sum() == 0:
-        return np.nan
-    y_true = deepcopy(y_true)
-    y_est = deepcopy(y_est)
+#     Return
+#     ------
+#     mean_localization_error : float
+#         The mean localization error between all sources in y_true and the 
+#         closest matches in y_est.
+#     '''
+#     if y_est.sum() == 0 or y_true.sum() == 0:
+#         return np.nan
+#     y_true = deepcopy(y_true)
+#     y_est = deepcopy(y_est)
 
     
-    maxima_true = get_maxima_pos(
-        get_maxima_mask(y_true, pos_1, k_neighbors=k_neighbors, 
-        threshold=threshold, min_dist=min_dist, 
-        argsorted_distance_matrix=argsorted_distance_matrix), pos_1)
-    maxima_est = get_maxima_pos(
-        get_maxima_mask(y_est, pos_2, k_neighbors=k_neighbors,
-        threshold=threshold, min_dist=min_dist, 
-        argsorted_distance_matrix=argsorted_distance_matrix), pos_2)
+#     maxima_true = get_maxima_pos(
+#         get_maxima_mask(y_true, pos_1, k_neighbors=k_neighbors, 
+#         threshold=threshold, min_dist=min_dist, 
+#         argsorted_distance_matrix=argsorted_distance_matrix), pos_1)
+#     maxima_est = get_maxima_pos(
+#         get_maxima_mask(y_est, pos_2, k_neighbors=k_neighbors,
+#         threshold=threshold, min_dist=min_dist, 
+#         argsorted_distance_matrix=argsorted_distance_matrix), pos_2)
 
-    # Distance matrix between every true and estimated maximum
-    distance_matrix = cdist(maxima_true, maxima_est)
-    # For each true source find the closest predicted source:
-    # closest_matches = distance_matrix.min(axis=1)
-    closest_matches = (distance_matrix.min(axis=0).mean() + distance_matrix.min(axis=1).mean()) / 2
+#     # Distance matrix between every true and estimated maximum
+#     distance_matrix = cdist(maxima_true, maxima_est)
+#     # For each true source find the closest predicted source:
+#     # closest_matches = distance_matrix.min(axis=1)
+#     closest_matches = (distance_matrix.min(axis=0).mean() + distance_matrix.min(axis=1).mean()) / 2
     
-    # Filter for ghost sources
-    closest_matches = closest_matches[closest_matches<ghost_thresh]
+#     # Filter for ghost sources
+#     closest_matches = closest_matches[closest_matches<ghost_thresh]
     
-    # No source left -> return nan
-    if len(closest_matches) == 0:
-        return np.nan
-    mean_localization_error = np.mean(closest_matches)
+#     # No source left -> return nan
+#     if len(closest_matches) == 0:
+#         return np.nan
+#     mean_localization_error = np.mean(closest_matches)
 
-    return mean_localization_error
+#     return mean_localization_error
 
 
 def get_maxima_mask(y, pos, k_neighbors=5, threshold=0.1, min_dist=30,

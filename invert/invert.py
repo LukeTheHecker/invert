@@ -135,7 +135,7 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverFLEXMUSIC(name="RAP-MUSIC", **kwargs)
     elif solver.lower() == "trap-music" or solver.lower() == "trap music" or solver.lower() == "trap":
         solver_object = solvers.SolverFLEXMUSIC(name="TRAP-MUSIC", **kwargs)
-    elif solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
+    elif solver.lower() == "flex-rap-music" or solver.lower() == "flex-music" or solver.lower() == "flex music" or solver.lower() == "flex":
         solver_object = solvers.SolverFLEXMUSIC(**kwargs)
     elif solver.lower() == "flex-ssm" or solver.lower() == "flex ssm":
         solver_object = solvers.SolverSignalSubspaceMatching(name="Flexible Signal Subspace Matching", **kwargs)
@@ -147,6 +147,11 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternating Projections", **kwargs)
     elif solver.lower() == "ap":
         solver_object = solvers.SolverAlternatingProjections(name="Alternating Projections", **kwargs)
+
+    # Basis Functions
+    elif solver.lower() == "gbf":
+        solver_object = solvers.SolverBasisFunctions(**kwargs)
+        
     # Other
     elif solver.lower() == "epifocus":
         solver_object = solvers.SolverEPIFOCUS(**kwargs)

@@ -125,16 +125,17 @@ class SolverMUSIC(BaseSolver):
 
 class SolverFLEXMUSIC(BaseSolver):
     ''' Class for the RAP Multiple Signal Classification with flexible extent
-        estimation (FLEX-MUSIC).
+        estimation (FLEX-MUSIC, [1]).
     
     Attributes
     ----------
     
     References
     ---------
-    This method is of my own making (Lukas Hecker, 2022) and soon to be
-    published.
-
+    [1] Hecker, L., Tebartz van Elst, L., & Kornmeier, J. (2023). Source
+    localization using recursively applied and projected MUSIC with flexible
+    extent estimation. Frontiers in Neuroscience, 17, 1170862.
+    
     '''
     def __init__(self, name="FLEX-MUSIC", scale_leadfield=False, **kwargs):
         self.name = name
@@ -385,9 +386,8 @@ class SolverFLEXMUSIC(BaseSolver):
         source_covariance = np.identity(n)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
         gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1))
-        # print(source_covariance.shape, L.shape, gradients.shape)
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
-        # print(inverse_operator.shape)
+        
         return inverse_operator
 
     # def prepare_flex(self):
@@ -570,7 +570,7 @@ class SolverAlternatingProjections(BaseSolver):
         '''
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
 
-        self.diffusion_smoothing = diffusion_smoothing, 
+        self.diffusion_smoothing = diffusion_smoothing
         self.diffusion_parameter = diffusion_parameter
         self.n_orders = n_orders
         self.adjacency_type = adjacency_type
@@ -617,17 +617,13 @@ class SolverAlternatingProjections(BaseSolver):
         n_time = y.shape[1]
 
         leadfield = self.leadfield
-        # leadfield -= leadfield.mean(axis=0)
         
         leadfields = self.leadfields
         n_orders = len(self.leadfields)
         if k == "auto":
-            k = n_chans
-        # Assert common average reference
-        # y -= y.mean(axis=0)
+            k = n_chans        
         
-        
-        # Compute Data Covariance
+        # Estimate number of components
         if type(n) == str:
             C = y @ y.T
             U, D, _= np.linalg.svd(C, full_matrices=False)
@@ -710,7 +706,6 @@ class SolverAlternatingProjections(BaseSolver):
             # S_AP.append( [best_order, best_dipole] )
             select_idx = -1
             while True:
-                
                 best_order, best_dipole = np.unravel_index(np.argsort(ap_val2.flatten())[select_idx], ap_val2.shape)
                 candidate = [best_order, best_dipole]
                 if not candidate in S_AP:
@@ -718,7 +713,7 @@ class SolverAlternatingProjections(BaseSolver):
                     break
                 print("rerolled AP candidate")
                 select_idx -= 1
-
+                
             if len(S_AP) != len(set(tuple(row) for row in S_AP)):
                 print("Found duplicate candidates in AP!!!!")
         
@@ -888,7 +883,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, mne_obj, *args, n_orders=3, 
-                              alpha="auto", n="auto", k="auto", refine_solution=True, 
+                              alpha="auto", n="auto", refine_solution=True, 
                               max_iter=5, diffusion_smoothing=True, 
                               diffusion_parameter=0.1, adjacency_type="spatial", 
                               adjacency_distance=3e-3, lambda_reg1=0.001, 
@@ -910,8 +905,6 @@ class SolverSignalSubspaceMatching(BaseSolver):
                 "drop": Selection based on relative change of eigenvalues.
                 "auto": Combine L and drop method
                 "mean": Selects the eigenvalues that are larger than the mean of all eigs.
-        k : int
-            Number of recursions.
         stop_crit : float
             Criterion to stop recursions. The lower, the more dipoles will be
             incorporated.
@@ -943,7 +936,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
 
         if not self.is_prepared:
             self.prepare_flex()
-        inverse_operator = self.make_ssm(data, n, k, 
+        inverse_operator = self.make_ssm(data, n, 
                                         max_iter=max_iter, 
                                         refine_solution=refine_solution,
                                         lambda_reg1=lambda_reg1,
@@ -952,7 +945,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
-    def make_ssm(self, Y, n, k, refine_solution=True, max_iter=5, 
+    def make_ssm(self, Y, n, refine_solution=True, max_iter=5, 
                  lambda_reg1=0.001, lambda_reg2=0.0001, lambda_reg3=0.0):
         ''' Create the FLEX-SSM inverse solution to the EEG data.
         
@@ -962,8 +955,6 @@ class SolverSignalSubspaceMatching(BaseSolver):
             EEG data matrix (channels, time)
         n : int/ str
             Number of eigenvectors to use or "auto" for l-curve method.
-        k : int
-            Number of recursions.
         refine_solution : bool
             If True: Re-visit each selected candidate and check if there is a
             better alternative.
@@ -984,9 +975,6 @@ class SolverSignalSubspaceMatching(BaseSolver):
 
         leadfields = self.leadfields
         n_orders = len(self.leadfields)
-
-        if k == "auto":
-            k = n_chans
         
         # Determine the number of sources
         if type(n) == str:
@@ -1042,7 +1030,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
                     P_A = self.compute_projection_matrix(A_temp, lambda_reg=lambda_reg2)
                     S_SSM_2[qq] = self.get_source_ssm(P_Y, P_A, leadfields, qq_temp, lambda_reg=lambda_reg3)
                     A_q_j[qq] = leadfields[S_SSM_2[qq][0]][:, S_SSM_2[qq][1]]
-
+                    
                 if S_SSM_2 == S_SSM_prev:
                     # print(f"No change after {j+1} iterations")
                     break
@@ -1051,11 +1039,12 @@ class SolverSignalSubspaceMatching(BaseSolver):
                 S_SSM_prev = deepcopy(S_SSM_2)
         self.candidates = S_SSM_2       
 
-        # Version 8: Lower rank MNE
+        # Low-rank minimum norm solution
         source_covariance = np.identity(n_comp)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_SSM_2], axis=1)
         gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_SSM_2], axis=1))
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+
         return inverse_operator
 
     @staticmethod
@@ -1072,25 +1061,25 @@ class SolverSignalSubspaceMatching(BaseSolver):
         q_ignore : list
             List of sources to ignore (e.g., already selected sources).
         lambda_reg : float
-            Regularization parameter to enhance stability.
+            Regularization parameter to enhance stability. This is not within the original SSM algorithm.
         '''
         n_dipoles = leadfields[0].shape[1]
         n_orders = len(leadfields)
 
-        P_Y_T_P_Y = P_Y.T @ P_Y
-        I_minus_P_A = np.eye(P_A.shape[0]) - P_A
+        C = P_Y.T @ P_Y
+        R = np.eye(P_A.shape[0]) - P_A
 
         expression = np.zeros((n_orders, n_dipoles))
         for jj in range(n_orders):
-            a_s = I_minus_P_A @ leadfields[jj]
+            a_s = R @ leadfields[jj]
 
             # Fast
-            upper = np.einsum('ij,ij->j', a_s, P_Y_T_P_Y @ a_s)
+            upper = np.einsum('ij,ij->j', a_s, C @ a_s)
             lower = np.einsum('ij,ij->j', a_s, a_s) + lambda_reg
             expression[jj, :] = upper  / lower
             
             # Slow
-            # upper = a_s.T @ P_Y_T_P_Y @ a_s
+            # upper = a_s.T @ C @ a_s
             # lower = a_s.T @ a_s + np.eye(n_dipoles) * lambda_reg
             # # print(upper.shape, lower.shape)
             # expression[jj, :] = np.diag(upper @ np.linalg.inv(lower))
@@ -1109,7 +1098,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         A_q = np.stack(A_q, axis=1)
         M_A = A_q.T @ A_q
         AA = M_A + lambda_reg * np.trace(M_A) * np.eye(M_A.shape[0])
-        P_A = (A_q @ np.linalg.pinv(AA)) @ A_q.T
+        P_A = (A_q @ np.linalg.inv(AA)) @ A_q.T
         return P_A
 
     def prepare_flex(self):
@@ -1571,8 +1560,6 @@ class SolverAdaptiveAlternatingProjections(BaseSolver):
             n_comp_drop = 1
         return n_comp_drop         
 
-
-
 class SolverFLEXMUSIC_2(BaseSolver):
     ''' Class for the RAP Multiple Signal Classification with flexible extent
         estimation (FLEX-MUSIC).
@@ -1837,3 +1824,450 @@ class SolverFLEXMUSIC_2(BaseSolver):
         return n_comp_drop         
 
 
+class SolverGeneralizedIterative(BaseSolver):
+    ''' Class that generalizes iterative solutions like RAP-MUSIC, AP and SSM
+        inverse solution with flexible extent estimation (FLEX-AP).
+    
+    Attributes
+    ----------
+    n_orders : int
+        Controls the maximum smoothness to pursue.
+    
+    References
+    ---------
+    [1] Wax, M., & Adler, A. (2021). Direction of arrival estimation in the
+    presence of model errors by signal subspace matching. Signal Processing,
+    181, 107900. [2] TBD.
+
+    '''
+    def __init__(self, name="Flexible Signal Subspace Matching", scale_leadfield=False, **kwargs):
+        self.name = name
+        self.is_prepared = False
+        self.scale_leadfield = scale_leadfield
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, inverse_type="SSM", n_orders=3,
+                              alpha="auto", n="auto", k="auto", refine_solution=True, 
+                              max_iter=5, diffusion_smoothing=True, 
+                              diffusion_parameter=0.1, adjacency_type="spatial", 
+                              adjacency_distance=3e-3, lambda_reg1=0.001, 
+                              lambda_reg2=0.0001, lambda_reg3=0.0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        inverse_type : str
+            The type of inverse solution to use. "SSM" -> Signal Subspace Matching.
+            "AP" -> Alternating Projections. "RAP" -> Recursively Applied and Projected MUSIC.
+        n_orders : int
+            Controls the maximum smoothness to pursue.
+        alpha : float
+            The regularization parameter.
+        n : int/ str
+            Number of eigenvalues to use.
+                int: The number of eigenvalues to use.
+                "L": L-curve method for automated selection.
+                "drop": Selection based on relative change of eigenvalues.
+                "auto": Combine L and drop method
+                "mean": Selects the eigenvalues that are larger than the mean of all eigs.
+        k : int
+            Number of recursions.
+        stop_crit : float
+            Criterion to stop recursions. The lower, the more dipoles will be
+            incorporated.
+        max_iter : int
+            Maximum number of iterations during refinement.
+        diffusion_smoothing : bool
+            Whether to use diffusion smoothing. Default is True.
+        diffusion_parameter : float
+            The diffusion parameter (alpha). Default is 0.1.
+        adjacency_type : str
+            The type of adjacency. "spatial" -> based on graph neighbors. "distance" -> based on distance
+        adjacency_distance : float
+            The distance at which neighboring dipoles are considered neighbors.
+        depth_weights : numpy.ndarray
+            The depth weights to use for depth weighting the leadfields. If None, no depth weighting is applied.
+
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
+        self.diffusion_smoothing = diffusion_smoothing, 
+        self.diffusion_parameter = diffusion_parameter
+        self.n_orders = n_orders
+        self.adjacency_type = adjacency_type
+        self.adjacency_distance = adjacency_distance
+        self.inverse_type = inverse_type
+        data = self.unpack_data_obj(mne_obj)
+
+        if not self.is_prepared:
+            self.prepare_flex()
+        
+        if inverse_type == "SSM":
+            self.get_source = self.get_source_ssm
+            self.get_covariance = self.get_covariance_ssm
+        elif inverse_type == "AP":
+            self.get_source = self.get_source_ap
+            self.get_covariance = self.get_covariance_ap
+        elif inverse_type == "RAP":
+            self.get_source = self.get_source_rap
+            self.get_covariance = self.get_covariance_rap
+        else:
+            self.get_source = None
+            raise AttributeError(f"Unknown inverse_type: {inverse_type}")
+
+        inverse_operator = self.make_iterative_solution(data, n, k, 
+                                        max_iter=max_iter, 
+                                        refine_solution=refine_solution,
+                                        lambda_reg1=lambda_reg1,
+                                        lambda_reg2=lambda_reg2,
+                                        lambda_reg3=lambda_reg3)
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
+
+        return self
+
+    def make_iterative_solution(self, Y, n, k, refine_solution=True, max_iter=5, 
+                 lambda_reg1=0.001, lambda_reg2=0.0001, lambda_reg3=0.0):
+        ''' Create the iterative inverse solution to the EEG data.
+        
+        Parameters
+        ----------
+        Y : numpy.ndarray
+            EEG data matrix (channels, time)
+        n : int/ str
+            Number of eigenvectors to use or "auto" for l-curve method.
+        k : int
+            Number of recursions.
+        refine_solution : bool
+            If True: Re-visit each selected candidate and check if there is a
+            better alternative.
+        lambda_reg1 : float
+            Regularization parameter for the projection matrix.
+        lambda_reg2 : float
+            Regularization parameter for the source covariance matrix.
+        lambda_reg3 : float
+            Regularization parameter for the source covariance matrix.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            Source data matrix (sources, time)
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        n_time = Y.shape[1]
+
+        leadfields = self.leadfields
+        n_orders = len(self.leadfields)
+
+        if k == "auto":
+            k = n_chans
+        
+        # Determine the number of sources
+        if n == "auto":
+            n_comp = self.estimate_comps(Y)
+        else:
+            n_comp = deepcopy(n)
+        
+        P_Y = self.get_covariance(Y, n_comp, lambda_reg1=lambda_reg1)
+        Q = np.eye(n_chans)  # np.zeros((n_chans, n_chans))
+
+        candidates = []
+        A_q = []
+        
+        # Initial source location
+        expression = self.get_source(P_Y, Q, leadfields, lambda_reg=lambda_reg3)
+        order, dipole = np.unravel_index(np.nanargmax(expression), expression.shape)
+        candidates.append( [order, dipole] )
+        print(order, dipole)
+
+        # Now, add one source at a time
+        for qq in range(1, n_comp):
+            order, location = candidates[-1]
+            A_q.append(leadfields[order][:, location])
+            Q = self.compute_projection_matrix(A_q, lambda_reg=lambda_reg2)
+            expression = self.get_source(P_Y, Q, leadfields, candidates, lambda_reg=lambda_reg3)
+            order, dipole = np.unravel_index(np.nanargmax(expression), expression.shape)
+            candidates.append( [order, dipole] )
+        
+        A_q.append( leadfields[order][:, dipole] )
+        
+        # Phase 2: refinement
+        candidates_2 = deepcopy(candidates)
+        if len(candidates_2) > 1 and refine_solution:
+            candidates_2_prev = deepcopy(candidates_2)
+            for j in range(max_iter):
+                A_q_j = A_q.copy()
+                for qq in range(n_comp):
+                    A_temp = np.delete(A_q_j, qq, axis=0) # delete the current source
+                    qq_temp = np.delete(candidates_2, qq, axis=0) # delete the current source
+                    Q = self.compute_projection_matrix(A_temp, lambda_reg=lambda_reg2)
+                    expression = self.get_source(P_Y, Q, leadfields, qq_temp, lambda_reg=lambda_reg3)
+                    order, dipole = np.unravel_index(np.nanargmax(expression), expression.shape)
+                    candidates_2[qq] = [order, dipole]
+                    A_q_j[qq] = leadfields[candidates_2[qq][0]][:, candidates_2[qq][1]]
+
+                if candidates_2 == candidates_2_prev:
+                    # print(f"No change after {j+1} iterations")
+                    break
+                # else:
+                #     print(candidates_2_prev, " ==> ", candidates_2)
+                candidates_2_prev = deepcopy(candidates_2)
+
+        self.candidates = candidates_2       
+
+        # Low-rank minimum norm solution
+        source_covariance = np.identity(n_comp)
+        L = np.stack([leadfields[order][:, dipole] for order, dipole in candidates_2], axis=1)
+        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in candidates_2], axis=1))
+        inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
+        
+        return inverse_operator
+   
+    def estimate_comps(self, Y, n):
+        ''' Estimate the number of sources to use.
+        Parameters
+        ----------
+        Y : numpy.ndarray
+            The data matrix.
+        n : str
+            The method to use. "L" -> L-curve method. "drop" -> based on eigenvalue drop-off.
+            "auto" -> Combine L and drop method. "mean" -> Selects the eigenvalues that are larger than the mean of all eigs.
+        Return
+        ------
+        n_comp : int
+            The number of sources to use.
+        
+        '''
+        C = Y @ Y.T
+        _, D, _= np.linalg.svd(C, full_matrices=False)
+        if n == "L":
+            # Based L-Curve Criterion
+            n_comp = self.get_comps_L(D)
+        elif n == "drop":
+            # Based on eigenvalue drop-off
+            n_comp = self.get_comps_drop(D)
+        elif n == "mean":
+            n_comp = np.where(D<D.mean())[0][0]
+            
+        elif n == "auto":
+            n_comp_L = self.get_comps_L(D)
+            n_comp_drop = self.get_comps_drop(D)
+            n_comp_mean = np.where(D<D.mean())[0][0]
+
+            # Combine the two and bias it slightly:
+            n_comp = np.ceil(1.1*np.mean([n_comp_L, n_comp_drop, n_comp_mean])).astype(int)
+        else:
+            raise AttributeError(f"Unknown n: {n}")
+        return n_comp
+    
+    @staticmethod
+    def get_covariance_ssm(Y, *args, lambda_reg1=0.001, **kwargs):
+        ''' Compute the source covariance matrix for the SSM algorithm.'''
+        n_time = Y.shape[1]
+
+        M_Y = Y.T @ Y
+        YY = M_Y + lambda_reg1 * np.trace(M_Y) * np.eye(n_time)
+        P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
+        return P_Y
+    
+    @staticmethod
+    def get_covariance_rap(Y, n_comp, *args, lambda_reg1=0.001, **kwargs):
+        ''' Compute the source covariance matrix for the SSM algorithm.'''
+        n_chans, n_time = Y.shape[1]
+        
+        C = Y @ Y.T
+        U, _, _= np.linalg.svd(C, full_matrices=False)
+        Us = U[:, :n_comp]
+        
+        # MUSIC subspace-based Covariance
+        P_Y = Us @ Us.T
+
+        return P_Y
+
+    @staticmethod
+    def get_covariance_ap(Y, *args, lambda_reg1=0.001, **kwargs):
+        ''' Compute the source covariance matrix for the SSM algorithm.'''
+        n_chans, n_time = Y.shape
+        C = Y @ Y.T
+        P_Y = C + lambda_reg1 * np.trace(C) * np.eye(n_chans)
+        return P_Y
+    
+    @staticmethod
+    def get_source_ssm(P_Y: np.ndarray, Q: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
+        ''' Compute the source with the highest AP value.
+        Parameters
+        ----------
+        P_Y : numpy.ndarray
+            The projection matrix of the data covariance.
+        Q : numpy.ndarray
+            The out-projection matrix of the source covariance.
+        leadfields : list
+            The list of leadfields.
+        q_ignore : list
+            List of sources to ignore (e.g., already selected sources).
+        lambda_reg : float
+            Regularization parameter to enhance stability.
+        '''
+        # print(f"Check within function")
+        # print(P_Y.shape, P_Y)
+        # print(Q.shape, Q)
+        # print(leadfields[0].shape, leadfields[0])
+        # print(q_ignore, lambda_reg)
+
+        n_dipoles = leadfields[0].shape[1]
+        n_orders = len(leadfields)
+
+        P_Y_T_P_Y = P_Y.T @ P_Y
+        
+        expression = np.zeros((n_orders, n_dipoles))
+        for jj in range(n_orders):
+            a_s = Q @ leadfields[jj]
+
+            # Fast
+            upper = np.einsum('ij,ij->j', a_s, P_Y_T_P_Y @ a_s)
+            lower = np.einsum('ij,ij->j', a_s, a_s) + lambda_reg
+            expression[jj, :] = upper  / lower
+
+        if q_ignore != []:
+            for order, dipole in q_ignore:
+                expression[order, dipole] = np.nan
+
+        return expression
+    
+    @staticmethod
+    def get_source_rap(P_Y: np.ndarray, Q: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
+        n_orders = len(leadfields)
+        n_chans, n_dipoles = leadfields[0].shape
+        P_YQ = P_Y @ Q
+        expression = np.zeros((n_orders, n_dipoles))
+        for jj in range(n_orders):
+            L = leadfields[jj]
+            norm_1 = np.linalg.norm(P_YQ @ L, axis=0)
+            norm_2 = np.linalg.norm(Q @ L, axis=0)
+            expression[jj, :] = norm_1 / norm_2
+
+        return expression
+    
+    @staticmethod
+    def get_source_ap(C, Q, leadfields, q_ignore: list=[], **kwargs):
+        ''' Compute the source with the highest AP value.
+        Parameters
+        ----------
+        C : numpy.ndarray
+            The data covariance matrix.
+        Q : numpy.ndarray
+            The out-projection matrix of the source covariance.
+        leadfields : list
+            The list of leadfields.
+        q_ignore : list
+            List of sources to ignore (e.g., already selected sources).
+        
+        Returns
+        -------
+        order : int
+            The order of the selected source.
+        dipole : int
+            The dipole index of the selected source.
+
+        '''
+        # print(Q)
+        # print()
+        # print(C)
+
+        n_dipoles = leadfields[0].shape[1]
+        n_orders = len(leadfields)
+        QC = Q @ C
+        
+        expression = np.zeros((n_orders, n_dipoles))
+        for jj in range(n_orders):
+            L = leadfields[jj]
+            expression[jj, :] = np.sum(L * (QC @ (Q @ L)), axis=0) / np.sum(L * (Q @ L), axis=0)  # fast and stable
+            
+        if q_ignore != []:
+            for order, dipole in q_ignore:
+                expression[order, dipole] = np.nan
+
+        return expression
+
+    @staticmethod
+    def compute_projection_matrix(A_q, lambda_reg=0.0001):
+        ''' Compute the out-projection matrix Q.'''
+
+        A_q = np.stack(A_q, axis=1)
+        M_A = A_q.T @ A_q
+        AA = M_A + lambda_reg * np.trace(M_A) * np.eye(M_A.shape[0])
+        P_A = (A_q @ np.linalg.pinv(AA)) @ A_q.T
+        Q = np.eye(P_A.shape[0]) - P_A
+        return Q
+
+    def prepare_flex(self):
+        ''' Create the dictionary of increasingly smooth sources unless
+        self.n_orders==0. Flexibly selects diffusion parameter, too.
+        
+        Parameters
+        ----------
+
+        '''
+        n_dipoles = self.leadfield.shape[1]
+        I = np.identity(n_dipoles)
+        if self.adjacency_type == "spatial":
+            adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
+        else:
+            adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
+        
+        LL = laplacian(adjacency)
+        self.leadfields = [deepcopy(self.leadfield), ]
+        self.gradients = [csr_matrix(I),]
+
+        if self.diffusion_parameter == "auto":
+            alphas = [0.05, 0.075, 0.1, 0.125, 0.15, 0.175]
+            smoothing_operators = [csr_matrix(I - alpha * LL) for alpha in alphas]
+        else:
+            smoothing_operators = [csr_matrix(I - self.diffusion_parameter * LL),]
+
+
+        for smoothing_operator in smoothing_operators:
+
+            for i in range(self.n_orders):
+                smoothing_operator_i = smoothing_operator**(i+1)  # csr_matrix(np.linalg.matrix_power(smoothing_operator.toarray(), i+1))
+                new_leadfield = self.leadfields[0] @ smoothing_operator_i
+                new_gradient = self.gradients[0] @ smoothing_operator_i
+
+                # Scaling? Not sure...
+                if self.scale_leadfield:
+                    # new_leadfield -= new_leadfield.mean(axis=0)
+                    new_leadfield /= np.linalg.norm(new_leadfield, axis=0)
+            
+                self.leadfields.append( new_leadfield )
+                self.gradients.append( new_gradient )
+        # scale and transform gradients
+        for i in range(len(self.gradients)):
+            row_sums = self.gradients[i].sum(axis=1).ravel()  # Compute the sum of each row
+            scaling_factors = 1 / row_sums
+            self.gradients[i] = csr_matrix(self.gradients[i].multiply(scaling_factors.reshape(-1, 1)))
+        
+        self.is_prepared = True
+
+        
+    @staticmethod
+    def get_comps_L(D):
+        # L-curve method
+        iters = np.arange(len(D))
+        n_comp_L = find_corner(deepcopy(iters), deepcopy(D))
+        return n_comp_L
+    @staticmethod
+    def get_comps_drop(D):
+        D_ = D/D.max()
+        n_comp_drop = np.where( abs(np.diff(D_)) < 0.001 )[0]
+
+        if len(n_comp_drop) > 0:
+            n_comp_drop = n_comp_drop[0] + 1
+        else:
+            n_comp_drop = 1
+        return n_comp_drop         

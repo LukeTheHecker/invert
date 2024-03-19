@@ -39,13 +39,15 @@ class SolverMNE(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        super().make_inverse_operator(forward, *args, reference=None, alpha=alpha, **kwargs)
+        
         leadfield = self.leadfield
         n_chans, _ = leadfield.shape
         
+        LLT = leadfield @ leadfield.T
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = leadfield.T @ np.linalg.inv(leadfield @ leadfield.T + alpha * np.identity(n_chans))
+            inverse_operator = leadfield.T @ np.linalg.inv(LLT + alpha * np.identity(n_chans))
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]

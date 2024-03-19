@@ -11,3 +11,4 @@ from .beamformer import *
 from .bayes import *
 from .epifocus import *
 from .music import *
+from .basis_functions import *
