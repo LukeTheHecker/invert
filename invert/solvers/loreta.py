@@ -218,7 +218,6 @@ class SolverELORETA(BaseSolver):
 
         return W
 
-
 def calc_eloreta_D2(leadfield, noise_cov, alpha, stop_crit=0.005, verbose=0):
     ''' Algorithm that optimizes weight matrix D as described in 
         Assessing interactions in the brain with exactlow-resolution electromagnetic tomography; Pascual-Marqui et al. 2011 and

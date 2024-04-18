@@ -4,7 +4,7 @@ import mne
 import matplotlib.pyplot as plt
 import os
 import pickle as pkl
-# import tensorflow as tf
+import tensorflow as tf
 from mne.io.constants import FIFF
 from ..util import find_corner
 
@@ -666,7 +666,13 @@ class BaseSolver:
         name = self.name
 
         # get list of folders in path
-        list_of_folders = os.listdir(path)
+        if os.path.exists(path):
+            list_of_folders = os.listdir(path)
+        else:
+            # create path
+            os.mkdir(path)
+            list_of_folders = []
+            
         model_ints = []
         for folder in list_of_folders:
             full_path = os.path.join(path, folder)
@@ -683,23 +689,23 @@ class BaseSolver:
         os.mkdir(new_path)
 
         if hasattr(self, "model"):
-            raise AttributeError("tensorflow is no longer supported")
-            # # Save model only
-            # self.model.save(new_path)
+            # raise AttributeError("tensorflow is no longer supported")
+            # Save model only
+            self.model.save(new_path)
 
-            # # Save rest
-            # # Delete model since it is not serializable
-            # self.model = None
-            # self.generator = None
-            # with open(new_path + '\\instance.pkl', 'wb') as f:
-            #     pkl.dump(self, f)
+            # Save rest
+            # Delete model since it is not serializable
+            self.model = None
+            self.generator = None
+            with open(new_path + '\\instance.pkl', 'wb') as f:
+                pkl.dump(self, f)
             
-            # # Attach model again now that everything is saved
-            # try:
-            #     self.model = tf.keras.models.load_model(new_path, custom_objects={'loss': self.loss})
-            # except:
-            #     print("Load model did not work using custom_objects. Now trying it without...")
-            #     self.model = tf.keras.models.load_model(new_path)
+            # Attach model again now that everything is saved
+            try:
+                self.model = tf.keras.models.load_model(new_path, custom_objects={'loss': self.loss})
+            except:
+                print("Load model did not work using custom_objects. Now trying it without...")
+                self.model = tf.keras.models.load_model(new_path)
         else:
             with open(new_path + '\\instance.pkl', 'wb') as f:
                 pkl.dump(self, f)

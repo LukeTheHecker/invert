@@ -49,7 +49,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverChampagne(**kwargs, update_rule="MacKay")
     elif solver.lower() == "convexitychampagne" or solver.lower() == "convexity champagne" or solver.lower() == "convexity-champagne" or solver.lower() == "coc":
         solver_object = solvers.SolverChampagne(**kwargs, update_rule="Convexity")
-    
+    elif solver.lower() == "champagne-nl" or solver.lower() == "champagne nl" or solver.lower() == "nl champagne":
+        solver_object = solvers.SolverNLChampagne(**kwargs)
 
     elif solver.lower() == "emchampagne" or solver.lower() == "em champagne" or solver.lower() == "emc":
         solver_object = solvers.SolverEMChampagne(**kwargs)

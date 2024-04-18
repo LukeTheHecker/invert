@@ -33,7 +33,7 @@ def create_forward_model(sampling='ico3', info=None, fixed_ori=True, conductivit
     # Fetch the template files for our forward model
     fs_dir = mne.datasets.fetch_fsaverage(verbose=verbose)
     subjects_dir = os.path.dirname(fs_dir)
-
+    
     # The files live in:
     subject = 'fsaverage'
     trans = os.path.join(fs_dir, 'bem', 'fsaverage-trans.fif')

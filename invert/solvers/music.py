@@ -385,7 +385,8 @@ class SolverFLEXMUSIC(BaseSolver):
         n = len(S_AP_2)
         source_covariance = np.identity(n)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
-        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1))
+        gradients = np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1)[0]
+        print("LOOK: ", gradients.shape, source_covariance.shape, L.shape, )
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
         
         return inverse_operator
@@ -946,7 +947,8 @@ class SolverSignalSubspaceMatching(BaseSolver):
         return self
 
     def make_ssm(self, Y, n, refine_solution=True, max_iter=5, 
-                 lambda_reg1=0.001, lambda_reg2=0.0001, lambda_reg3=0.0):
+                 lambda_reg1=0.001, lambda_reg2=0.0001, lambda_reg3=0.0,
+                 adaptive_reg=False):
         ''' Create the FLEX-SSM inverse solution to the EEG data.
         
         Parameters
@@ -1000,7 +1002,11 @@ class SolverSignalSubspaceMatching(BaseSolver):
             n_comp = deepcopy(n)
         
         M_Y = Y.T @ Y
-        YY = M_Y + lambda_reg1 * np.trace(M_Y) * np.eye(n_time)
+        if adaptive_reg:
+            YY = M_Y + lambda_reg1 * (50/n_time) * np.trace(M_Y) * np.eye(n_time)
+        else:
+            YY = M_Y + lambda_reg1 * np.trace(M_Y) * np.eye(n_time)
+            
         P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
         P_A = np.zeros((n_chans, n_chans))
 

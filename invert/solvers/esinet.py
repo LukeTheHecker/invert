@@ -261,7 +261,7 @@ class SolverCovCNN(BaseSolver):
                             batch_repetitions=10, 
                             epochs=300, learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=(1, 10), n_orders=(0, 10), size_validation_set=256,
-                            epsilon=0.25, snr_range=(0.44,5), patience=100,
+                            epsilon=0., snr_range=(0.44,5), patience=100,
                             add_forward_error=False, forward_error=0.1,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
@@ -429,7 +429,8 @@ class SolverCovCNN(BaseSolver):
         # L = self.leadfield[:, dipole_idc]
         # W = np.diag(np.linalg.norm(L, axis=0))
         # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
-
+        
+        self.gammas = gammas
         # Bayes-like inversion
         Gamma = source_covariance
         Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
@@ -487,7 +488,7 @@ class SolverCovCNN(BaseSolver):
         gen_args = dict(use_cov=True, return_mask=True, scale_data=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
                 snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,
-                inter_source_correlation=self.inter_source_correlation, iid_noise=True)
+                inter_source_correlation=self.inter_source_correlation, correlation_mode=None)
         self.generator = generator(self.forward, **gen_args)
         
 class SolverFC(BaseSolver):
@@ -510,7 +511,8 @@ class SolverFC(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
-                            add_forward_error=False, forward_error=0.1,
+                            add_forward_error=False, forward_error=0.1, 
+                            correlation_mode=None, noise_color_coeff=0,
                             verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
@@ -550,6 +552,12 @@ class SolverFC(BaseSolver):
             Stopping criterion for the training.
         alpha : float
             The regularization parameter.
+        correlation_mode : None/str
+            None implies no correlation between the noise in different channels.
+            'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+            'diagonal' : Some channels have varying degrees of noise.
+        noise_color_coeff : float
+            The magnitude of spatial coloring of the noise.
         
         Return
         ------
@@ -581,6 +589,8 @@ class SolverFC(BaseSolver):
         self.snr_range = snr_range
         self.add_forward_error = add_forward_error
         self.forward_error = forward_error
+        self.correlation_mode = correlation_mode
+        self.noise_color_coeff = noise_color_coeff
         # MISC
         self.verbose = verbose
         # Inference
@@ -630,7 +640,7 @@ class SolverFC(BaseSolver):
         '''
 
         y = deepcopy(data)
-        y -= y.mean(axis=0)
+        # y -= y.mean(axis=0)
         y /= np.linalg.norm(y, axis=0)
         y /= abs(y).max()
 
@@ -678,8 +688,8 @@ class SolverFC(BaseSolver):
         dense = TimeDistributed(Dense(self.n_dense_units, 
                 activation=self.activation_function), name=f'FC2')(dense)
 
-        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(inputs)
-        dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(dense)
+        # dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(inputs)
+        # dense = Bidirectional(LSTM(self.n_dense_units, return_sequences=True))(dense)
 
         out = Dense(n_dipoles, 
             activation="linear", 
@@ -697,7 +707,9 @@ class SolverFC(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, 
+                forward_error=self.forward_error, correlation_mode=self.correlation_mode, 
+                noise_color_coeff=self.noise_color_coeff, scale_data=True)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
@@ -963,8 +975,8 @@ class SolverLSTM(BaseSolver):
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
                             snr_range=(1,100), patience=100, alpha="auto", 
-                            add_forward_error=False, forward_error=0.1,
-                            verbose=0, **kwargs):
+                            add_forward_error=False, forward_error=0.1, correlation_mode=None, 
+                            noise_color_coeff=0, verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -1007,6 +1019,12 @@ class SolverLSTM(BaseSolver):
             Stopping criterion for the training.
         alpha : float
             The regularization parameter.
+        correlation_mode : None/str
+            None implies no correlation between the noise in different channels.
+            'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+            'diagonal' : Some channels have varying degrees of noise.
+        noise_color_coeff : float
+            The magnitude of spatial coloring of the noise.
         
         Return
         ------
@@ -1038,6 +1056,10 @@ class SolverLSTM(BaseSolver):
         self.snr_range = snr_range
         self.add_forward_error = add_forward_error
         self.forward_error = forward_error
+        self.correlation_mode = correlation_mode
+        self.noise_color_coeff = noise_color_coeff
+
+
         # MISC
         self.verbose = verbose
         # Inference
@@ -1183,7 +1205,9 @@ class SolverLSTM(BaseSolver):
         '''
         gen_args = dict(use_cov=False, return_mask=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
                 n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
-                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,)
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, 
+                forward_error=self.forward_error, correlation_mode=self.correlation_mode, 
+                noise_color_coeff=self.noise_color_coeff)
         self.generator = generator(self.forward, **gen_args)
         self.generator.__next__()
 
