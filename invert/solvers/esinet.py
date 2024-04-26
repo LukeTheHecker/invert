@@ -1376,3 +1376,34 @@ class CustomConv2D(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.nn.conv2d(inputs, self.kernel, strides=[1, 1, 1, 1], padding='VALID')
+
+
+def hybrid_loss(y_true, y_pred, lambda_reg=0.01):
+    # Cosine similarity component
+    cosine_loss = 1 - tf.reduce_sum(tf.nn.l2_normalize(y_true, 0) * tf.nn.l2_normalize(y_pred, 0))
+    
+    # Normalized MAE component
+    mae_loss = tf.reduce_sum(tf.abs(y_true - y_pred)) / tf.norm(y_true)
+    
+    # Combine losses
+    total_loss = cosine_loss + lambda_reg * mae_loss
+    return total_loss
+
+def sparse_cosine_similarity_loss(y_true, y_pred):
+    # Calculate the signs and minima of corresponding elements
+    signs = tf.sign(y_true) * tf.sign(y_pred)
+    minima = tf.minimum(tf.abs(y_true), tf.abs(y_pred))
+    
+    # Modified dot product using signs and minima
+    modified_dot_product = tf.reduce_sum(signs * minima)
+    
+    # Compute the norms of the true and predicted vectors
+    norm_true = tf.norm(y_true)
+    norm_pred = tf.norm(y_pred)
+    
+    # Calculate the cosine similarity using the modified dot product
+    cosine_similarity = modified_dot_product / (norm_true * norm_pred)
+    
+    # Since we need a loss (lower is better), subtract the cosine similarity from 1
+    loss = 1 - cosine_similarity
+    return loss

@@ -3,12 +3,12 @@ from invert.config import all_solvers
 from invert import Solver
 import numpy as np
 import mne
-from esinet.forward import get_info, create_forward_model
+from invert.forward import get_info, create_forward_model
 pp = dict(surface='white', hemi='both', verbose=0)
 
 
 # Parameters
-sampling = 'ico3'
+sampling = 'ico1'
 montage = "biosemi16"
 alpha = 0.1
 epochs = 1
@@ -16,6 +16,7 @@ epochs = 1
 # Forward Model
 info = get_info(kind=montage)
 fwd = create_forward_model(info=info, sampling=sampling)
+print(fwd["sol"]["data"].shape)
 vertices = [fwd["src"][0]['vertno'], fwd["src"][1]['vertno']]
 leadfield = fwd["sol"]["data"]
 
@@ -37,6 +38,6 @@ def test_solvers():
 
         print("########################\n", solver_name, "\n########################")
         solver = Solver(solver_name)
-        solver.make_inverse_operator(fwd, evoked, alpha=alpha, epochs=epochs)
+        solver.make_inverse_operator(fwd, evoked, alpha=alpha, epochs=epochs, n=2, k=2)
         stc_hat = solver.apply_inverse_operator(evoked)
         print(type(stc_hat))

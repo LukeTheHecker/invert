@@ -319,6 +319,8 @@ class SolverFLEXMUSIC(BaseSolver):
             Q = I - B @ np.linalg.pinv(B)
             C = Q @ Us
             U, D, _= np.linalg.svd(C, full_matrices=False)
+            # new_cov = Q @ C @ Q
+            # U, D, _= np.linalg.svd(new_cov, full_matrices=False)
             
             # Truncate eigenvectors
             if truncate:
@@ -386,7 +388,7 @@ class SolverFLEXMUSIC(BaseSolver):
         source_covariance = np.identity(n)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
         gradients = np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1)[0]
-        print("LOOK: ", gradients.shape, source_covariance.shape, L.shape, )
+        # print("LOOK: ", gradients.shape, source_covariance.shape, L.shape, )
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
         
         return inverse_operator
@@ -785,7 +787,7 @@ class SolverAlternatingProjections(BaseSolver):
         n = len(S_AP_2)
         source_covariance = np.identity(n)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
-        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1))
+        gradients = np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1)[0]
         # print(source_covariance.shape, L.shape, gradients.shape)
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
         # print(inverse_operator.shape)
@@ -1048,7 +1050,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         # Low-rank minimum norm solution
         source_covariance = np.identity(n_comp)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_SSM_2], axis=1)
-        gradients = np.squeeze(np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_SSM_2], axis=1))
+        gradients = np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_SSM_2], axis=1)[0]
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
 
         return inverse_operator
@@ -1084,6 +1086,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
             lower = np.einsum('ij,ij->j', a_s, a_s) + lambda_reg
             expression[jj, :] = upper  / lower
             
+            
             # Slow
             # upper = a_s.T @ C @ a_s
             # lower = a_s.T @ a_s + np.eye(n_dipoles) * lambda_reg
@@ -1091,10 +1094,9 @@ class SolverSignalSubspaceMatching(BaseSolver):
             # expression[jj, :] = np.diag(upper @ np.linalg.inv(lower))
 
 
-        if q_ignore != []:
+        if len(q_ignore) > 0:
             for order, dipole in q_ignore:
                 expression[order, dipole] = np.nan
-        # print(f"Expression:\n{expression}")
         order, dipole = np.unravel_index(np.nanargmax(expression), expression.shape)
         return order, dipole
 

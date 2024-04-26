@@ -190,18 +190,19 @@ class BaseSolver:
 
         type_list = [mne.Evoked, mne.EvokedArray, mne.Epochs, mne.EpochsArray, mne.io.Raw, mne.io.RawArray,]  # mne.io.brainvision.brainvision.RawBrainVision]
         if pick_types is None:
-            pick_types = dict(meg=True, eeg=True, fnirs=True)
+            pick_types = ["meg", "eeg", "fnirs"]
+        assert type(pick_types) != dict(), f"pick_types must be of type str or list(str), but is of type dict()"
         
         # Prepare Data
         mne_obj = self.prep_data(mne_obj)
-        mne_obj_meeg = mne_obj.copy().pick_types(**pick_types)
+        mne_obj_meeg = mne_obj.copy().pick(pick_types)
 
         channels_in_fwd = self.forward.ch_names
         channels_in_mne_obj = mne_obj_meeg.ch_names
         picks = self.select_list_intersection(channels_in_fwd, channels_in_mne_obj)
         
         # Select only data channels in mne_obj
-        mne_obj_meeg.pick_channels(picks)
+        mne_obj_meeg.pick(picks)
         
         # Store original forward model for later
         self.forward_original = deepcopy(self.forward)
@@ -697,8 +698,11 @@ class BaseSolver:
             # Delete model since it is not serializable
             self.model = None
             self.generator = None
+            if hasattr(self, "history"):
+                self.history = None
+            
             with open(new_path + '\\instance.pkl', 'wb') as f:
-                pkl.dump(self, f)
+                pkl.dump(self, f, protocol=pkl.HIGHEST_PROTOCOL)
             
             # Attach model again now that everything is saved
             try:
