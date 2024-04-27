@@ -1,5 +1,12 @@
 # Changelog
 
+# 0.0.7 27.04.2024
+* Updated to python 3.10.11
+* Many changes such as
+  * added new solvers
+  * added more sophisticated simulations
+
+
 # 0.0.6 03.01.2022
 * fixed an error in RAP- and TRAP-MUSIC resulting in a potentially erroneous extra source found
 * standardized the final estimation of the current source density with all recursive MUSIC approaches

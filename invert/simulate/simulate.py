@@ -13,7 +13,7 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
               return_mask=True, scale_data=True, return_info=False,
               add_forward_error=False, forward_error=0.1, remove_channel_dim=False, 
               inter_source_correlation=0.5, diffusion_smoothing=True, 
-              diffusion_parameter=0.1, fixed_covariance=False, correlation_mode=None, 
+              diffusion_parameter=0.1, correlation_mode=None, 
               noise_color_coeff=0.5, random_seed=None, verbose=0):
     """
     Parameters
