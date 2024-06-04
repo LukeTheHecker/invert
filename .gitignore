@@ -1,5 +1,8 @@
 *.pkl
 *.pyc
+*.h5
+*.keras
+*.fif
 .pytest_cache
 .vscode
 inverse.egg-info

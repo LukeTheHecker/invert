@@ -146,6 +146,19 @@ class BaseSolver:
         '''
         
         data = self.unpack_data_obj(mne_obj)
+
+        # if type(self.inverse_operators[0].data) == list:
+        #     M = data
+            
+        #     maximum_a_posteriori, A, S = self.inverse_operators[0].data
+        #     # transform data M with spatial (A) and temporal (S) projector
+        #     M_ = A @ M @ S
+        #     # invert transformed data M_ to tansformed sources J_
+        #     J_ = maximum_a_posteriori @ M_
+        #     # Project tansformed sources J_ back to original time frame using temporal projector S
+        #     source_mat = J_ @ S.T 
+        #     stc = self.source_to_object(source_mat)
+        #     return stc
         
         if self.use_last_alpha and self.last_reg_idx is not None:
             source_mat = self.inverse_operators[self.last_reg_idx].apply( data ) 
@@ -241,8 +254,6 @@ class BaseSolver:
 
         if self.reduce_rank:
             data = self.select_signal_subspace(data, rank=self.rank)
-
-            
         
         return data
     

@@ -2147,7 +2147,7 @@ class SolverNLChampagne(BaseSolver):
                 prune_candidates = alpha<(pruning_thresh*alpha.max())
                 alpha[prune_candidates] = 0
                 Alpha = csr_matrix(np.diag(alpha))
-                print("pruned ", prune_candidates.sum(), " dipoles")
+                # print("pruned ", prune_candidates.sum(), " dipoles")
             
         # update rest
         Sigma_y = L @ Alpha @ L.T + LLambda

@@ -7,14 +7,15 @@ import mne
 import pandas as pd
 
 
-def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_sources=10, 
+def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
               snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
               return_mask=True, scale_data=True, return_info=False,
               add_forward_error=False, forward_error=0.1, remove_channel_dim=False, 
               inter_source_correlation=0.5, diffusion_smoothing=True, 
               diffusion_parameter=0.1, correlation_mode=None, 
-              noise_color_coeff=0.5, random_seed=None, verbose=0):
+              noise_color_coeff=0.5, random_seed=None, 
+              normalize_leadfield=False, verbose=0):
     """
     Parameters
     ----------
@@ -101,9 +102,10 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
     del adjacency
     
     
-    leadfield -= leadfield.mean()
+    # leadfield -= leadfield.mean()
     # Normalize columns of the leadfield
-    leadfield /= np.linalg.norm(leadfield, axis=0)
+    if normalize_leadfield:
+        leadfield /= np.linalg.norm(leadfield, axis=0)
 
     sources = csr_matrix(np.identity(n_dipoles))
     if isinstance(n_orders, (tuple, list)):
@@ -200,7 +202,8 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         
         if use_cov:
             # Calculate Covariance
-            x = np.stack([xx@xx.T for xx in x], axis=0)
+            
+            x = np.stack([compute_covariance(xx, cov_type=cov_type) for xx in x], axis=0)
             
             # Normalize Covariance to abs. max. of 1
             x = np.stack([C / np.max(abs(C)) for C in x], axis=0)
@@ -212,9 +215,10 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
         else:
             if scale_data:
                 # normalize all time points to unit length
-                x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
+                # x = np.stack([xx / np.linalg.norm(xx, axis=0) for xx in x], axis=0)
                 # normalize each sample to max(abs()) == 1
                 x = np.stack([xx / np.max(abs(xx)) for xx in x], axis=0)
+                # x = np.stack([xx / (np.trace(xx@xx.T) / n_chans) for xx in x], axis=0)
             # Reshape
             x = np.swapaxes(x, 1,2)
 
@@ -256,6 +260,36 @@ def generator(fwd, use_cov=True, batch_size=1284, batch_repetitions=30, n_source
 
         for _ in range(batch_repetitions):
             yield output
+
+
+def compute_covariance(Y, cov_type="basic"):
+        ''' Compute the covariance matrix of the data.
+
+        Parameters
+        ----------
+        Y : numpy.ndarray
+            The data matrix.
+        cov_type : str
+            The type of covariance matrix to compute. Options are 'basic' and 'SSM'. Default is 'basic'.
+        
+        Return
+        ------
+        C : numpy.ndarray
+            The covariance matrix.
+        '''
+        if cov_type == "basic":
+            C = Y @ Y.T
+        elif cov_type == "SSM":
+            n_time = Y.shape[1]
+            M_Y = Y.T @ Y
+            YY = M_Y + 0.001 * (50/n_time) * np.trace(M_Y) * np.eye(n_time)
+            P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
+            C = P_Y.T @ P_Y
+        else:
+            msg = "Covariance type not recognized. Use 'basic', 'SSM' or provide a custom covariance matrix."
+            raise ValueError(msg)
+        
+        return C
 
 def generator_simple(fwd, batch_size, corrs, T, n_sources, SNR_range, 
                      random_seed=42, return_info=True):
@@ -363,7 +397,7 @@ def gen_correlated_sources(corr_coeff, T, Q):
     Signals = np.sqrt(2) * np.cos(2 * np.pi * freq[:, None] * t + phases[:, None])  # the basic signals
 
     if corr_coeff < 1:
-        A = np.linalg.cholesky(Cov).T  # Cholesky Decomposition
+        A = np.linalg.cholesky(Cov).T  # cholesky Decomposition
         Y = A @ Signals
     else:  # Coherent Sources
         Y = np.tile(Signals[0, :], (Q, 1))
@@ -406,35 +440,29 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
 
         covariance_matrix = np.full((n_chans, n_chans), noise_color_coeff)
         np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
-
+        
         # Generate correlated noise
         mean = np.zeros(n_chans)  # Mean of the noise
         X_noise = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
+
         
-        # if noise_color_coeff < 1:
-        #     Cov = np.ones((n_chans, n_chans)) * noise_color_coeff + np.diag(np.ones(n_chans) * (1 - noise_color_coeff))
-        #     # Correlate the noise channels
-        #     X_noise = np.linalg.cholesky(Cov).T @ X_noise
-        # else:
-        #     X_noise = np.tile(X_noise[0, :], (n_chans, 1))
-        
+        import matplotlib.pyplot as plt
         # plt.figure()
-        # plt.bar(np.arange(n_chans), X_noise.std(axis=1))
-        # plt.title("Channel Noise Power Histogram After")
+        # plt.imshow(covariance_matrix, vmin=-1, vmax=1)
+        # plt.colorbar()
+        # plt.title(f"covariance: {np.median(abs(covariance_matrix))}")
 
-        # Some old code
-        # # Inter-channel correlations
-        # coeff_mat = rng.random((X_clean.shape[0], X_clean.shape[0]))
-        # np.fill_diagonal(coeff_mat, 1)
+        C_noise = X_noise @ X_noise.T
+        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+        # plt.figure()
+        # plt.imshow(C_noise, vmin=-1, vmax=1)
+        # plt.colorbar()
+        # plt.title(f"actual covariance: {np.median(abs(C_noise)):.2f}")
+
+        # plt.figure()
+        # plt.plot(X_noise[:4,:].T)
+        # plt.title("Selection of noise channels")
         
-        # # Make positive semi-definite
-        # coeff_mat = np.dot(coeff_mat, coeff_mat.T)
-
-        # # Make matrix symmetric
-        # coeff_mat = (coeff_mat + coeff_mat.T)/2
-        # # print(coeff_mat)
-        # # Random partially correlated noise
-        # X_noise = np.linalg.cholesky( coeff_mat ) @ X_noise
     elif correlation_mode == "bounded":
         num_sensors = X_noise.shape[0]
         Y = np.zeros_like(X_noise)
@@ -446,10 +474,52 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
                 if abs(i - j) % num_sensors == 1:
                     Y[i, :] += (noise_color_coeff / np.sqrt(2)) * X_noise[j, :]
         X_noise = Y
+
+        import matplotlib.pyplot as plt
+        C_noise = X_noise @ X_noise.T
+
+        # plt.figure()
+        # plt.imshow(C_noise)
+        # plt.colorbar()
+        # plt.title(f"Noise covariance: {np.median(abs(C_noise)):.2f}")
+
+        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+
+        # plt.figure()
+        # plt.imshow(C_noise, vmin=-1, vmax=1)
+        # plt.colorbar()
+        # plt.title(f"Standardized noise covariance: {np.median(abs(C_noise)):.2f}")
+
+        # plt.figure()
+        # plt.plot(X_noise[:4,:].T)
+        # plt.title("Selection of noise channels")
+
+
     elif correlation_mode == "diagonal":
         # Apply coloring to the noise
         X_noise[1::3, :] *= (1 - noise_color_coeff)
         X_noise[2::3, :] *= (1 + noise_color_coeff)
+
+        import matplotlib.pyplot as plt
+        C_noise = X_noise @ X_noise.T
+
+        # plt.figure()
+        # plt.imshow(C_noise)
+        # plt.colorbar()
+        # plt.title(f"Noise covariance: {np.median(abs(C_noise)):.2f}")
+
+        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+
+        
+        # plt.figure()
+        # plt.imshow(C_noise, vmin=-1, vmax=1)
+        # plt.colorbar()
+        # plt.title(f"Standardized noise covariance: {np.median(abs(C_noise)):.2f}")
+
+        # plt.figure()
+        # plt.plot(X_noise[:4,:].T)
+        # plt.title("Selection of noise channels")
+
     elif correlation_mode is None:
         pass
     else:

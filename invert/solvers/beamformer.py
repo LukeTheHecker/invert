@@ -108,7 +108,7 @@ class SolverLCMV(BaseSolver):
         n_chans, n_dipoles = self.leadfield.shape
         
         y = data
-        y -= y.mean(axis=0)
+        # y -= y.mean(axis=0)
         
         I = np.identity(n_chans)
         C = y@y.T

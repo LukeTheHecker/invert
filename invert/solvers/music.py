@@ -286,7 +286,6 @@ class SolverFLEXMUSIC(BaseSolver):
         source_covariance = np.zeros(n_dipoles)
         S_AP = []
         for i in range(k):
-            print(f"Source Iteration ", i)
             Ps = Us @ Us.T
             PsQ = Ps @ Q
 
@@ -388,7 +387,6 @@ class SolverFLEXMUSIC(BaseSolver):
         source_covariance = np.identity(n)
         L = np.stack([leadfields[order][:, dipole] for order, dipole in S_AP_2], axis=1)
         gradients = np.stack([self.gradients[order][dipole].toarray() for order, dipole in S_AP_2], axis=1)[0]
-        # print("LOOK: ", gradients.shape, source_covariance.shape, L.shape, )
         inverse_operator = gradients.T @ source_covariance @ L.T @ np.linalg.pinv(L @ source_covariance @ L.T)
         
         return inverse_operator
@@ -801,16 +799,23 @@ class SolverAlternatingProjections(BaseSolver):
         ----------
 
         '''
+        
         n_dipoles = self.leadfield.shape[1]
         I = np.identity(n_dipoles)
+        self.leadfields = [deepcopy(self.leadfield), ]
+        self.gradients = [csr_matrix(I),]
+
+        if self.n_orders == 0:
+            self.is_prepared = True
+            return
+        
         if self.adjacency_type == "spatial":
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         else:
             adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
         
         LL = laplacian(adjacency)
-        self.leadfields = [deepcopy(self.leadfield), ]
-        self.gradients = [csr_matrix(I),]
+        
 
         if self.diffusion_parameter == "auto":
             alphas = [0.05, 0.075, 0.1, 0.125, 0.15, 0.175]
