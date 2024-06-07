@@ -9,7 +9,7 @@ import pandas as pd
 
 def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repetitions=30, n_sources=10, 
               n_orders=2, amplitude_range=(0.001,1), n_timepoints=20, 
-              snr_range=(1, 100), n_timecourses=5000, beta_range=(0, 3),
+              snr_range=(-5, 5), n_timecourses=5000, beta_range=(0, 3),
               return_mask=True, scale_data=True, return_info=False,
               add_forward_error=False, forward_error=0.1, remove_channel_dim=False, 
               inter_source_correlation=0.5, diffusion_smoothing=True, 
@@ -36,7 +36,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
     n_timepoints : int
         Number of timepoints in each simulated time course. Default is 20.
     snr_range : tuple
-        Range of signal to noise ratios to be used in the simulations. Default is (1, 100).
+        Range of signal to noise ratios (in dB) to be used in the simulations. Default is (-5, 5 dB).
     n_timecourses : int
         Number of unique time courses to simulate. Default is 5000.
     beta_range : tuple
@@ -421,6 +421,10 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
     ''' 
     Parameters
     ----------
+    X_clean : numpy.ndarray
+        The clean EEG data.
+    snr : float
+        The signal to noise ratio in dB.
     correlation_mode : None/str
         None implies no correlation between the noise in different channels.
         'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
@@ -435,6 +439,8 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
     # X_noise = rng.uniform(0, 1, (n_chans, n_time))
     # Ensure equal noise variance
     # X_noise = (X_noise.T / np.var(X_noise, axis=1)).T
+
+    snr_linear = 10**(snr/10)
     
     if correlation_mode == "cholesky":
 
@@ -445,23 +451,9 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
         mean = np.zeros(n_chans)  # Mean of the noise
         X_noise = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
 
-        
-        import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.imshow(covariance_matrix, vmin=-1, vmax=1)
-        # plt.colorbar()
-        # plt.title(f"covariance: {np.median(abs(covariance_matrix))}")
-
         C_noise = X_noise @ X_noise.T
         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-        # plt.figure()
-        # plt.imshow(C_noise, vmin=-1, vmax=1)
-        # plt.colorbar()
-        # plt.title(f"actual covariance: {np.median(abs(C_noise)):.2f}")
 
-        # plt.figure()
-        # plt.plot(X_noise[:4,:].T)
-        # plt.title("Selection of noise channels")
         
     elif correlation_mode == "bounded":
         num_sensors = X_noise.shape[0]
@@ -478,66 +470,28 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
         import matplotlib.pyplot as plt
         C_noise = X_noise @ X_noise.T
 
-        # plt.figure()
-        # plt.imshow(C_noise)
-        # plt.colorbar()
-        # plt.title(f"Noise covariance: {np.median(abs(C_noise)):.2f}")
-
         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-
-        # plt.figure()
-        # plt.imshow(C_noise, vmin=-1, vmax=1)
-        # plt.colorbar()
-        # plt.title(f"Standardized noise covariance: {np.median(abs(C_noise)):.2f}")
-
-        # plt.figure()
-        # plt.plot(X_noise[:4,:].T)
-        # plt.title("Selection of noise channels")
-
 
     elif correlation_mode == "diagonal":
         # Apply coloring to the noise
         X_noise[1::3, :] *= (1 - noise_color_coeff)
         X_noise[2::3, :] *= (1 + noise_color_coeff)
 
-        import matplotlib.pyplot as plt
         C_noise = X_noise @ X_noise.T
-
-        # plt.figure()
-        # plt.imshow(C_noise)
-        # plt.colorbar()
-        # plt.title(f"Noise covariance: {np.median(abs(C_noise)):.2f}")
-
         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-
-        
-        # plt.figure()
-        # plt.imshow(C_noise, vmin=-1, vmax=1)
-        # plt.colorbar()
-        # plt.title(f"Standardized noise covariance: {np.median(abs(C_noise)):.2f}")
-
-        # plt.figure()
-        # plt.plot(X_noise[:4,:].T)
-        # plt.title("Selection of noise channels")
-
     elif correlation_mode is None:
         pass
     else:
         msg = f"correlation_mode can bei either None, cholesky, bounded or diagonal, but was {correlation_mode}"
         raise AttributeError(msg)
-    
-    # rms_noise = rms(X_noise)
-    # rms_signal = rms(X_clean)
-
-    # scaler = rms_signal / (snr * rms_noise)
-    
+ 
     # # According to Adler et al.:
     X_clean_energy = np.trace(X_clean@X_clean.T)/(X_clean.shape[0]*X_clean.shape[1])
-    noise_var = X_clean_energy/snr
+    noise_var = X_clean_energy/snr_linear
     scaler = np.sqrt(noise_var)
 
     X_full = X_clean + X_noise*scaler
-    # print(rms(X_clean), rms(X_noise*scaler))
+    
     return X_full
 
 def add_error(leadfield, forward_error, gradient, rng):

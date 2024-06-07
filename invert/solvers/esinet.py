@@ -38,7 +38,7 @@ class SolverCNN(BaseSolver):
                             n_timepoints=20, batch_repetitions=5, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            epsilon=0.25, snr_range=(1,100), patience=300,
+                            epsilon=0.25, snr_range=(-5,5), patience=300,
                             add_forward_error=False, forward_error=0.1,
                             alpha="auto", **kwargs):
         ''' Calculate inverse operator.
@@ -78,8 +78,7 @@ class SolverCNN(BaseSolver):
             The threshold at which to select sources as "active". 0.25 -> select
             all sources that are active at least 25 % of the maximum dipoles.
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data. (1,
-            10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -261,7 +260,7 @@ class SolverCovCNN(BaseSolver):
                             batch_repetitions=10, 
                             epochs=300, learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=(1, 10), n_orders=(0, 10), size_validation_set=256,
-                            epsilon=0., snr_range=(0.44,5), patience=100,
+                            epsilon=0., snr_range=(-5,5), patience=100,
                             add_forward_error=False, correlation_mode=None, noise_color_coeff=0, 
                             forward_error=0.1, cov_type="basic",
                             alpha="auto", **kwargs):
@@ -307,8 +306,7 @@ class SolverCovCNN(BaseSolver):
             "basic" -> Use the basic
             "SSM" -> use the Signal Subspace Matching (SSM) covariance
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data.
-            (1, 10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -529,6 +527,382 @@ class SolverCovCNN(BaseSolver):
                 noise_color_coeff=self.noise_color_coeff)
         self.generator = generator(self.forward, **gen_args)
         
+
+class SolverCovTriCNN(BaseSolver):
+    ''' Class for the Covariance-based Convolutional Neural Network (CovTriCNN) for EEG inverse solutions.
+    
+    Attributes
+    ----------
+    forward : mne.Forward
+        The mne-python Forward model instance.
+    '''
+
+    def __init__(self, name="Cov-Tri-CNN", **kwargs):
+        self.name = name
+        return super().__init__(**kwargs)
+
+    def make_inverse_operator(self, forward, *args, n_filters="auto", 
+                            n_dense_units=300, n_dense_layers=2, 
+                            activation_function="tanh", inter_source_correlation=(0, 1), 
+                            output_activation="sigmoid", batch_size="auto", n_timepoints=20, 
+                            batch_repetitions=10, 
+                            epochs=300, learning_rate=1e-3, loss="cosine_similarity",
+                            n_sources=(1, 10), n_orders=(0, 10), size_validation_set=256,
+                            epsilon=0., snr_range=(-5,5), patience=100,
+                            add_forward_error=False, correlation_mode=None, noise_color_coeff=0, 
+                            forward_error=0.1, cov_type="basic",
+                            alpha="auto", **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        n_filters : int
+            Number of filters in the convolution layer.
+        activation_function : str
+            The activation function of the hidden layers.
+        batch_size : ["auto", int]
+            The batch_size used during training. If "auto", the batch_size
+            defaults to the number of dipoles in the source/ forward model.
+            Choose a smaller batch_size (e.g., 1000) if you run into memory
+            problems (RAM or GPU memory).
+        n_timepoints : int
+            The number of time points to simulate and ultimately train the
+            neural network on.
+        batch_repetitions : int
+            The number of learning repetitions on the same batch of training
+            data until a new batch is simulated.
+        epochs : int
+            The number of epochs to train.
+        learning_rate : float
+            The learning rate of the optimizer that trains the neural network.
+        loss : str
+            The loss function of the neural network.
+        n_sources : int
+            The maximum number of sources to simulate for the training data.
+        n_orders : int
+            Controls the maximum smoothness of the sources.
+        size_validation_set : int
+            The size of validation data set.
+        epsilon : float
+            The threshold at which to select sources as "active". 
+            0.25 -> select all sources that are active at least 25 % of the
+            maximum dipoles.
+        cov_type : str
+            The type of covariance matrix to use. 
+            "basic" -> Use the basic
+            "SSM" -> use the Signal Subspace Matching (SSM) covariance
+        snr_range : tuple
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
+        patience : int
+            Stopping criterion for the training.
+        alpha : float
+            The regularization parameter.
+        
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        n_channels, n_dipoles = self.leadfield.shape
+        
+        if batch_size == "auto":
+            batch_size = n_dipoles
+        if n_filters == "auto":
+            n_filters = n_channels
+        self.forward = forward
+        # Store Parameters
+        # Architecture
+        self.n_filters = n_filters
+        self.activation_function = activation_function
+        self.output_activation = output_activation
+        self.n_dense_layers = n_dense_layers
+        self.n_dense_units = n_dense_units
+        # Training
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        self.loss = loss
+        self.size_validation_set = size_validation_set
+        self.patience = patience
+        # Training Data
+        self.n_timepoints = n_timepoints
+        self.n_sources = n_sources
+        self.n_orders = n_orders
+        self.batch_repetitions = batch_repetitions
+        self.snr_range = snr_range
+        self.add_forward_error = add_forward_error
+        self.forward_error=forward_error
+        self.inter_source_correlation = inter_source_correlation
+        self.cov_type = cov_type
+        self.correlation_mode = correlation_mode
+        self.noise_color_coeff = noise_color_coeff
+        # Inference
+        self.epsilon = epsilon
+        print("Create Generator:..")
+        self.create_generator()
+        print("Build Model:..")
+        self.build_model()
+        print("Train Model:..")
+        self.train_model()
+
+        self.inverse_operators = []
+        return self
+
+    def apply_inverse_operator(self, mne_obj) -> mne.SourceEstimate:
+        ''' Apply the inverse operator.
+        
+        Parameters
+        ----------
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        
+        Return
+        ------
+        stc : mne.SourceEstimate
+            The mne Source Estimate object.
+        '''
+        data = self.unpack_data_obj(mne_obj)
+
+        source_mat = self.apply_model(data)
+        stc = self.source_to_object(source_mat)
+
+        return stc
+
+    def compute_covariance(self, Y: np.ndarray) -> np.ndarray:
+        ''' Compute the covariance matrix of the data.
+
+        Parameters
+        ----------
+        Y : numpy.ndarray
+            The data matrix.
+        
+        Return
+        ------
+        C : numpy.ndarray
+            The covariance matrix.
+        '''
+        if self.cov_type == "basic":
+            C = Y @ Y.T
+        elif self.cov_type == "SSM":
+            n_time = Y.shape[1]
+            M_Y = Y.T @ Y
+            YY = M_Y + 0.001 * (50/n_time) * np.trace(M_Y) * np.eye(n_time)
+            P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
+            C = P_Y.T @ P_Y
+            print("yes its new")
+
+        else:
+            msg = "Covariance type not recognized. Use 'basic', 'SSM' or provide a custom covariance matrix."
+            raise ValueError(msg)
+
+        return C
+
+    def apply_model(self, data, n_sources, refine_solution=True, max_iter=6, alpha=0.01) -> np.ndarray:
+        ''' Compute the inverse solution of the M/EEG data.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            The M/EEG data matrix.
+        n_sources : int
+            The number of sources to estimate.
+        refine_solution : bool
+            Whether to refine the solution using the estimated sources. 
+        max_iter : int
+            The maximum number of iterations to refine the solution.
+
+        Return
+        ------
+        x_hat : numpy.ndarray
+            The source esimate.
+
+        '''
+
+        Y = deepcopy(data)
+        n_channels, n_times = Y.shape
+        _, n_dipoles = self.leadfield.shape
+        # print(alpha)
+        # Compute Data Covariance Matrix
+        C =self.get_diag_and_lower(self.compute_covariance(Y))
+        # Scale
+        C /= abs(C).max()
+
+        # Add empty batch and (color-) channel dimension
+        C = C[np.newaxis, :, :, np.newaxis]
+        self.estimates = dict()
+        estimated_idc = []
+        # Add all sources
+        for i_iter in range(n_sources):
+            # print(f"iter {i_iter+1}")
+            X = self.model.predict(C, verbose=self.verbose)[0]
+            # print(f"\tmax_val iter {i_iter} = {X.max()}")
+            # X /= abs(X).max()
+            X /= X.max()
+            self.estimates[f"iter_{i_iter}"] = X
+            X[np.array(estimated_idc).astype(int)] = 0  # prevent double selection
+            next_index = np.argmax(X)
+            estimated_idc.append( next_index )
+
+            # # Outproject on whole data:
+            current_data = self.outproject_from_data(Y.copy(), self.leadfield, estimated_idc, alpha=alpha)
+            C = self.get_diag_and_lower(self.compute_covariance(current_data))
+            C /= abs(C).max()
+            C = C[np.newaxis]
+            
+
+        
+        estimated_idc = np.array(estimated_idc)
+        # print(f"before refinement: {estimated_idc}")
+        # Phase 2: refinement
+        candidates_2 = deepcopy(estimated_idc)
+        list_of_sets = [set(estimated_idc)]
+        if len(estimated_idc) > 1 and refine_solution:
+            candidates_2_prev = deepcopy(candidates_2)
+            for j in range(max_iter):#
+                # print(f"\titeration {j+1}")
+                # A_q_j = A_q.copy()
+                for qq in range(n_sources):
+                    candidates_2 = np.delete(candidates_2, qq, axis=0) # delete the current source
+                    
+                    # # Outproject on whole data
+                    # current_data = self.outproject_from_data(Y.copy(), self.leadfield, candidates_2, alpha=alpha)
+                    # C = self.compute_covariance(current_data)
+                    # C /= abs(C).max()
+                    # C = C[np.newaxis, :, :, np.newaxis]
+                    
+                    # Outproject on data covariance:
+                    C = self.outproject_from_data_cov(Y.copy(), self.leadfield, candidates_2, alpha=alpha)
+                    C /= abs(C).max()
+                    C = C[np.newaxis, :, :, np.newaxis]
+
+                    X = self.model.predict(C, verbose=self.verbose)[0]
+                    # print(f"\tmax_val iter {j}/{qq} = {X.max()}")
+                    X /= abs(X).max()
+                    X[np.array(candidates_2).astype(int)] = 0  # prevcent double selection
+                    next_index = np.argmax(X)
+                    candidates_2 = np.insert(candidates_2, qq, next_index)
+                    # print(f"\tinserting {next_index} at {qq} (replaces {estimated_idc[qq]}): {candidates_2}") 
+
+                
+                if set(candidates_2) in list_of_sets:#set(candidates_2_prev):
+                    # print(f"\t\tNo change after {j+1} iteration(s)")
+                    break
+                # else:
+                #     print(candidates_2_prev, " ==> ", candidates_2)
+                candidates_2_prev = deepcopy(candidates_2)
+                list_of_sets.append(set(candidates_2))
+                
+        # print(f"after refinement: {candidates_2}")
+        # Get prior source covariance from model
+        L = self.leadfield[:, candidates_2]
+        gradients = np.zeros((n_dipoles, n_sources))
+        x_hat = np.zeros((n_dipoles, n_times))
+        x_hat[candidates_2, :] = L.T @ np.linalg.pinv(L @ L.T) @ data
+        
+        return x_hat
+         
+    def train_model(self,):
+        ''' Train the neural network model.
+        '''
+        callbacks = [tf.keras.callbacks.EarlyStopping(patience=self.patience, restore_best_weights=True),]
+        
+        # Get Validation data from generator (and clear all repetitions with loop)
+        for _ in range(self.batch_repetitions):
+            x_val, y_val = self.generator.__next__()
+        
+        self.history = self.model.fit(x=self.generator, epochs=self.epochs, steps_per_epoch=self.batch_repetitions, 
+                validation_data=(x_val, y_val), callbacks=callbacks)
+    
+    def build_model(self,):
+        ''' Build the neural network model.
+        '''
+        n_chans, n_dipoles = self.leadfield.shape
+        input_size = int((n_chans**2 - n_chans) / 2)
+        input_shape = (input_size,)  # Specify the input shape based on your data
+
+        model = tf.keras.Sequential([
+            # Reshape input to match the expected input for Conv2D
+            tf.layers.Reshape((1, input_size, 1), input_shape=input_shape),
+            
+            # Convolutional layer
+            tf.layers.Conv2D(self.n_filters, (1, input_size), activation='tanh'),
+            
+            # Flatten the output from the Conv2D layer
+            tf.layers.Flatten(),
+            
+            # Fully connected layers
+            tf.layers.Dense(self.n_dense_units, activation='tanh'),
+            
+            tf.layers.Dense(n_dipoles, activation='sigmoid')
+        ])
+
+        model.build(input_shape=(None, input_size))  # Build the model with the specified input shape
+
+        # Compile the model
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate), loss=self.loss)  # Specify the loss function and optimizer
+        model.build()
+        self.model = model
+
+    def create_generator(self,):
+        ''' Creat the data generator used for the simulations.
+        '''
+        gen_args = dict(use_cov=True, return_mask=True, scale_data=False, batch_size=self.batch_size, batch_repetitions=self.batch_repetitions, 
+                n_sources=self.n_sources, n_orders=self.n_orders, n_timepoints=self.n_timepoints,
+                snr_range=self.snr_range, add_forward_error=self.add_forward_error, forward_error=self.forward_error,
+                inter_source_correlation=self.inter_source_correlation, correlation_mode=self.correlation_mode, cov_type=self.cov_type,
+                noise_color_coeff=self.noise_color_coeff)
+        self.generator = generator(self.forward, **gen_args)
+    
+    @staticmethod
+    def get_diag_and_lower(matrix):
+        """
+        This function takes a square matrix and returns a flattened array
+        containing its diagonal and lower diagonal values.
+        
+        Parameters:
+        matrix (np.ndarray): A square matrix.
+
+        Returns:
+        np.ndarray: A flattened array of the diagonal and lower diagonal values.
+        """
+        if matrix.shape[0] != matrix.shape[1]:
+            raise ValueError("The input matrix must be square.")
+        
+        diag_and_lower = matrix[np.tril_indices(matrix.shape[0])]
+        
+        return diag_and_lower
+
+    
+    @staticmethod
+    def outproject_from_data(data, leadfield, idc: np.array, alpha=0.):
+        """
+        Projects away the leadfield components at the indices idc from the EEG data.
+
+        Parameters:
+        data (np.array): Observed M/EEG data (n_chans x n_time).
+        leadfield (np.array): Leadfield matrix (n_chans x n_dipoles).
+        idc (np.array): Indices to project away from the leadfield.
+
+        Returns:
+        np.array: Data with the specified leadfield components removed.
+        """
+        # Select the columns of the leadfield matrix corresponding to the indices
+        L_idc = leadfield[:, idc]
+
+        # Compute the projection matrix
+        # P = I - L(L.TL)^-1L.T
+        # where L = L_idc
+        L_idc_T = L_idc.T
+        projection_matrix = np.eye(leadfield.shape[0]) - L_idc @ np.linalg.pinv(L_idc_T @ L_idc + np.identity(len(idc)) * alpha) @ L_idc_T
+
+        # Apply the projection matrix to the data
+        data_without_idc = projection_matrix @ data
+
+        return data_without_idc
+
+
 class SolverFC(BaseSolver):
     ''' Class for the Fully-Connected Neural Network (FC) for 
         EEG inverse solutions.
@@ -548,7 +922,7 @@ class SolverFC(BaseSolver):
                             batch_repetitions=10, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            snr_range=(1,100), patience=100, alpha="auto", 
+                            snr_range=(-5,5), patience=100, alpha="auto", 
                             add_forward_error=False, forward_error=0.1, 
                             correlation_mode=None, noise_color_coeff=0,
                             verbose=0, **kwargs):
@@ -584,8 +958,7 @@ class SolverFC(BaseSolver):
         size_validation_set : int
             The size of validation data set.
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data.
-            (1, 10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -773,7 +1146,7 @@ class SolverCovLSTM(BaseSolver):
                             batch_repetitions=10, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            snr_range=(1,100), patience=100, alpha="auto", 
+                            snr_range=(-5,5), patience=100, alpha="auto", 
                             add_forward_error=False, forward_error=0.1,
                             inter_source_correlation=(0, 1), correlation_mode=None, 
                             noise_color_coeff=0, epsilon=0.0, verbose=0, **kwargs):
@@ -813,8 +1186,7 @@ class SolverCovLSTM(BaseSolver):
         size_validation_set : int
             The size of validation data set.
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data. (1,
-            10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -1052,7 +1424,7 @@ class SolverCovLSTM2(BaseSolver):
                             batch_repetitions=10, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            snr_range=(1,100), patience=100, alpha="auto", 
+                            snr_range=(-5,5), patience=100, alpha="auto", 
                             add_forward_error=False, forward_error=0.1,
                             inter_source_correlation=(0, 1), correlation_mode=None, 
                             noise_color_coeff=0, epsilon=0.0, verbose=0, **kwargs):
@@ -1092,8 +1464,7 @@ class SolverCovLSTM2(BaseSolver):
         size_validation_set : int
             The size of validation data set.
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data. (1,
-            10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -1337,7 +1708,7 @@ class SolverLSTM(BaseSolver):
                             batch_repetitions=10, epochs=300,
                             learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=10, n_orders=2, size_validation_set=256,
-                            snr_range=(1,100), patience=100, alpha="auto", 
+                            snr_range=(-5,5), patience=100, alpha="auto", 
                             inter_source_correlation=(0, 1), add_forward_error=False, forward_error=0.1, correlation_mode=None, 
                             noise_color_coeff=0, verbose=0, **kwargs):
         ''' Calculate inverse operator.
@@ -1376,8 +1747,7 @@ class SolverLSTM(BaseSolver):
         size_validation_set : int
             The size of validation data set.
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data. (1,
-            10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
@@ -1595,7 +1965,7 @@ class SolverRAPNN(BaseSolver):
                             batch_repetitions=10, 
                             epochs=300, learning_rate=1e-3, loss="cosine_similarity",
                             n_sources=(1, 10), n_orders=(0, 10), size_validation_set=256,
-                            epsilon=0., snr_range=(0.2,5), patience=100,
+                            epsilon=0., snr_range=(-5,5), patience=100,
                             add_forward_error=False, correlation_mode=None, noise_color_coeff=0, 
                             forward_error=0.1, cov_type="basic", verbose=0,
                             alpha="auto", **kwargs):
@@ -1641,8 +2011,7 @@ class SolverRAPNN(BaseSolver):
             "basic" -> Use the basic
             "SSM" -> use the Signal Subspace Matching (SSM) covariance
         snr_range : tuple
-            The range of signal to noise ratios (SNRs) in the training data.
-            (1, 10) -> Samples have varying SNR from 1 to 10.
+            The range of signal to noise ratios (SNRs) in the training data (in dB).
         patience : int
             Stopping criterion for the training.
         alpha : float
