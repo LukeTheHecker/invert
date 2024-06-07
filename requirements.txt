@@ -111,6 +111,6 @@ tzdata==2024.1
 urllib3==2.2.1
 vtk==9.3.0
 wcwidth==0.2.13
-Werkzeug==3.0.2
+Werkzeug==3.0.3
 wrapt==1.16.0
 zipp==3.18.1
