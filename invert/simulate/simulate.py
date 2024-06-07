@@ -434,7 +434,6 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
     noise_color_coeff : float
         The magnitude of spatial coloring of the noise (not the magnitude of noise overall!).
     '''
-    print("UNTESTED FUNCTION")
     n_chans, n_time = X_clean.shape
     X_noise = rng.standard_normal((n_chans, n_time))
     snr_linear = 10**(snr/10)
