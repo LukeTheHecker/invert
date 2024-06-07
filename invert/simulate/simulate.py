@@ -79,6 +79,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         The source data matrix.
     """
     rng = np.random.default_rng(random_seed)
+    channel_types = fwd["info"].get_channel_types()
     leadfield = deepcopy(fwd["sol"]["data"])
     leadfield_original = deepcopy(fwd["sol"]["data"])
     n_chans, n_dipoles = leadfield.shape
@@ -195,7 +196,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
         # Add white noise to clean EEG
         snr_levels = rng.uniform(low=snr_range[0], high=snr_range[1], size=batch_size)
-        x = np.stack([add_white_noise(xx, snr_level, rng, correlation_mode=correlation_mode, noise_color_coeff=noise_color_level) for (xx, snr_level, noise_color_level) in zip(x, snr_levels, noise_color_coeffs)], axis=0)
+        x = np.stack([add_white_noise(xx, snr_level, rng, channel_types, correlation_mode=correlation_mode, noise_color_coeff=noise_color_level) for (xx, snr_level, noise_color_level) in zip(x, snr_levels, noise_color_coeffs)], axis=0)
 
         # Apply common average reference
         # x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
@@ -417,7 +418,7 @@ def get_cov(n, corr_coef):
         cov[:, 0] = 1
     return cov.T
 
-def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=None):
+def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, correlation_mode=None):
     ''' 
     Parameters
     ----------
@@ -433,66 +434,129 @@ def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=N
     noise_color_coeff : float
         The magnitude of spatial coloring of the noise (not the magnitude of noise overall!).
     '''
-    # print(X_clean.shape)
+    print("UNTESTED FUNCTION")
     n_chans, n_time = X_clean.shape
     X_noise = rng.standard_normal((n_chans, n_time))
-    # X_noise = rng.uniform(0, 1, (n_chans, n_time))
-    # Ensure equal noise variance
-    # X_noise = (X_noise.T / np.var(X_noise, axis=1)).T
-
     snr_linear = 10**(snr/10)
+    if type(channel_types == list):
+        channel_types = np.array(channel_types)
+    # Ensure the channel_types array is correct length
+    assert len(channel_types) == n_chans, "Length of channel_types must match the number of channels in X_clean"
     
-    if correlation_mode == "cholesky":
-
-        covariance_matrix = np.full((n_chans, n_chans), noise_color_coeff)
-        np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
+    unique_types = np.unique(channel_types)
+    X_full = np.zeros_like(X_clean)
+    
+    for ch_type in unique_types:
+        type_indices = np.where(channel_types == ch_type)[0]
+        X_clean_type = X_clean[type_indices, :]
+        X_noise_type = X_noise[type_indices, :]
+        if correlation_mode == "cholesky":
+            covariance_matrix = np.full((len(type_indices), len(type_indices)), noise_color_coeff)
+            np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
+            mean = np.zeros(len(type_indices))  # Mean of the noise
+            X_noise_type = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
+            C_noise = X_noise_type @ X_noise_type.T
+            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+        elif correlation_mode == "bounded":
+            num_sensors = X_noise_type.shape[0]
+            Y = np.zeros_like(X_noise_type)
+            for i in range(num_sensors):
+                Y[i, :] = X_noise_type[i, :]
+                for j in range(num_sensors):
+                    if abs(i - j) % num_sensors == 1:
+                        Y[i, :] += (noise_color_coeff / np.sqrt(2)) * X_noise_type[j, :]
+            X_noise_type = Y
+            C_noise = X_noise_type @ X_noise_type.T
+            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+        elif correlation_mode == "diagonal":
+            X_noise_type[1::3, :] *= (1 - noise_color_coeff)
+            X_noise_type[2::3, :] *= (1 + noise_color_coeff)
+            C_noise = X_noise_type @ X_noise_type.T
+            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+        elif correlation_mode is None:
+            pass
+        else:
+            msg = f"correlation_mode can be either None, cholesky, bounded or diagonal, but was {correlation_mode}"
+            raise AttributeError(msg)
         
-        # Generate correlated noise
-        mean = np.zeros(n_chans)  # Mean of the noise
-        X_noise = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
-
-        C_noise = X_noise @ X_noise.T
-        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-
+        X_clean_energy = np.trace(X_clean_type @ X_clean_type.T) / (X_clean_type.shape[0] * X_clean_type.shape[1])
+        noise_var = X_clean_energy / snr_linear
+        scaler = np.sqrt(noise_var)
         
-    elif correlation_mode == "bounded":
-        num_sensors = X_noise.shape[0]
-        Y = np.zeros_like(X_noise)
-        
-        # Apply coloring to the noise
-        for i in range(num_sensors):
-            Y[i, :] = X_noise[i, :]
-            for j in range(num_sensors):
-                if abs(i - j) % num_sensors == 1:
-                    Y[i, :] += (noise_color_coeff / np.sqrt(2)) * X_noise[j, :]
-        X_noise = Y
-
-        import matplotlib.pyplot as plt
-        C_noise = X_noise @ X_noise.T
-
-        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-
-    elif correlation_mode == "diagonal":
-        # Apply coloring to the noise
-        X_noise[1::3, :] *= (1 - noise_color_coeff)
-        X_noise[2::3, :] *= (1 + noise_color_coeff)
-
-        C_noise = X_noise @ X_noise.T
-        C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-    elif correlation_mode is None:
-        pass
-    else:
-        msg = f"correlation_mode can bei either None, cholesky, bounded or diagonal, but was {correlation_mode}"
-        raise AttributeError(msg)
- 
-    # # According to Adler et al.:
-    X_clean_energy = np.trace(X_clean@X_clean.T)/(X_clean.shape[0]*X_clean.shape[1])
-    noise_var = X_clean_energy/snr_linear
-    scaler = np.sqrt(noise_var)
-
-    X_full = X_clean + X_noise*scaler
+        X_full[type_indices, :] = X_clean_type + X_noise_type * scaler
     
     return X_full
+
+# def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=None):
+#     ''' 
+#     Parameters
+#     ----------
+#     correlation_mode : None/str
+#         None implies no correlation between the noise in different channels.
+#         'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+#         'diagonal' : Some channels have varying degrees of noise.
+#         'cholesky' : A set correlation coefficient between each pair of channels
+#     noise_color_coeff : float
+#         The magnitude of spatial coloring of the noise (not the magnitude of noise overall!).
+#     '''
+#     # print(X_clean.shape)
+#     n_chans, n_time = X_clean.shape
+#     X_noise = rng.standard_normal((n_chans, n_time))
+#     # X_noise = rng.uniform(0, 1, (n_chans, n_time))
+#     # Ensure equal noise variance
+#     # X_noise = (X_noise.T / np.var(X_noise, axis=1)).T
+    
+#     if correlation_mode == "cholesky":
+
+#         covariance_matrix = np.full((n_chans, n_chans), noise_color_coeff)
+#         np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
+        
+#         # Generate correlated noise
+#         mean = np.zeros(n_chans)  # Mean of the noise
+#         X_noise = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
+    
+#         C_noise = X_noise @ X_noise.T
+#         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+#     elif correlation_mode == "bounded":
+#         num_sensors = X_noise.shape[0]
+#         Y = np.zeros_like(X_noise)
+        
+#         # Apply coloring to the noise
+#         for i in range(num_sensors):
+#             Y[i, :] = X_noise[i, :]
+#             for j in range(num_sensors):
+#                 if abs(i - j) % num_sensors == 1:
+#                     Y[i, :] += (noise_color_coeff / np.sqrt(2)) * X_noise[j, :]
+#         X_noise = Y
+
+#         C_noise = X_noise @ X_noise.T
+#         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+
+#     elif correlation_mode == "diagonal":
+#         # Apply coloring to the noise
+#         X_noise[1::3, :] *= (1 - noise_color_coeff)
+#         X_noise[2::3, :] *= (1 + noise_color_coeff)
+
+#         C_noise = X_noise @ X_noise.T
+#         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+#     elif correlation_mode is None:
+#         pass
+#     else:
+#         msg = f"correlation_mode can bei either None, cholesky, bounded or diagonal, but was {correlation_mode}"
+#         raise AttributeError(msg)
+    
+#     # rms_noise = rms(X_noise)
+#     # rms_signal = rms(X_clean)
+
+#     # scaler = rms_signal / (snr * rms_noise)
+    
+#     # # According to Adler et al.:
+#     X_clean_energy = np.trace(X_clean@X_clean.T)/(X_clean.shape[0]*X_clean.shape[1])
+#     noise_var = X_clean_energy/snr
+#     scaler = np.sqrt(noise_var)
+
+#     X_full = X_clean + X_noise*scaler
+#     return X_full
 
 def add_error(leadfield, forward_error, gradient, rng):
     n_chans, n_dipoles = leadfield.shape

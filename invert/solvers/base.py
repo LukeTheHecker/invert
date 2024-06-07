@@ -321,8 +321,8 @@ class BaseSolver:
         leadfield = self.leadfield
         source_mats = [inverse_operator.apply( M ) for inverse_operator in self.inverse_operators]
         
-        M -= M.mean(axis=0)
-        leadfield -= leadfield.mean(axis=0)
+        # M -= M.mean(axis=0)
+        # leadfield -= leadfield.mean(axis=0)
         
 
         # l2_norms = [np.log(np.linalg.norm( leadfield @ source_mat )) for source_mat in source_mats]
@@ -401,7 +401,7 @@ class BaseSolver:
         """
         n_chans = self.leadfield.shape[0]
         # Common Average Reference
-        M -= M.mean(axis=0)
+        # M -= M.mean(axis=0)
         
         I = np.identity(n_chans)
         gcv_values = []
