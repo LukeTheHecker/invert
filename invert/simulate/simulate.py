@@ -437,6 +437,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
     n_chans, n_time = X_clean.shape
     X_noise = rng.standard_normal((n_chans, n_time))
     snr_linear = 10**(snr/10)
+    
     if type(channel_types == list):
         channel_types = np.array(channel_types)
     # Ensure the channel_types array is correct length
