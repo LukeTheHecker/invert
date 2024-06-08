@@ -3,6 +3,7 @@
 *.h5
 *.keras
 *.fif
+*.pt
 .pytest_cache
 .vscode
 inverse.egg-info
