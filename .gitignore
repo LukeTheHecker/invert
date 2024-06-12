@@ -4,6 +4,7 @@
 *.keras
 *.fif
 *.pt
+*.csv
 .pytest_cache
 .vscode
 inverse.egg-info

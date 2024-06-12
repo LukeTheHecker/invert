@@ -1015,19 +1015,20 @@ class SolverSignalSubspaceMatching(BaseSolver):
             YY = M_Y + lambda_reg1 * np.trace(M_Y) * np.eye(n_time)
             
         P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
+        C = P_Y.T @ P_Y
         P_A = np.zeros((n_chans, n_chans))
 
         S_SSM = []
         A_q = []
         
         # Initial source location
-        S_SSM.append( self.get_source_ssm(P_Y, P_A, leadfields, lambda_reg=lambda_reg3) )
+        S_SSM.append( self.get_source_ssm(C, P_A, leadfields, lambda_reg=lambda_reg3) )
         # Now, add one source at a time
         for qq in range(1, n_comp):
             order, location = S_SSM[-1]
             A_q.append(leadfields[order][:, location])
             P_A = self.compute_projection_matrix(A_q, lambda_reg=lambda_reg2)
-            S_SSM.append( self.get_source_ssm(P_Y, P_A, leadfields, S_SSM, lambda_reg=lambda_reg3) )
+            S_SSM.append( self.get_source_ssm(C, P_A, leadfields, S_SSM, lambda_reg=lambda_reg3) )
         
         A_q.append( leadfields[S_SSM[-1][0]][:, S_SSM[-1][1]] )
         
@@ -1041,7 +1042,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
                     A_temp = np.delete(A_q_j, qq, axis=0) # delete the current source
                     qq_temp = np.delete(S_SSM_2, qq, axis=0) # delete the current source
                     P_A = self.compute_projection_matrix(A_temp, lambda_reg=lambda_reg2)
-                    S_SSM_2[qq] = self.get_source_ssm(P_Y, P_A, leadfields, qq_temp, lambda_reg=lambda_reg3)
+                    S_SSM_2[qq] = self.get_source_ssm(C, P_A, leadfields, qq_temp, lambda_reg=lambda_reg3)
                     A_q_j[qq] = leadfields[S_SSM_2[qq][0]][:, S_SSM_2[qq][1]]
                     
                 if S_SSM_2 == S_SSM_prev:
@@ -1061,7 +1062,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         return inverse_operator
 
     @staticmethod
-    def get_source_ssm(P_Y: np.ndarray, P_A: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
+    def get_source_ssm(C: np.ndarray, P_A: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
         ''' Compute the source with the highest AP value.
         Parameters
         ----------
@@ -1079,7 +1080,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
         n_dipoles = leadfields[0].shape[1]
         n_orders = len(leadfields)
 
-        C = P_Y.T @ P_Y
+        # C = P_Y.T @ P_Y
         R = np.eye(P_A.shape[0]) - P_A
 
         expression = np.zeros((n_orders, n_dipoles))

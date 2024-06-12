@@ -63,7 +63,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         correlation_mode : None/str
         None implies no correlation between the noise in different channels.
         'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
-        'diagonal' : Some channels have varying degrees of noise.
+        'diagonal' : Channels have varying degrees of noise.
     noise_color_coeff : float
         The magnitude of spatial coloring of the noise.
     random_seed : None / int
@@ -176,7 +176,10 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         # print(len(amplitudes), amplitudes[0].shape)
         # print("Initial corr between two timecourses: ", pearsonr(amplitudes[0][0], amplitudes[0][1])[0])
         inter_source_correlations = get_inter_source_correlation(n=batch_size)
-        noise_color_coeffs = get_noise_color_coeff(n=batch_size)
+        if type(noise_color_coeff) != str:
+            noise_color_coeffs = get_noise_color_coeff(n=batch_size)
+        else:
+            noise_color_coeffs = [noise_color_coeff,] * batch_size
         source_covariances = [get_cov(n, isc) for n, isc in zip(n_sources_batch, inter_source_correlations)]
         amplitudes = [amp @ np.diag(amplitude_values[i]) @ cov for i, (amp, cov) in enumerate(zip(amplitudes, source_covariances))]
 
@@ -253,7 +256,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
                 n_timepoints=[n_timepoints,] * batch_size,
                 n_timecourses=[n_timecourses,] * batch_size,
                 correlation_mode=[correlation_mode,] * batch_size,
-                noise_color_coeff=[noise_color_coeff,] * batch_size,
+                noise_color_coeff=noise_color_coeffs,
                 ))
             output = (x, y, info)
         else:
@@ -447,16 +450,27 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
     X_full = np.zeros_like(X_clean)
     
     for ch_type in unique_types:
+        
         type_indices = np.where(channel_types == ch_type)[0]
+        print(len(type_indices), ch_type)
         X_clean_type = X_clean[type_indices, :]
         X_noise_type = X_noise[type_indices, :]
-        if correlation_mode == "cholesky":
+        if (type(noise_color_coeff) == str) & (type(correlation_mode) == np.ndarray):
+            # Real Noise Covariance
+            # X_noise_type = correlation_mode[type_indices,type_indices] @ X_noise_type
+            X_noise_type = np.linalg.cholesky(correlation_mode[type_indices][:,type_indices]) @ X_noise_type
+        elif correlation_mode == "cholesky":
             covariance_matrix = np.full((len(type_indices), len(type_indices)), noise_color_coeff)
             np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
             mean = np.zeros(len(type_indices))  # Mean of the noise
             X_noise_type = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
             C_noise = X_noise_type @ X_noise_type.T
             C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.imshow(C_noise, vmin=-1, vmax=1, cmap="coolwarm")
+            plt.title(f"Covariance Matrix of {ch_type} noise")
+            
         elif correlation_mode == "bounded":
             num_sensors = X_noise_type.shape[0]
             Y = np.zeros_like(X_noise_type)
@@ -466,25 +480,38 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
                     if abs(i - j) % num_sensors == 1:
                         Y[i, :] += (noise_color_coeff / np.sqrt(2)) * X_noise_type[j, :]
             X_noise_type = Y
-            C_noise = X_noise_type @ X_noise_type.T
-            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+            # C_noise = X_noise_type @ X_noise_type.T
+            # C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
         elif correlation_mode == "diagonal":
             X_noise_type[1::3, :] *= (1 - noise_color_coeff)
             X_noise_type[2::3, :] *= (1 + noise_color_coeff)
-            C_noise = X_noise_type @ X_noise_type.T
-            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+            # C_noise = X_noise_type @ X_noise_type.T
+            # C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
         elif correlation_mode is None:
             pass
         else:
             msg = f"correlation_mode can be either None, cholesky, bounded or diagonal, but was {correlation_mode}"
             raise AttributeError(msg)
         
-        X_clean_energy = np.trace(X_clean_type @ X_clean_type.T) / (X_clean_type.shape[0] * X_clean_type.shape[1])
-        noise_var = X_clean_energy / snr_linear
-        scaler = np.sqrt(noise_var)
+        rms_noise = rms(X_noise_type)
+        rms_signal = rms(X_clean_type)
+        scaler = rms_signal / (snr_linear * rms_noise)
+        # print that the noise is scaled
+        effective_snr = rms(X_clean_type) / rms(X_noise_type * scaler)
+        # print(f"Effective SNR for {ch_type} is {effective_snr}")
+
+        X_full[type_indices] = X_clean_type + X_noise_type * scaler
         
-        X_full[type_indices, :] = X_clean_type + X_noise_type * scaler
-    
+
+        # # Amirs version
+        # X_clean_energy = np.trace(X_clean_type @ X_clean_type.T) / (X_clean_type.shape[0] * X_clean_type.shape[1])
+        # noise_var = X_clean_energy / snr_linear
+        # scaler = np.sqrt(noise_var)
+        # X_full[type_indices, :] = X_clean_type + X_noise_type * scaler
+        # effective_snr = rms(X_clean_type) / rms(X_noise_type * scaler)
+        # print(f"Effective SNR for {ch_type} is {effective_snr}")
+
+    # print(f"effectice snr overall is {rms(X_clean) / rms(X_full - X_clean)}")
     return X_full
 
 # def add_white_noise(X_clean, snr, rng, noise_color_coeff=0.5, correlation_mode=None):
