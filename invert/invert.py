@@ -32,7 +32,7 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "eloreta" or solver.lower() == "elor":
         solver_object = solvers.SolverELORETA(**kwargs)
     
-    # Various smooth Algorithms
+    # Other Minimum-norm-like Algorithms
     elif solver.lower() == "laura" or solver.lower() == "laur":
         solver_object = solvers.SolverLAURA(**kwargs)
     elif solver.lower() == "backus-gilbert" or solver.lower() == "b-g" or  solver.lower() == "bg":
@@ -51,7 +51,6 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverChampagne(**kwargs, update_rule="Convexity")
     elif solver.lower() == "champagne-nl" or solver.lower() == "champagne nl" or solver.lower() == "nl champagne":
         solver_object = solvers.SolverNLChampagne(**kwargs)
-
     elif solver.lower() == "emchampagne" or solver.lower() == "em champagne" or solver.lower() == "emc":
         solver_object = solvers.SolverEMChampagne(**kwargs)
     elif solver.lower() == "mmchampagne" or solver.lower() == "mm champagne" or solver.lower() == "mmc":
@@ -71,7 +70,7 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "source-map-msp" or solver.lower() == "source map msp":
         solver_object = solvers.SolverSourceMAPMSP(**kwargs)
     
-    # Beamformer Algorithms
+    # Beamformers
     elif solver.lower() == "mvab":
         solver_object = solvers.SolverMVAB(**kwargs)
     elif solver.lower() == "lcmv":
@@ -97,7 +96,7 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "ebb" or solver.lower() == "empirical bayesian beamformer":
         solver_object = solvers.SolverEBB(**kwargs)
 
-    # Own approaches
+    # Artificial Neural Networks
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
         solver_object = solvers.SolverFC(**kwargs)
     elif solver.lower() == "covcnn" or solver.lower() == "cov cnn" or solver.lower() == "covnet" or solver.lower() == "cov-cnn":
@@ -131,7 +130,7 @@ def Solver(solver="mne", **kwargs):
     elif solver.lower() == "bcs":
         solver_object = solvers.SolverBCS(**kwargs)
     
-    # Subspace Methods
+    # MUSIC/RAP/Subspace Methods
     elif solver.lower() == "music":
         solver_object = solvers.SolverMUSIC(**kwargs)
     elif solver.lower() == "rap-music" or solver.lower() == "rap music" or solver.lower() == "rap":
@@ -144,8 +143,6 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverSignalSubspaceMatching(name="Flexible Signal Subspace Matching", **kwargs)
     elif solver.lower() == "ssm" or solver.lower() == "signal subspaces matching":
         solver_object = solvers.SolverSignalSubspaceMatching(name="Signal Subspace Matching", **kwargs)
-    
-    # Alternative Projections
     elif solver.lower() == "flex-ap" or solver.lower() == "flex ap":
         solver_object = solvers.SolverAlternatingProjections(name="Flexible Alternating Projections", **kwargs)
     elif solver.lower() == "ap":
@@ -158,9 +155,6 @@ def Solver(solver="mne", **kwargs):
     # Other
     elif solver.lower() == "epifocus":
         solver_object = solvers.SolverEPIFOCUS(**kwargs)
-
-    
-    
     
     else:
         msg = f"{solver} is not available. Please choose from one of the following: {config.all_solvers}"

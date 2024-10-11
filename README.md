@@ -60,3 +60,116 @@ If you use this package and publish results, please cite as:
   year = {since 2022}
 }
 ```
+
+# List of Algorithms
+
+## Minimum Norm
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Minimum Norm Estimate | "mne" |
+| Weighted Minimum Norm Estimate | "wmne" |
+| Dynamic Statistical Parametric Mapping | "dspm" |
+| Minimum Current Estimate | "l1", "fista", "mce" |
+| Minimum L1 Norm GPT | "gpt", "l1 gpt" |
+| Minimum L1L2 Norm | "l1l2" |
+
+## LORETA
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| LORETA | "lor" |
+| sLORETA | "slor" |
+| eLORETA | "elor" |
+
+## Other Minimum-norm-like Algorithms
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| LAURA | "laura", "laur" |
+| Backus-Gilbert | "b-g", "bg" |
+| S-MAP | "smap" |
+
+## Bayesian
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Champagne | "champ" |
+| Low SNR Champagne | "lsc", "low snr champagne" |
+| MacKay Champagne | "mcc", "mackay champagne" |
+| Convexity Champagne | "coc", "convexity champagne" |
+| Non-Linear Champagne | "champagne-nl" |
+| Expectation Maximization Champagne | "emc" |
+| Majorization Maximization Champagne | "mmc" |
+| Full-Structure Noise | "fun" |
+| Heteroscedastic Champagne | "hsc" |
+| Gamma-MAP | "gmap" |
+| Source-MAP | "source map" |
+| Gamma-MAP-MSP | "gamma map msp" |
+| Source-MAP-MSP | "source map msp" |
+
+## Beamformers
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Minimum Variance Adaptive Beamformer | "mvab" |
+| Linearly Constrained Minimum Variance | "lcmv" |
+| Standardized Minimum Variance | "smv" |
+| Weight-Normalized Minimum Variance | "wnmv" |
+| Higher-Order Covariance Minimum Variance | "hocmv" |
+| Eigenspace Scalar Minimum Variance | "esmv" |
+| Multiple Constraint Minimum Variance | "mcmv" |
+| Higher-Order Covariance Multiple Constraint Minimum Variance | "hocmcmv" |
+| Reciprocal PSIICOS | "recipsiicos" |
+| Synthetic Aperture Magnetometry | "sam" |
+| Empirical Bayesian Beamformer | "ebb" |
+
+## Artificial Neural Networks
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Fully-Connected Network | "fc", "esinet" |
+| Covariance CNN | "covcnn", "covnet" |
+| Long Short-Term Memory | "lstm" |
+| Convolutional Neural Network | "cnn" |
+
+## Matching Pursuit / Compressive Sensing
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Orthogonal Matching Pursuit | "omp" |
+| Compressive Sampling Matching Pursuit | "cosamp" |
+| Simultaneous Orthogonal Matching Pursuit | "somp" |
+| Random Embedding Matching Pursuit | "rembo" |
+| Subspace Pursuit | "sp" |
+| Structured Subspace Pursuit | "ssp" |
+| Subspace Matching Pursuit | "smp" |
+| Structured Subspace Matching Pursuit | "ssmp" |
+| Subspace-based Subspace Matching Pursuit | "subsmp" |
+| Iterative Subspace-based Subspace Matching Pursuit | "isubsmp" |
+| Bayesian Compressive Sensing | "bcs" |
+
+## MUSIC/RAP/Subspace
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Multiple Signal Classification | "music" |
+| Recursively Applied and Projected MUSIC | "rap-music", "rap" |
+| Truncated Recursively Applied and Projected MUSIC | "trap-music", "trap" |
+| Flexible RAP-MUSIC | "flex-music", "flex" |
+| Flexible Signal Subspace Matching | "flex-ssm" |
+| Signal Subspace Matching | "ssm" |
+| Flexible Alternating Projections | "flex-ap" |
+| Alternating Projections | "ap" |
+
+## Basis Functions
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| Geometrically Informed Basis Functions | "gbf" |
+
+## Other
+
+| Full Solver Name | Abbreviation |
+|------------------|--------------|
+| EPIFOCUS | "epifocus" |

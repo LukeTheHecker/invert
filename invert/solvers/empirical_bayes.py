@@ -323,7 +323,7 @@ class SolverEMChampagne(BaseSolver):
         return inverse_operator
 
 class SolverMMChampagne(BaseSolver):
-    ''' Class for the Majority Maximization Champagne inverse solution. 
+    ''' Class for the Majorization Maximization Champagne inverse solution. 
 
     References
     ----------

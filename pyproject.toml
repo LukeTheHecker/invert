@@ -1,0 +1,3 @@
+[build-system]
+requires = ["tensorflow","mne", "scipy", "colorednoise", "matplotlib", "pyvista", "pyvistaqt", "PyQt5", "tqdm", "pytest", "scikit-learn", "pandas", "POT"]
+build-backend = "setuptools.build_meta"
