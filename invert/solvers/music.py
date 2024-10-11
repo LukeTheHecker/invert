@@ -303,7 +303,7 @@ class SolverFLEXMUSIC(BaseSolver):
             best_order, best_dipole = np.unravel_index(np.argmax(mu), mu.shape)
             
             if i>0 and np.max(mu) < stop_crit:
-                print(f"\t break because mu is ", np.max(mu))
+                # print(f"\t break because mu is ", np.max(mu))
                 break
             S_AP.append([best_order, best_dipole])
 
@@ -329,7 +329,7 @@ class SolverFLEXMUSIC(BaseSolver):
         # Phase 2: refinement
         C = C_initial
         S_AP_2 = deepcopy(S_AP)
-        print(S_AP)
+        # print(S_AP)
         
         if len(S_AP) > 1 and refine_solution:
             # best_vals = np.zeros(n_comp)
@@ -438,14 +438,20 @@ class SolverFLEXMUSIC(BaseSolver):
         '''
         n_dipoles = self.leadfield.shape[1]
         I = np.identity(n_dipoles)
+        
+        self.leadfields = [deepcopy(self.leadfield), ]
+        self.gradients = [csr_matrix(I),]
+
+        if self.n_orders == 0:
+            self.is_prepared = True
+            return
+        
         if self.adjacency_type == "spatial":
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         else:
             adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
         
         LL = laplacian(adjacency)
-        self.leadfields = [deepcopy(self.leadfield), ]
-        self.gradients = [csr_matrix(I),]
         
 
         # if self.diffusion_smoothing:
@@ -526,8 +532,8 @@ class SolverAlternatingProjections(BaseSolver):
         return super().__init__(**kwargs)
 
     def make_inverse_operator(self, forward, mne_obj, *args, n_orders=3, 
-                              alpha="auto", n="auto", k="auto", stop_crit=0.95,
-                              refine_solution=True, max_iter=1000, diffusion_smoothing=True, 
+                              alpha="auto", n="auto", k="auto", refine_solution=True, 
+                              max_iter=1000, diffusion_smoothing=True, 
                               diffusion_parameter=0.1, adjacency_type="spatial", 
                               adjacency_distance=3e-3, depth_weights=None, **kwargs):
         ''' Calculate inverse operator.
@@ -549,9 +555,7 @@ class SolverAlternatingProjections(BaseSolver):
                 "mean": Selects the eigenvalues that are larger than the mean of all eigs.
         k : int
             Number of recursions.
-        stop_crit : float
-            Criterion to stop recursions. The lower, the more dipoles will be
-            incorporated.
+
         max_iter : int
             Maximum number of iterations during refinement.
         diffusion_smoothing : bool
@@ -598,9 +602,6 @@ class SolverAlternatingProjections(BaseSolver):
             Number of eigenvectors to use or "auto" for l-curve method.
         k : int
             Number of recursions.
-        stop_crit : float
-            Criterion to stop recursions. The lower, the more dipoles will be
-            incorporated.
         refine_solution : bool
             If True: Re-visit each selected candidate and check if there is a
             better alternative.
@@ -769,6 +770,7 @@ class SolverAlternatingProjections(BaseSolver):
                     
                 if S_AP_2 == S_AP_2_Prev:  # and iter>0:
                     break
+        self.initial_candidates = S_AP
         self.candidates = S_AP_2
         source_covariance = np.sum([np.squeeze(self.gradients[order][dipole].toarray()) for order, dipole in S_AP_2], axis=0)
 
@@ -864,7 +866,6 @@ class SolverAlternatingProjections(BaseSolver):
             n_comp_drop = 1
         return n_comp_drop         
 
-
 class SolverSignalSubspaceMatching(BaseSolver):
     ''' Class for the Signal Subspace Matching inverse solution with flexible
         extent estimation (FLEX-AP). This approach combines the SSM-approach by
@@ -895,7 +896,8 @@ class SolverSignalSubspaceMatching(BaseSolver):
                               max_iter=5, diffusion_smoothing=True, 
                               diffusion_parameter=0.1, adjacency_type="spatial", 
                               adjacency_distance=3e-3, lambda_reg1=0.001, 
-                              lambda_reg2=0.0001, lambda_reg3=0.0, **kwargs):
+                              lambda_reg2=0.0001, lambda_reg3=0.0, adaptive_reg=False, 
+                              **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -913,9 +915,6 @@ class SolverSignalSubspaceMatching(BaseSolver):
                 "drop": Selection based on relative change of eigenvalues.
                 "auto": Combine L and drop method
                 "mean": Selects the eigenvalues that are larger than the mean of all eigs.
-        stop_crit : float
-            Criterion to stop recursions. The lower, the more dipoles will be
-            incorporated.
         max_iter : int
             Maximum number of iterations during refinement.
         diffusion_smoothing : bool
@@ -949,7 +948,9 @@ class SolverSignalSubspaceMatching(BaseSolver):
                                         refine_solution=refine_solution,
                                         lambda_reg1=lambda_reg1,
                                         lambda_reg2=lambda_reg2,
-                                        lambda_reg3=lambda_reg3)
+                                        lambda_reg3=lambda_reg3,
+                                        adaptive_reg=adaptive_reg,
+                                        )
         self.inverse_operators = [InverseOperator(inverse_operator, self.name), ]
         return self
 
@@ -1008,19 +1009,29 @@ class SolverSignalSubspaceMatching(BaseSolver):
         else:
             n_comp = deepcopy(n)
         
+        channel_types = self.forward['info'].get_channel_types()
+        for ch_type in set(channel_types):
+            selection = np.where(np.array(channel_types) == ch_type)[0]
+            C = Y[selection, :] @ Y[selection, :].T
+            scaler = np.sqrt(np.trace(C)) / C.shape[0]
+            # scaler = np.std(Y[selection, :])
+            Y[selection, :] /= scaler
+        
+        # Old (erroneous for correlated noise)
         M_Y = Y.T @ Y
         if adaptive_reg:
             YY = M_Y + lambda_reg1 * (50/n_time) * np.trace(M_Y) * np.eye(n_time)
         else:
             YY = M_Y + lambda_reg1 * np.trace(M_Y) * np.eye(n_time)
-            
+            # print("reg_trace = ", np.trace(M_Y) )
         P_Y = (Y @ np.linalg.inv(YY)) @ Y.T
         C = P_Y.T @ P_Y
+
         P_A = np.zeros((n_chans, n_chans))
 
         S_SSM = []
         A_q = []
-        
+        self.maps = []
         # Initial source location
         S_SSM.append( self.get_source_ssm(C, P_A, leadfields, lambda_reg=lambda_reg3) )
         # Now, add one source at a time
@@ -1029,6 +1040,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
             A_q.append(leadfields[order][:, location])
             P_A = self.compute_projection_matrix(A_q, lambda_reg=lambda_reg2)
             S_SSM.append( self.get_source_ssm(C, P_A, leadfields, S_SSM, lambda_reg=lambda_reg3) )
+            
         
         A_q.append( leadfields[S_SSM[-1][0]][:, S_SSM[-1][1]] )
         
@@ -1048,8 +1060,7 @@ class SolverSignalSubspaceMatching(BaseSolver):
                 if S_SSM_2 == S_SSM_prev:
                     # print(f"No change after {j+1} iterations")
                     break
-                # else:
-                #     print(S_SSM_prev, " ==> ", S_SSM_2)
+   
                 S_SSM_prev = deepcopy(S_SSM_2)
         self.candidates = S_SSM_2       
 
@@ -1061,8 +1072,8 @@ class SolverSignalSubspaceMatching(BaseSolver):
 
         return inverse_operator
 
-    @staticmethod
-    def get_source_ssm(C: np.ndarray, P_A: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
+    # @staticmethod
+    def get_source_ssm(self, C: np.ndarray, P_A: np.ndarray, leadfields: list, q_ignore: list=[], lambda_reg=0.0):
         ''' Compute the source with the highest AP value.
         Parameters
         ----------
@@ -1092,14 +1103,13 @@ class SolverSignalSubspaceMatching(BaseSolver):
             lower = np.einsum('ij,ij->j', a_s, a_s) + lambda_reg
             expression[jj, :] = upper  / lower
             
-            
-            # Slow
+            # # Slow
             # upper = a_s.T @ C @ a_s
             # lower = a_s.T @ a_s + np.eye(n_dipoles) * lambda_reg
             # # print(upper.shape, lower.shape)
             # expression[jj, :] = np.diag(upper @ np.linalg.inv(lower))
 
-
+        self.maps.append(expression)
         if len(q_ignore) > 0:
             for order, dipole in q_ignore:
                 expression[order, dipole] = np.nan
@@ -1112,8 +1122,47 @@ class SolverSignalSubspaceMatching(BaseSolver):
         A_q = np.stack(A_q, axis=1)
         M_A = A_q.T @ A_q
         AA = M_A + lambda_reg * np.trace(M_A) * np.eye(M_A.shape[0])
+        # or adjusted 
+        # AA = M_A + lambda_reg * np.mean(np.diag(M_A)) * np.eye(M_A.shape[0])
+        
         P_A = (A_q @ np.linalg.inv(AA)) @ A_q.T
         return P_A
+
+    # @staticmethod
+    # def compute_projection_matrix(A_q, lambda_reg=0.0001):
+    #     ''' Compute the projection matrix for the SSM algorithm with adaptive regularization.'''
+    #     print("new")
+    #     A_q = np.stack(A_q, axis=1)
+    #     M_A = A_q.T @ A_q
+    #     eigenvalues, _ = np.linalg.eigh(M_A)
+    #     lambda_adaptive = lambda_reg * np.mean(eigenvalues)
+    #     AA = M_A + lambda_adaptive * np.eye(M_A.shape[0])
+    #     P_A = (A_q @ np.linalg.inv(AA)) @ A_q.T
+    #     return P_A
+
+
+    # @staticmethod
+    # def compute_projection_matrix(A_q, lambda_reg=0.0001):
+    #     ''' Compute the projection matrix for the SSM algorithm with scaled regularization.'''
+    #     A_q = np.stack(A_q, axis=1)
+    #     M_A = A_q.T @ A_q
+    #     frobenius_norm = np.linalg.norm(M_A, 'fro')
+    #     lambda_scaled = lambda_reg * frobenius_norm
+    #     AA = M_A + lambda_scaled * np.eye(M_A.shape[0])
+    #     P_A = (A_q @ np.linalg.inv(AA)) @ A_q.T
+    #     return P_A
+
+    # @staticmethod
+    # def compute_projection_matrix(A_q, lambda_reg=0.0001):
+    #     ''' Compute the projection matrix for the SSM algorithm with statistical property-based regularization.'''
+    #     A_q = np.stack(A_q, axis=1)
+    #     M_A = A_q.T @ A_q
+    #     std_deviation = np.std(A_q)
+    #     lambda_stat = lambda_reg * std_deviation
+    #     AA = M_A + lambda_stat * np.eye(M_A.shape[0])
+    #     P_A = (A_q @ np.linalg.inv(AA)) @ A_q.T
+    #     return P_A
+
 
     def prepare_flex(self):
         ''' Create the dictionary of increasingly smooth sources unless
@@ -1125,14 +1174,21 @@ class SolverSignalSubspaceMatching(BaseSolver):
         '''
         n_dipoles = self.leadfield.shape[1]
         I = np.identity(n_dipoles)
+
+        self.leadfields = [deepcopy(self.leadfield), ]
+        self.gradients = [csr_matrix(I),]
+
+        if self.n_orders == 0:
+            self.is_prepared = True
+            return
+        
         if self.adjacency_type == "spatial":
             adjacency = mne.spatial_src_adjacency(self.forward['src'], verbose=0)
         else:
             adjacency = mne.spatial_dist_adjacency(self.forward['src'], self.adjacency_distance, verbose=None)
         
         LL = laplacian(adjacency)
-        self.leadfields = [deepcopy(self.leadfield), ]
-        self.gradients = [csr_matrix(I),]
+        
 
         if self.diffusion_parameter == "auto":
             alphas = [0.05, 0.075, 0.1, 0.125, 0.15, 0.175]
@@ -1837,7 +1893,6 @@ class SolverFLEXMUSIC_2(BaseSolver):
             n_comp_drop = 1
         return n_comp_drop         
 
-
 class SolverGeneralizedIterative(BaseSolver):
     ''' Class that generalizes iterative solutions like RAP-MUSIC, AP and SSM
         inverse solution with flexible extent estimation (FLEX-AP).
@@ -2147,7 +2202,7 @@ class SolverGeneralizedIterative(BaseSolver):
             upper = np.einsum('ij,ij->j', a_s, P_Y_T_P_Y @ a_s)
             lower = np.einsum('ij,ij->j', a_s, a_s) + lambda_reg
             expression[jj, :] = upper  / lower
-
+            
         if q_ignore != []:
             for order, dipole in q_ignore:
                 expression[order, dipole] = np.nan

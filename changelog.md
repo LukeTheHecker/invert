@@ -1,5 +1,12 @@
 # Changelog
 
+
+# 0.1.0 11.10.2024
+* Package underwent a complete makeover with new solvers and improved/ fixed mathematical formulations
+
+# May 2024
+The package was taken offline due to a makeover
+
 # 0.0.7 27.04.2024
 * Updated to python 3.10.11
 * Many changes such as

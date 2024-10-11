@@ -49,7 +49,7 @@ params = {
     "inter_source_correlation": 0.8,
     "diffusion_smoothing": False,
     "diffusion_parameter": 0.5,
-    "correlation_mode": "bounded",
+    "correlation_mode": "banded",
     "noise_color_coeff": 0.8,
     "random_seed": 123,
     "verbose": 1

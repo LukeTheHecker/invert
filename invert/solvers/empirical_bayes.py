@@ -811,7 +811,7 @@ class SolverConvexityChampagne(BaseSolver):
         
         return inverse_operator
 
-class SolverTEMChampagne(BaseSolver):
+class  SolverTEMChampagne(BaseSolver):
     ''' Class for the Temporal Expectation Maximization Champagne (T-EM
     Champagne) inverse solution. 
 
@@ -1219,11 +1219,11 @@ class SolverChampagne(BaseSolver):
         self.get_alphas(reference=self.leadfield@self.leadfield.T)
         inverse_operators = []
         for alpha in self.alphas:
-            inverse_operator = self.make_champagne(data, alpha)
+            inverse_operator = self.make_champagne(data, alpha, pruning_thresh=pruning_thresh)
             inverse_operators.append( inverse_operator )
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
-    def make_champagne(self, Y, alpha):
+    def make_champagne(self, Y, alpha, pruning_thresh=1e-3):
         ''' Majority Maximization Champagne method.
 
         Parameters
@@ -1242,20 +1242,22 @@ class SolverChampagne(BaseSolver):
         n_chans, n_dipoles = self.leadfield.shape
         _, n_times = Y.shape
         L = deepcopy(self.leadfield)
-        set_threshold = 1e-3
+        # L /= np.linalg.norm(L, axis=0)
+        
 
         # re-reference data
-        Y -= Y.mean(axis=0)
+        # Y -= Y.mean(axis=0)
 
         # Scaling of the data (necessary for convergence criterion and pruning
         # threshold)
         Y_scaled = deepcopy(Y)
         Y_scaled /= abs(Y_scaled).mean()
+        # Y_scaled /= np.linalg.norm(Y_scaled)
 
         I = np.identity(n_chans)
         gammas = np.ones(n_dipoles)
         Gamma = diags(gammas,0)
-        noise_cov = (alpha**2) * I
+        noise_cov = alpha * I
         Sigma_y = noise_cov + L @ Gamma @ L.T
         Sigma_y_inv = np.linalg.inv(Sigma_y)
         # Sigma_x = Gamma - Gamma @ L.T @ Sigma_y_inv @ L @ Gamma
@@ -1264,7 +1266,7 @@ class SolverChampagne(BaseSolver):
         loss_list = [1e99,]
         active_set = np.arange(n_dipoles)
 
-        for _ in range(self.max_iter):
+        for i_iter in range(self.max_iter):
             old_gammas = deepcopy(gammas)
             # Update gammas:
             # if self.update_rule.lower() == "default":
@@ -1287,30 +1289,60 @@ class SolverChampagne(BaseSolver):
                 lower_term = np.sum(L**2, axis=0)
                 # gammas = np.sqrt(upper_term / lower_term)
                 gammas = np.sqrt(upper_term) / np.sqrt(lower_term)
-
+            elif self.update_rule.lower() == "adaptive":
+                # ai-composed update rule
+                upper_term = np.mean(mu_x**2, axis=1)
+                lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+                snr_estimate = upper_term / np.mean(np.diag(noise_cov))
+                
+                # Adaptive exponent based on estimated SNR
+                adaptive_exponent = 0.5 + 0.5 / (1 + np.exp(-snr_estimate + 5))
+                
+                # Combine aspects of MacKay, Convexity, and LowSNR rules
+                gammas = (upper_term / lower_term) ** adaptive_exponent
+            elif self.update_rule.lower() == "dynamic_adaptive":
+                upper_term = np.mean(mu_x**2, axis=1)
+                lower_term = np.array([np.sum(L[:, jj] * (Sigma_y_inv @ L[:, jj])) for jj in range(L.shape[1])])
+                snr_estimate = upper_term / np.mean(np.diag(noise_cov))
+                
+                # Dynamic scaling factor based on iteration number and SNR
+                iteration_factor = 1 - np.exp(-i_iter / 10)  # Assumes 'i' is the current iteration number
+                snr_factor = 1 / (1 + np.exp(-snr_estimate + 5))
+                
+                # Combine MacKay and Convexity rules with dynamic weighting
+                mackay_update = upper_term / (gammas * lower_term)
+                convexity_update = np.sqrt(upper_term / lower_term)
+                
+                # Apply dynamic weighting
+                weighted_update = (snr_factor * mackay_update + (1 - snr_factor) * convexity_update) ** iteration_factor
+                
+                # Apply adaptive smoothing
+                smoothing_factor = 0.1 * (1 - iteration_factor)
+                gammas = (1 - smoothing_factor) * weighted_update + smoothing_factor * gammas
+                
+                # Apply soft thresholding for sparsity
+                # threshold = np.percentile(gammas, 10)  # Adjust percentile as needed
+                # gammas = np.maximum(gammas - threshold, 0)
                 
             # Remove nans
             gammas[np.isnan(gammas)] = 0
 
-            
-
+            # Stop if gammas went to zero
+            if np.linalg.norm(gammas) == 0:
+                # print("breaking")
+                gammas = old_gammas
+                break
 
             if self.prune:
-                active_set_idc = np.where(gammas>set_threshold)[0]
+                active_set_idc = np.where(gammas>(pruning_thresh*gammas.max()))[0]
                 if len(active_set_idc) == 0:
-                    print("pruned too much")
+                    # print("pruned too much")
                     gammas = old_gammas
                     break
                 active_set = active_set[active_set_idc]
                 # print(f"New set: {len(active_set)}")
                 gammas = gammas[active_set_idc]
                 L = L[:, active_set_idc]
-            
-
-            # Prune low gammas
-            # if self.prune:
-            #     prune_candidates = gammas < self.pruning_thresh
-            #     gammas[prune_candidates] = 0
             
             # update rest
             Gamma = diags(gammas,0)
@@ -1332,25 +1364,11 @@ class SolverChampagne(BaseSolver):
             
             # Compute the residuals
             loss_list.append(loss)
-
-            # Check if gammas went to zero
-            if np.linalg.norm(gammas) == 0:
-                # print("breaking")
-                gammas = old_gammas
+            
+            relative_change = (loss_list[-2] - loss) / loss_list[-2]
+            if relative_change < self.convergence_criterion:
                 break
-            # Check convergence:
-            change = loss_list[-2] - loss_list[-1] 
-            # print(gammas.max(), gammas.min(), np.percentile(gammas, 5))
-            # residuals = Y_scaled - L @ mu_x
-            print(f"\tloss: {loss:.1f}")
-            # print(f"\tchange: {change:.1f} ")
-            # print(f"\tresiduals: {np.linalg.norm(residuals):.3f}")
             
-            
-            
-            if change < self.convergence_criterion:
-                print("Converged!")
-                break
         
         # update rest
         L = deepcopy(self.leadfield)

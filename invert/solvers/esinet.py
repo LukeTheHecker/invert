@@ -444,9 +444,9 @@ class SolverCovCNN(BaseSolver):
         self.gammas = deepcopy(gammas)
         # gammas = np.maximum(gammas, 0)
         gammas /= gammas.max()
-        gammas[gammas<self.epsilon] = 0
-        source_covariance = np.diag(gammas)
-
+        # gammas[gammas<self.epsilon] = 0
+        source_covariance = np.outer(gammas, gammas) #+ 0.001 * np.eye(len(gammas))
+        # source_covariance = np.diag(gammas**2)
         # Perform inversion
         # L_s = self.leadfield @ source_covariance
         # L = self.leadfield
@@ -465,14 +465,20 @@ class SolverCovCNN(BaseSolver):
         # W = np.diag(np.linalg.norm(L, axis=0))
         # x_hat[dipole_idc, :] = np.linalg.inv(L.T @ L + W.T@W) @ L.T @ y
         
-        self.gammas = gammas
-        # Bayes-like inversion
-        Gamma = source_covariance
-        Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
-        Sigma_y_inv = np.linalg.inv(Sigma_y)
-        inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
-        x_hat = inverse_operator @ y
-        return x_hat        
+        # self.gammas = gammas
+        # # Bayes-like inversion
+        # Gamma = source_covariance
+        # Sigma_y = self.leadfield @ Gamma @ self.leadfield.T
+        # Sigma_y_inv = np.linalg.inv(Sigma_y + 0.01*np.trace(Sigma_y)*Sigma_y.shape[0]*np.eye(n_channels))
+        # inverse_operator = Gamma @ self.leadfield.T @ Sigma_y_inv
+        # x_hat = inverse_operator @ y
+        # return x_hat        
+
+
+        # Minimum norm
+        L = self.leadfield
+        x_hat =  source_covariance @ L.T @ np.linalg.inv(L @ source_covariance @ L.T) @ y
+        return x_hat
          
     def train_model(self,):
         ''' Train the neural network model.
@@ -1064,13 +1070,15 @@ class SolverFC(BaseSolver):
         # Predict source(s)
         source_pred = self.model.predict(y, verbose=self.verbose)
         source_pred = np.swapaxes(source_pred, 1, 2)
+        print(source_pred.shape)
 
         # Rescale sources
         y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
-        source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
+        # source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
+        source_pred_scaled = rescale_sources(self.leadfield, source_pred[0], y_original)
         
-        return source_pred_scaled[0]
+        return source_pred_scaled
         
         
     def train_model(self,):
@@ -1859,9 +1867,10 @@ class SolverLSTM(BaseSolver):
         # Rescale sources
         y_original = deepcopy(data)
         y_original = y_original[np.newaxis]
-        source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
+        # source_pred_scaled = solve_p_wrap(self.leadfield, source_pred, y_original)
+        source_pred_scaled = rescale_sources(self.leadfield, source_pred[0], y_original)
         
-        return source_pred_scaled[0]
+        return source_pred_scaled
                
     def train_model(self,):
         ''' Train the neural network model.
@@ -2380,6 +2389,35 @@ class SolverRAPNN(BaseSolver):
         self.generator = generator(self.forward, **gen_args)
         
 
+def rescale_sources(leadfield, source_pred, y_original):
+    """
+    Rescale the predicted sources to match the original data.
+
+    Parameters:
+    -----------
+    leadfield : numpy.ndarray
+        The leadfield matrix.
+    source_pred : numpy.ndarray
+        The predicted source activity.
+    y_original : numpy.ndarray
+        The original observed data.
+
+    Returns:
+    --------
+    source_pred_scaled : numpy.ndarray
+        The rescaled source predictions.
+    """
+    # Forward calculate the sensor data from the predicted sources
+    y_pred = leadfield @ source_pred
+
+    # Calculate the scaling factor
+    scaling_factor = np.sum(y_original * y_pred) / np.sum(y_pred ** 2)
+
+    # Apply the scaling factor to the predicted sources
+    source_pred_scaled = source_pred * scaling_factor
+
+    return source_pred_scaled
+
 def solve_p_wrap(leadfield, y_est, x_true):
     ''' Wrapper for parallel (or, alternatively, serial) scaling of 
     predicted sources.
@@ -2573,3 +2611,4 @@ def sparse_cosine_similarity_loss(y_true, y_pred):
     # Since we need a loss (lower is better), subtract the cosine similarity from 1
     loss = 1 - cosine_similarity
     return loss
+

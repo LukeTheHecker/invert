@@ -79,12 +79,12 @@ class BaseSolver:
         Plot the regularization parameters.
 
     '''
-    def __init__(self, regularisation_method="GCV", n_reg_params=8, 
+    def __init__(self, regularisation_method="GCV", n_reg_params=11, 
         prep_leadfield=False, use_last_alpha=False, rank="auto",
-        reduce_rank=False, plot_reg=False, verbose=0):
+        reduce_rank=False, plot_reg=False, common_average_reference=False, verbose=0):
         self.verbose = verbose
 
-        self.r_values = np.insert(np.logspace(-6, 1, n_reg_params), 0, 0)
+        self.r_values = np.insert(np.logspace(-9, 1, n_reg_params), 0, 0)
 
 
         # self.alphas = deepcopy(self.r_values)
@@ -97,6 +97,7 @@ class BaseSolver:
         self.reduce_rank = reduce_rank
         self.plot_reg = plot_reg
         self.made_inverse_operator = False
+        self.common_average_reference = common_average_reference
 
     def make_inverse_operator(self, forward: mne.Forward, *args, alpha="auto", reference=None, **kwargs):
         """ Base function to create the inverse operator based on the forward
@@ -114,9 +115,9 @@ class BaseSolver:
         Return
         ------
         None
-
+        
         """
-        self.forward = forward
+        self.forward = deepcopy(forward)
         self.prepare_forward()
         self.alpha = alpha
         self.alphas = self.get_alphas(reference=reference)
@@ -180,9 +181,9 @@ class BaseSolver:
         stc = self.source_to_object(source_mat)
         return stc
         
-    @staticmethod
-    def prep_data(mne_obj):
-        if not mne_obj.proj and "eeg" in mne_obj.get_channel_types():
+    
+    def prep_data(self, mne_obj):
+        if not mne_obj.proj and "eeg" in mne_obj.get_channel_types() and self.common_average_reference:
             mne_obj.set_eeg_reference("average", projection=True, verbose=0).apply_proj(verbose=0)
         
         return mne_obj

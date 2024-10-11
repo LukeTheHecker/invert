@@ -174,6 +174,10 @@ class SolverSOMP(BaseSolver):
         ----------
         mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
             The MNE data object.
+        K : int
+            The number of atoms to select per iteration.
+        max_iter : int
+            The maximum number of iterations.
 
         Return
         ------

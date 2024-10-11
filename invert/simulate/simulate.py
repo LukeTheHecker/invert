@@ -62,7 +62,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
     correlation_mode : None/str
         correlation_mode : None/str
         None implies no correlation between the noise in different channels.
-        'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+        'banded' : Colored banded noise, where channels closer to each other will be more correlated.
         'diagonal' : Channels have varying degrees of noise.
     noise_color_coeff : float
         The magnitude of spatial coloring of the noise.
@@ -127,6 +127,13 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
     else:
         get_noise_color_coeff = lambda n=1: rng.uniform(noise_color_coeff, noise_color_coeff, n)
 
+    if type(correlation_mode) == str and correlation_mode.lower() == "auto":
+        correlation_modes = ["cholesky", "banded", "diagonal", None]
+        correlation_modes = rng.choice(correlation_modes, batch_size)
+    else:
+        correlation_modes = [correlation_mode,] * batch_size
+
+    # print(get_inter_source_correlation())
 
     for i in range(1, max_order):
         # new_sources = sources[-n_dipoles:, -n_dipoles:] @ gradient
@@ -149,7 +156,8 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
     sources = csr_matrix(sources)
     # Pre-compute random time courses
     betas = rng.uniform(*beta_range,n_timecourses)
-    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints) for beta in betas], axis=0)
+    random_states = rng.integers(0, 2**32, n_timecourses)
+    time_courses = np.stack([cn.powerlaw_psd_gaussian(beta, n_timepoints, random_state=random_state) for beta, random_state in zip(betas, random_states)], axis=0)
     
     # Normalize time course to max(abs()) == 1
     time_courses = (time_courses.T / abs(time_courses).max(axis=1)).T
@@ -181,6 +189,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         else:
             noise_color_coeffs = [noise_color_coeff,] * batch_size
         source_covariances = [get_cov(n, isc) for n, isc in zip(n_sources_batch, inter_source_correlations)]
+        # print(source_covariances)
         amplitudes = [amp @ np.diag(amplitude_values[i]) @ cov for i, (amp, cov) in enumerate(zip(amplitudes, source_covariances))]
 
         # print("All the data: \n")
@@ -199,7 +208,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
         x = np.stack([leadfield @ yy.T for yy in y], axis=0)
         # Add white noise to clean EEG
         snr_levels = rng.uniform(low=snr_range[0], high=snr_range[1], size=batch_size)
-        x = np.stack([add_white_noise(xx, snr_level, rng, channel_types, correlation_mode=correlation_mode, noise_color_coeff=noise_color_level) for (xx, snr_level, noise_color_level) in zip(x, snr_levels, noise_color_coeffs)], axis=0)
+        x = np.stack([add_white_noise(xx, snr_level, rng, channel_types, correlation_mode=correlation_mode, noise_color_coeff=noise_color_level) for (xx, snr_level, correlation_mode, noise_color_level) in zip(x, snr_levels, correlation_modes, noise_color_coeffs)], axis=0)
 
         # Apply common average reference
         # x = np.stack([xx - xx.mean(axis=0) for xx in x], axis=0)
@@ -257,6 +266,7 @@ def generator(fwd, use_cov=True, cov_type="basic", batch_size=1284, batch_repeti
                 n_timecourses=[n_timecourses,] * batch_size,
                 correlation_mode=[correlation_mode,] * batch_size,
                 noise_color_coeff=noise_color_coeffs,
+                centers=selection
                 ))
             output = (x, y, info)
         else:
@@ -431,7 +441,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
         The signal to noise ratio in dB.
     correlation_mode : None/str
         None implies no correlation between the noise in different channels.
-        'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+        'banded' : Colored banded noise, where channels closer to each other will be more correlated.
         'diagonal' : Some channels have varying degrees of noise.
         'cholesky' : A set correlation coefficient between each pair of channels
     noise_color_coeff : float
@@ -452,7 +462,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
     for ch_type in unique_types:
         
         type_indices = np.where(channel_types == ch_type)[0]
-        print(len(type_indices), ch_type)
+        # print(len(type_indices), ch_type)
         X_clean_type = X_clean[type_indices, :]
         X_noise_type = X_noise[type_indices, :]
         if (type(noise_color_coeff) == str) & (type(correlation_mode) == np.ndarray):
@@ -462,16 +472,37 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
         elif correlation_mode == "cholesky":
             covariance_matrix = np.full((len(type_indices), len(type_indices)), noise_color_coeff)
             np.fill_diagonal(covariance_matrix, 1)  # Set diagonal to 1 for variance
-            mean = np.zeros(len(type_indices))  # Mean of the noise
-            X_noise_type = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
-            C_noise = X_noise_type @ X_noise_type.T
-            C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-            import matplotlib.pyplot as plt
-            plt.figure()
-            plt.imshow(C_noise, vmin=-1, vmax=1, cmap="coolwarm")
-            plt.title(f"Covariance Matrix of {ch_type} noise")
             
-        elif correlation_mode == "bounded":
+            # mean = np.zeros(len(type_indices))  # Mean of the noise
+            # X_noise_type = np.random.multivariate_normal(mean, covariance_matrix, n_time).T
+
+            # Cholesky decomposition
+            X_noise_type = np.linalg.cholesky(covariance_matrix) @ X_noise_type
+
+            
+            
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # plt.plot(X_noise_type.T)
+            
+            # C_noise = X_noise_type @ X_noise_type.T
+            # C_noise_r = C_noise / np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
+            
+            # import matplotlib.pyplot as plt
+            
+            # plt.figure()
+            # plt.subplot(1,2,1)
+            # plt.imshow(C_noise, vmin=-np.max(abs(C_noise)), vmax=np.max(abs(C_noise)), cmap="coolwarm")
+            # plt.title(f"Covariance Matrix of {ch_type} noise")
+            # plt.colorbar()  
+
+            # plt.subplot(1,2,2)
+            # plt.imshow(C_noise_r, vmin=-1, vmax=1, cmap="coolwarm")
+            # plt.title(f"Correlation Matrix of {ch_type} noise")
+            # plt.colorbar()
+
+            
+        elif correlation_mode == "banded":
             num_sensors = X_noise_type.shape[0]
             Y = np.zeros_like(X_noise_type)
             for i in range(num_sensors):
@@ -490,15 +521,16 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
         elif correlation_mode is None:
             pass
         else:
-            msg = f"correlation_mode can be either None, cholesky, bounded or diagonal, but was {correlation_mode}"
+            msg = f"correlation_mode can be either None, cholesky, banded or diagonal, but was {correlation_mode}"
             raise AttributeError(msg)
         
         rms_noise = rms(X_noise_type)
         rms_signal = rms(X_clean_type)
         scaler = rms_signal / (snr_linear * rms_noise)
         # print that the noise is scaled
-        effective_snr = rms(X_clean_type) / rms(X_noise_type * scaler)
+        # effective_snr = rms(X_clean_type) / rms(X_noise_type * scaler)
         # print(f"Effective SNR for {ch_type} is {effective_snr}")
+
 
         X_full[type_indices] = X_clean_type + X_noise_type * scaler
         
@@ -520,7 +552,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
 #     ----------
 #     correlation_mode : None/str
 #         None implies no correlation between the noise in different channels.
-#         'bounded' : Colored bounded noise, where channels closer to each other will be more correlated.
+#         'banded' : Colored banded noise, where channels closer to each other will be more correlated.
 #         'diagonal' : Some channels have varying degrees of noise.
 #         'cholesky' : A set correlation coefficient between each pair of channels
 #     noise_color_coeff : float
@@ -544,7 +576,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
     
 #         C_noise = X_noise @ X_noise.T
 #         C_noise /= np.sqrt(np.diag(C_noise)[:, None] @ np.diag(C_noise)[None, :])
-#     elif correlation_mode == "bounded":
+#     elif correlation_mode == "banded":
 #         num_sensors = X_noise.shape[0]
 #         Y = np.zeros_like(X_noise)
         
@@ -569,7 +601,7 @@ def add_white_noise(X_clean, snr, rng, channel_types, noise_color_coeff=0.5, cor
 #     elif correlation_mode is None:
 #         pass
 #     else:
-#         msg = f"correlation_mode can bei either None, cholesky, bounded or diagonal, but was {correlation_mode}"
+#         msg = f"correlation_mode can bei either None, cholesky, banded or diagonal, but was {correlation_mode}"
 #         raise AttributeError(msg)
     
 #     # rms_noise = rms(X_noise)

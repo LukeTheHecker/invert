@@ -57,6 +57,12 @@ class Ensemble:
             W = np.diag(np.linalg.norm(L, axis=0)) 
             inverse_operator = source_covariance @ np.linalg.inv(L_s.T @ L_s + W.T @ W) @ L_s.T
             stc.data = inverse_operator @ data
+        elif self.summary_type.lower() == "normalized_mean":
+            # Normalize the data
+            data = np.stack([stc_.data / np.linalg.norm(stc_.data) for stc_ in stc_list], axis=0)
+            # Calculate the mean of the normalized data
+            stc.data = np.nanmean(data, axis=0)
+            
         else:
             msg = f"summary_type is {self.summary_type} but must be either of the following: {self.summary_types}"
             raise AttributeError(msg)

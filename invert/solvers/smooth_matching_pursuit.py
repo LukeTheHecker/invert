@@ -385,7 +385,8 @@ class SolverSubSMP(BaseSolver):
         u, s, _ = np.linalg.svd(y)
         
         # Select components
-        idx = find_corner(np.arange(len(s)), s) + 0
+        idx = find_corner(np.arange(len(s)), s) + 1
+        print(f"Selected {idx} components")
         # Kaiser-Guttmann:
         # thr = 1  # 1=kaiser-guttmann, else: np.e**(-16)
         # idx = np.where((s*len(s) / s.sum()) > thr)[0][-1] + 1

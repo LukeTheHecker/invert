@@ -43,19 +43,18 @@ class SolverMVAB(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
 
         y = data
-        y -= y.mean(axis=0)
-        R_inv = np.linalg.inv(y@y.T)
-        leadfield -= leadfield.mean(axis=0)
-        self.get_alphas(reference=y@y.T)
-  
+        C = y@y.T
+        I = np.identity(n_chans)
+
+        self.get_alphas(reference=C)
         
         inverse_operators = []
         for alpha in self.alphas:
+            R_inv = np.linalg.inv(C + alpha * I)
             inverse_operator = 1/(leadfield.T @ R_inv @ leadfield + alpha * np.identity(n_dipoles)) @ leadfield.T @ R_inv
 
             inverse_operators.append(inverse_operator)
@@ -103,12 +102,10 @@ class SolverLCMV(BaseSolver):
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         data = self.unpack_data_obj(mne_obj)
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
         
         y = data
-        # y -= y.mean(axis=0)
         
         I = np.identity(n_chans)
         C = y@y.T
@@ -182,14 +179,12 @@ class SolverSMV(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
 
         self.weight_norm = weight_norm
 
         y = data
-        y -= y.mean(axis=0)
         I = np.identity(n_chans)
         
         # Recompute regularization based on the max eigenvalue of the Covariance
@@ -252,13 +247,11 @@ class SolverWNMV(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
 
         self.weight_norm = weight_norm
         y = data
-        y -= y.mean(axis=0)
         I = np.identity(n_chans)
 
         # Recompute regularization based on the max eigenvalue of the Covariance
@@ -326,14 +319,12 @@ class SolverHOCMV(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
         
         self.weight_norm = weight_norm
         
         y = data
-        y -= y.mean(axis=0)
         I = np.identity(n_chans)
 
         # Recompute regularization based on the max eigenvalue of the Covariance
@@ -399,14 +390,11 @@ class SolverESMV(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
         
 
         y = data
-        y -= y.mean(axis=0)
-        leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
         
         # Recompute regularization based on the max eigenvalue of the Covariance
@@ -419,8 +407,9 @@ class SolverESMV(BaseSolver):
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
-
-            W_mv = (C_inv @ leadfield) / np.diagonal(leadfield.T @ C_inv @ leadfield)
+            C_inv_leadfield = C_inv @ leadfield
+            diag_elements = np.einsum('ij,ji->i', leadfield.T, C_inv_leadfield)
+            W_mv = C_inv_leadfield / diag_elements
             W = subspace @ W_mv
 
             inverse_operator = W.T
@@ -492,13 +481,11 @@ class SolverMCMV(BaseSolver):
         ------
         self : object returns itself for convenience
         '''
-        tstart = time()
         super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
-        leadfield /= np.linalg.norm(leadfield, axis=0)
+        # leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
 
         if noise_cov is None:
@@ -507,27 +494,22 @@ class SolverMCMV(BaseSolver):
         self.weight_norm = weight_norm
 
         y = data
-        y -= y.mean(axis=0)
-        leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
 
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
-        C = y@y.T
+        C = y @ y.T
         self.alphas = self.get_alphas(reference=C)
-        tend = time()
-        print(f"prep: {tend-tstart}")
-        tstart = time()
         inverse_operators = []
         for alpha in self.alphas:
             C_inv = np.linalg.inv(C + alpha * I)
+            leadfield_C_inv = leadfield.T @ C_inv
 
-            W = C_inv @ leadfield * np.diagonal(np.linalg.inv(leadfield.T @ C_inv @ leadfield))
-            # W = C_inv @ leadfield @ np.linalg.inv(leadfield.T @ C_inv @ leadfield)
-            
-            # W = np.dot(leadfield.T, np.dot(C_inv, leadfield))
-            # W = np.dot(np.linalg.inv(W + leadfield.T @ noise_cov @ leadfield), np.dot(leadfield.T, C_inv)).T
-    
+            # Use np.einsum to compute the diagonal elements
+            diag_elements = np.einsum('ij,ji->i', leadfield_C_inv, leadfield)
+
+            W = C_inv @ leadfield * (1.0 / diag_elements)
+            # W = C_inv @ leadfield @ np.linalg.pinv(leadfield.T @ C_inv @ leadfield)
 
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
@@ -536,9 +518,84 @@ class SolverMCMV(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
-        tend = time()
-        print(f"prep 2 (alpha Ws): {tend-tstart}")
+
+        return self
+    
+class SolverUnitNoiseGain(BaseSolver):
+    ''' Class for the Unit Noise Gain (UNIG) Beamformer
+    inverse solution [1].
+    
+    Attributes
+    ----------
+
+    
+    References
+    ----------
+    [1] 
+    '''
+    def __init__(self, name="UNIG Beamformer", reduce_rank=True, rank="auto", **kwargs):
+        self.name = name
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
+
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, noise_cov=None, alpha='auto', verbose=0, **kwargs):
+        ''' Calculate inverse operator.
+
+        Parameters
+        ----------
+        forward : mne.Forward
+            The mne-python Forward model instance.
+        mne_obj : [mne.Evoked, mne.Epochs, mne.io.Raw]
+            The MNE data object.
+        weight_norm : bool
+            Normalize the filter weight matrix W to unit length of the columns.
+        alpha : float
+            The regularization parameter.
         
+        Return
+        ------
+        self : object returns itself for convenience
+        '''
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+        data = self.unpack_data_obj(mne_obj)
+
+        leadfield = self.leadfield
+        # leadfield /= np.linalg.norm(leadfield, axis=0)
+        n_chans, n_dipoles = leadfield.shape
+
+        if noise_cov is None:
+            noise_cov = np.identity(n_chans)
+            
+        self.weight_norm = weight_norm
+
+        y = data
+        I = np.identity(n_chans)
+
+        # Recompute regularization based on the max eigenvalue of the Covariance
+        # Matrix (opposed to that of the leadfield)
+        C = y @ y.T
+        self.alphas = self.get_alphas(reference=C)
+        inverse_operators = []
+        for alpha in self.alphas:
+            C_inv = np.linalg.inv(C + alpha * I)
+            C_inv_inv = np.linalg.inv(C_inv)
+            leadfield_C_inv_inv = leadfield.T @ C_inv_inv
+
+            # Use np.einsum to compute the diagonal elements
+            diag_elements = np.einsum('ij,ji->i', leadfield_C_inv_inv, leadfield)
+
+            # W = C_inv @ leadfield * (1.0 / diag_elements)
+            W = C_inv @ leadfield * (1 / np.sqrt(diag_elements))
+
+            # W = C_inv @ leadfield @ np.linalg.pinv(leadfield.T @ C_inv @ leadfield)
+
+            if self.weight_norm:
+                W /= np.linalg.norm(W, axis=0)
+
+            inverse_operator = W.T
+            inverse_operators.append(inverse_operator)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+
         return self
 
 class SolverHOCMCMV(BaseSolver):
@@ -586,14 +643,12 @@ class SolverHOCMCMV(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = self.leadfield.shape
         
         self.weight_norm = weight_norm
         
         y = data
-        y -= y.mean(axis=0)
         I = np.identity(n_chans)
 
         # Recompute regularization based on the max eigenvalue of the Covariance
@@ -617,6 +672,7 @@ class SolverHOCMCMV(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
+    
 
 class SolverReciPSIICOS(BaseSolver):
     ''' Class for the Reciprocal Phase Shift Invariant Imaging of Coherent
@@ -637,7 +693,7 @@ class SolverReciPSIICOS(BaseSolver):
         self.name = name
         return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
 
-    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, alpha='auto', verbose=0, **kwargs):
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, K=3, alpha='auto', verbose=0, **kwargs):
         ''' Calculate inverse operator.
 
         Parameters
@@ -660,47 +716,45 @@ class SolverReciPSIICOS(BaseSolver):
         data = self.unpack_data_obj(mne_obj)
 
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         leadfield /= np.linalg.norm(leadfield, axis=0)
         n_chans, n_dipoles = leadfield.shape
         
         self.weight_norm = weight_norm
         
         y = data
-        y -= y.mean(axis=0)
+        C = y@y.T
 
-        
         # Step 1
-        G_pwr = leadfield @ leadfield.T
+        G_pwpr = self.construct_G_pwpr(leadfield.T)
         
         # Step 2
-        U_pwr, S_pwr, _ = np.linalg.svd(G_pwr, full_matrices=False)
-        k = find_corner(np.arange(len(S_pwr)), S_pwr)
-        P = U_pwr[:, :k] @ U_pwr[:, :k].T
-        
+        P = self.compute_projector(G_pwpr, K)
+
+        # Step 3
+        C_projected = self.apply_projection(P, C)
+
+        # Step 4: SVD of C_projected and reconstruct with absolute eigenvalues
+        E, A, _ = np.linalg.svd(C_projected, full_matrices=False)
+        C = E @ np.diag(np.abs(A)) @ E.T
         
         I = np.identity(n_chans)
         # Recompute regularization based on the max eigenvalue of the Covariance
         # Matrix (opposed to that of the leadfield)
-        C = y@y.T
-        self.alphas = self.get_alphas(reference=G_pwr)
-        # self.alphas = np.logspace(-4, 1, self.n_reg_params) * np.diagonal(y@y.T).mean()
-        
+        self.alphas = self.get_alphas(reference=C)
+
         inverse_operators = []
         for alpha in self.alphas:
-            C = y@y.T + alpha * I
+            C_inv = np.linalg.inv(C + alpha * I)
+            leadfield_C_inv = leadfield.T @ C_inv
 
-            # Step 3
-            C_x = (P@C).T
+            # MCMV
+            diag_elements = np.einsum('ij,ji->i', leadfield_C_inv, leadfield)
+            W = C_inv @ leadfield * (1.0 / diag_elements)
 
-            # Step 4
-            E, A, _ = np.linalg.svd(C_x, full_matrices=False)
-
-            # Make new Covariance positive semidefinite
-            C_x = E @ np.diag(np.abs(A)) @ E.T
-            C_x_inv = np.linalg.inv(C_x)
-
-            W = (C_x_inv @ leadfield) * np.diagonal(np.linalg.inv(leadfield.T @ C_x_inv @ leadfield))
+            #LCMV
+            # upper = C_inv @ leadfield
+            # lower = np.einsum('ij,jk,ki->i', leadfield.T, C_inv, leadfield)
+            # W = upper / lower
 
             if self.weight_norm:
                 W /= np.linalg.norm(W, axis=0)
@@ -710,6 +764,32 @@ class SolverReciPSIICOS(BaseSolver):
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
         return self
+    
+    @staticmethod
+    def construct_G_pwpr(g_list):
+        # g_list is a list of topography vectors g_i for N sources
+        N = len(g_list)
+        q_list = [np.outer(g, g).flatten() for g in g_list]
+        G_pwpr = np.column_stack(q_list)
+        return G_pwpr
+
+    @staticmethod
+    def compute_projector(G_pwpr, K):
+        U, S, Vt = np.linalg.svd(G_pwpr, full_matrices=False)
+        U_K = U[:, :K]  # Keep only the first K singular vectors
+        P = U_K @ U_K.T  # Projector matrix
+        return P
+
+    @staticmethod
+    def apply_projection(P, C_x):
+        # Vectorize the sensor-space covariance matrix C_x
+        vec_Cx = C_x.flatten()
+        # Project the vectorized covariance matrix
+        projected_vec_Cx = P @ vec_Cx
+        # Reshape back to matrix form
+        C_x_projected = np.reshape(projected_vec_Cx, C_x.shape)
+        return C_x_projected
+
 
 class SolverSAM(BaseSolver):
     ''' Class for the Synthetic Aperture Magnetometry Beamformer (SAM) inverse
@@ -751,13 +831,10 @@ class SolverSAM(BaseSolver):
 
         self.weight_norm = weight_norm
         leadfield = self.leadfield
-        leadfield -= leadfield.mean(axis=0)
         n_chans, n_dipoles = leadfield.shape
         
 
         y = data
-        y -= y.mean(axis=0)
-        leadfield -= leadfield.mean(axis=0)
         I = np.identity(n_chans)
   
         
@@ -776,4 +853,79 @@ class SolverSAM(BaseSolver):
             inverse_operators.append(inverse_operator)
 
         self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+        return self
+
+class SolverEBB(BaseSolver):
+    """
+    Empirical Bayesian Beamformer (EBB) solver for M/EEG inverse problem.
+    """
+    def __init__(self, name="Empirical Bayesian Beamformer", reduce_rank=True, rank="auto", **kwargs):
+        self.name = name
+        return super().__init__(reduce_rank=reduce_rank, rank=rank, **kwargs)
+        
+    def make_inverse_operator(self, forward, mne_obj, *args, weight_norm=True, noise_cov=None, alpha='auto', **kwargs):
+        """
+        Solve the inverse problem using the Empirical Bayesian Beamformer method.
+
+        Parameters:
+        -----------
+        data : array, shape (n_channels, n_times)
+            The sensor data.
+        forward : array, shape (n_channels, n_sources)
+            The forward solution.
+        noise_cov : array, shape (n_channels, n_channels), optional
+            The noise covariance matrix.
+
+        Returns:
+        --------
+        sources : array, shape (n_sources, n_times)
+            The estimated source time series.
+        """
+        print(type(forward))
+        super().make_inverse_operator(forward, *args, alpha=alpha, **kwargs)
+
+        data = self.unpack_data_obj(mne_obj)
+        leadfield = self.leadfield
+        n_channels, n_times = data.shape
+        n_sources = leadfield.shape[1]
+        leadfield /= np.linalg.norm(leadfield, axis=0)
+        
+
+        # Compute data covariance
+        data_cov = np.cov(data)
+
+        # handle noise_cov
+        if noise_cov is None:
+            noise_cov = np.identity(n_channels)
+
+        # Initialize source covariance
+        inverse_operators = []
+        self.alphas = self.get_alphas(reference=leadfield@leadfield.T)
+        for alpha in self.alphas:
+            source_cov = np.eye(n_sources)
+            # Iterative process
+            for n_iter in range(100):  # You can adjust the number of iterations
+                # Compute regularized inverse
+                C = leadfield @ source_cov @ leadfield.T
+                C_inv = np.linalg.inv(C + alpha * noise_cov)
+                
+                # Update source covariance
+                W = source_cov @ leadfield.T @ C_inv
+                new_source_cov = W @ data_cov @ W.T
+                if weight_norm:
+                    W /= np.linalg.norm(W, axis=0)
+                
+                # Check convergence
+                if np.allclose(new_source_cov, source_cov, rtol=1e-9):
+                    print(f"Converged after {n_iter} iterations")
+                    break
+                
+                source_cov = new_source_cov
+
+            # Compute final beamformer weights
+            W = source_cov @ leadfield.T @ np.linalg.inv(leadfield @ source_cov @ leadfield.T + noise_cov)
+            inverse_operators.append(W)
+
+        self.inverse_operators = [InverseOperator(inverse_operator, self.name) for inverse_operator in inverse_operators]
+
         return self

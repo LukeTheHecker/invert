@@ -94,6 +94,8 @@ def Solver(solver="mne", **kwargs):
         solver_object = solvers.SolverReciPSIICOS(**kwargs)
     elif solver.lower() == "sam":
         solver_object = solvers.SolverSAM(**kwargs)
+    elif solver.lower() == "ebb" or solver.lower() == "empirical bayesian beamformer":
+        solver_object = solvers.SolverEBB(**kwargs)
 
     # Own approaches
     elif solver.lower() == "fully-connected" or solver.lower() == "fc" or solver.lower() == "fullyconnected" or solver.lower() == "esinet":
